@@ -34,13 +34,9 @@ namespace Net {
 		explicit SocketAddress(AddressFamily::Family family);
 		SocketAddress(AddressFamily::Family family, u16 port);
 		SocketAddress(AddressFamily::Family family, const std::string & hostAddress, u16 port);
-		SocketAddress(AddressFamily::Family family, const std::string & hostAddress, const std::string & port);
-		SocketAddress(AddressFamily::Family family, const std::string & addr);
 		explicit SocketAddress(u16 port);
 		SocketAddress(const IPAddress & hostAddress, u16 port);
 		SocketAddress(const std::string & hostAddress, u16 port);
-		SocketAddress(const std::string & hostAddress, const std::string & port);
-		explicit SocketAddress(const std::string & hostAndPort);
 		SocketAddress(const struct sockaddr * addr, socklen_t length);
 		SocketAddress(const SocketAddress & rhs);
 		SocketAddress & operator=(const SocketAddress & rhs);
@@ -89,7 +85,7 @@ inline Net::IPAddress Net::SocketAddress::Host() const {
 	return Impl()->Host();
 }
 
-inline Net::u16 Net::SocketAddress::Port() const {
+inline u16 Net::SocketAddress::Port() const {
 	return Impl()->Port();
 }
 
@@ -113,11 +109,11 @@ inline std::string Net::SocketAddress::ToString() const {
 	return Impl()->ToString();
 }
 
-Net::SocketAddressImpl * Net::SocketAddress::Impl() const {
+inline Net::SocketAddressImpl * Net::SocketAddress::Impl() const {
 	return reinterpret_cast<SocketAddressImpl *>(const_cast<char *>(memory_.buffer));
 }
 
-char * Net::SocketAddress::Storage() {
+inline char * Net::SocketAddress::Storage() {
 	return memory_.buffer;
 }
 

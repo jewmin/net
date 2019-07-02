@@ -93,7 +93,7 @@ inline int Net::IPAddress::AF() const {
 	return Impl()->AF();
 }
 
-inline Net::u32 Net::IPAddress::Scope() const {
+inline u32 Net::IPAddress::Scope() const {
 	return Impl()->Scope();
 }
 

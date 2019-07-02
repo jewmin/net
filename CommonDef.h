@@ -22,12 +22,13 @@
  * SOFTWARE.
  */
 
-#ifndef Net_CommonDef_INCLUDED
-#define Net_CommonDef_INCLUDED
+#ifndef CommonDef_INCLUDED
+#define CommonDef_INCLUDED
 
 #include <set>
 #include <map>
 #include <list>
+#include <atomic>
 #include <vector>
 #include <string>
 #include <cstring>
@@ -36,27 +37,25 @@
 #include <stdexcept>
 #include <unordered_map>
 
-namespace Net {
-	typedef std::int8_t		i8;
-	typedef std::int16_t	i16;
-	typedef std::int32_t	i32;
-	typedef std::int64_t	i64;
+typedef std::int8_t		i8;
+typedef std::int16_t	i16;
+typedef std::int32_t	i32;
+typedef std::int64_t	i64;
 
-	typedef std::uint8_t	u8;
-	typedef std::uint16_t	u16;
-	typedef std::uint32_t	u32;
-	typedef std::uint64_t	u64;
+typedef std::uint8_t	u8;
+typedef std::uint16_t	u16;
+typedef std::uint32_t	u32;
+typedef std::uint64_t	u64;
 
-	template<class S>
-	S Trim(const S & str) {
-		int first = 0;
-		int last = int(str.size()) - 1;
+template<class S>
+S Trim(const S & str) {
+	int first = 0;
+	int last = int(str.size()) - 1;
 
-		while (first <= last && 0x20 == str[first]) ++first;
-		while (last >= first && 0x20 == str[last]) --last;
+	while (first <= last && 0x20 == str[first]) ++first;
+	while (last >= first && 0x20 == str[last]) --last;
 
-		return S(str, first, last - first + 1);
-	}
+	return S(str, first, last - first + 1);
 }
 
 #endif

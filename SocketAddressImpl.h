@@ -92,7 +92,7 @@ inline Net::IPAddress Net::IPv4SocketAddressImpl::Host() const {
 	return IPAddress(&addr_.sin_addr, sizeof(addr_.sin_addr));
 }
 
-inline Net::u16 Net::IPv4SocketAddressImpl::Port() const {
+inline u16 Net::IPv4SocketAddressImpl::Port() const {
 	return addr_.sin_port;
 }
 
@@ -120,7 +120,7 @@ inline Net::IPAddress Net::IPv6SocketAddressImpl::Host() const {
 	return IPAddress(&addr_.sin6_addr, sizeof(addr_.sin6_addr), addr_.sin6_scope_id);
 }
 
-inline Net::u16 Net::IPv6SocketAddressImpl::Port() const {
+inline u16 Net::IPv6SocketAddressImpl::Port() const {
 	return addr_.sin6_port;
 }
 

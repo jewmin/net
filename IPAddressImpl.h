@@ -116,7 +116,7 @@ inline int Net::IPv4AddressImpl::AF() const {
 	return AF_INET;
 }
 
-inline Net::u32 Net::IPv4AddressImpl::Scope() const {
+inline u32 Net::IPv4AddressImpl::Scope() const {
 	return 0;
 }
 
@@ -140,7 +140,7 @@ inline int Net::IPv6AddressImpl::AF() const {
 	return AF_INET6;
 }
 
-inline Net::u32 Net::IPv6AddressImpl::Scope() const {
+inline u32 Net::IPv6AddressImpl::Scope() const {
 	return scope_;
 }
 
