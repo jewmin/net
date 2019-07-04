@@ -65,6 +65,98 @@ namespace Foundation {
 	private:
 		mutable RefCounter counter_;
 	};
+
+	template<class C>
+	class RefPtr {
+	public:
+		RefPtr() : ptr_(nullptr) {
+		}
+
+		RefPtr(C * ptr) : ptr_(ptr) {
+		}
+
+		RefPtr(C * ptr, bool shared) : ptr_(ptr) {
+			if (shared && ptr_) {
+				ptr_->Duplicate();
+			}
+		}
+
+		RefPtr(const RefPtr & ptr) : ptr_(ptr.ptr_) {
+			if (ptr_) {
+				ptr_->Duplicate();
+			}
+		}
+
+		RefPtr(RefPtr && ptr) : ptr_(ptr.ptr_) {
+			ptr.ptr_ = nullptr;
+		}
+
+		RefPtr & operator=(C * ptr) {
+			return Assign(ptr);
+		}
+
+		RefPtr & operator=(const RefPtr & ptr) {
+			return Assign(ptr);
+		}
+
+		RefPtr & operator=(RefPtr && ptr) {
+			MoveAssign(&ptr.ptr_);
+			return *this;
+		}
+
+		~RefPtr() {
+			Release();
+		}
+
+		RefPtr & Assign(C * ptr);
+		RefPtr & Assign(C * ptr, bool shared);
+		RefPtr & Assign(const RefPtr & ptr);
+		void MoveAssign(C * * ptr);
+		void Reset();
+		void Reset(C * ptr);
+		void Reset(C * ptr, bool shared);
+		void Reset(const RefPtr & ptr);
+		void Swap(RefPtr & ptr);
+		C * Duplicate();
+
+		C * operator->();
+		const C * operator->() const;
+		C & operator*();
+		const C & operator*() const;
+		C * Get();
+		const C * Get() const;
+		operator C * ();
+		operator const C * () const;
+		bool operator!() const;
+		bool operator==(C * ptr) const;
+		bool operator==(const C * ptr) const;
+		bool operator==(const RefPtr & ptr) const;
+		bool operator!=(C * ptr) const;
+		bool operator!=(const C * ptr) const;
+		bool operator!=(const RefPtr & ptr) const;
+		bool operator<(C * ptr) const;
+		bool operator<(const C * ptr) const;
+		bool operator<(const RefPtr & ptr) const;
+		bool operator<=(C * ptr) const;
+		bool operator<=(const C * ptr) const;
+		bool operator<=(const RefPtr & ptr) const;
+		bool operator>(C * ptr) const;
+		bool operator>(const C * ptr) const;
+		bool operator>(const RefPtr & ptr) const;
+		bool operator>=(C * ptr) const;
+		bool operator>=(const C * ptr) const;
+		bool operator>=(const RefPtr & ptr) const;
+
+	protected:
+		C * Deref() const;
+		void Release();
+
+	private:
+		C * ptr_;
+	};
+
+	template<class T>
+	using AutoPtr = RefPtr<T>;
 }
 
 //*********************************************************************
@@ -107,6 +199,246 @@ inline void Foundation::RefCountedObject::Release() {
 
 inline int Foundation::RefCountedObject::ReferenceCount() const {
 	return counter_;
+}
+
+//*********************************************************************
+//RefPtr
+//*********************************************************************
+
+template<class C>
+inline Foundation::RefPtr<C> & Foundation::RefPtr<C>::Assign(C * ptr) {
+	if (ptr_ != ptr) {
+		Release();
+		ptr_ = ptr;
+	}
+
+	return *this;
+}
+
+template<class C>
+inline Foundation::RefPtr<C> & Foundation::RefPtr<C>::Assign(C * ptr, bool shared) {
+	if (ptr_ != ptr) {
+		Release();
+		ptr_ = ptr;
+		if (shared && ptr_) {
+			ptr_->Duplicate();
+		}
+	}
+
+	return *this;
+}
+
+template<class C>
+inline Foundation::RefPtr<C> & Foundation::RefPtr<C>::Assign(const RefPtr & ptr) {
+	if (this != &ptr) {
+		Release();
+		ptr_ = ptr.ptr_;
+		if (ptr_) {
+			ptr_->Duplicate();
+		}
+	}
+
+	return *this;
+}
+
+template<class C>
+inline void Foundation::RefPtr<C>::MoveAssign(C ** ptr) {
+	if (ptr_ != *ptr) {
+		Reset();
+		if (*ptr) {
+			ptr_ = *ptr;
+			*ptr = nullptr;
+		}
+	}
+}
+
+template<class C>
+inline void Foundation::RefPtr<C>::Reset() {
+	if (ptr_) {
+		Release();
+		ptr_ = nullptr;
+	}
+}
+
+template<class C>
+inline void Foundation::RefPtr<C>::Reset(C * ptr) {
+	Assign(ptr);
+}
+
+template<class C>
+inline void Foundation::RefPtr<C>::Reset(C * ptr, bool shared) {
+	Assign(ptr, shared);
+}
+
+template<class C>
+inline void Foundation::RefPtr<C>::Reset(const RefPtr & ptr) {
+	Assign(ptr);
+}
+
+template<class C>
+inline void Foundation::RefPtr<C>::Swap(RefPtr & ptr) {
+	std::swap(ptr_, ptr.ptr_);
+}
+
+template<class C>
+inline C * Foundation::RefPtr<C>::Duplicate() {
+	if (ptr_) {
+		ptr_->Duplicate();
+	}
+
+	return ptr_;
+}
+
+template<class C>
+inline C * Foundation::RefPtr<C>::Deref() const {
+	if (ptr_) {
+		return ptr_;
+	}
+	else {
+		throw std::invalid_argument("Deref(): ptr_ is null");
+	}
+}
+
+template<class C>
+inline void Foundation::RefPtr<C>::Release() {
+	if (ptr_) {
+		ptr_->Release();
+	}
+}
+
+template<class C>
+inline C * Foundation::RefPtr<C>::operator->() {
+	return Deref();
+}
+
+template<class C>
+inline const C * Foundation::RefPtr<C>::operator->() const {
+	return Deref();
+}
+
+template<class C>
+inline C & Foundation::RefPtr<C>::operator*() {
+	return *Deref();
+}
+
+template<class C>
+inline const C & Foundation::RefPtr<C>::operator*() const {
+	return *Deref();
+}
+
+template<class C>
+inline C * Foundation::RefPtr<C>::Get() {
+	return ptr_;
+}
+
+template<class C>
+inline const C * Foundation::RefPtr<C>::Get() const {
+	return ptr_;
+}
+
+template<class C>
+inline Foundation::RefPtr<C>::operator C*() {
+	return ptr_;
+}
+
+template<class C>
+inline Foundation::RefPtr<C>::operator const C*() const {
+	return ptr_;
+}
+
+template<class C>
+inline bool Foundation::RefPtr<C>::operator!() const {
+	return nullptr == ptr_;
+}
+
+template<class C>
+inline bool Foundation::RefPtr<C>::operator==(C * ptr) const {
+	return ptr_ == ptr;
+}
+
+template<class C>
+inline bool Foundation::RefPtr<C>::operator==(const C * ptr) const {
+	return ptr_ == ptr;
+}
+
+template<class C>
+inline bool Foundation::RefPtr<C>::operator==(const RefPtr & ptr) const {
+	return ptr_ == ptr.ptr_;
+}
+
+template<class C>
+inline bool Foundation::RefPtr<C>::operator!=(C * ptr) const {
+	return ptr_ != ptr;
+}
+
+template<class C>
+inline bool Foundation::RefPtr<C>::operator!=(const C * ptr) const {
+	return ptr_ != ptr;
+}
+
+template<class C>
+inline bool Foundation::RefPtr<C>::operator!=(const RefPtr & ptr) const {
+	return ptr_ != ptr.ptr_;
+}
+
+template<class C>
+inline bool Foundation::RefPtr<C>::operator<(C * ptr) const {
+	return ptr_ < ptr;
+}
+
+template<class C>
+inline bool Foundation::RefPtr<C>::operator<(const C * ptr) const {
+	return ptr_ < ptr;
+}
+
+template<class C>
+inline bool Foundation::RefPtr<C>::operator<(const RefPtr & ptr) const {
+	return ptr_ < ptr.ptr_;
+}
+
+template<class C>
+inline bool Foundation::RefPtr<C>::operator<=(C * ptr) const {
+	return ptr_ <= ptr;
+}
+
+template<class C>
+inline bool Foundation::RefPtr<C>::operator<=(const C * ptr) const {
+	return ptr_ <= ptr;
+}
+
+template<class C>
+inline bool Foundation::RefPtr<C>::operator<=(const RefPtr & ptr) const {
+	return ptr_ <= ptr.ptr_;
+}
+
+template<class C>
+inline bool Foundation::RefPtr<C>::operator>(C * ptr) const {
+	return ptr_ > ptr;
+}
+
+template<class C>
+inline bool Foundation::RefPtr<C>::operator>(const C * ptr) const {
+	return ptr_ > ptr;
+}
+
+template<class C>
+inline bool Foundation::RefPtr<C>::operator>(const RefPtr & ptr) const {
+	return ptr_ > ptr.ptr_;
+}
+
+template<class C>
+inline bool Foundation::RefPtr<C>::operator>=(C * ptr) const {
+	return ptr_ >= ptr;
+}
+
+template<class C>
+inline bool Foundation::RefPtr<C>::operator>=(const C * ptr) const {
+	return ptr_ >= ptr;
+}
+
+template<class C>
+inline bool Foundation::RefPtr<C>::operator>=(const RefPtr & ptr) const {
+	return ptr_ >= ptr.ptr_;
 }
 
 #endif
