@@ -1,38 +1,49 @@
 # cmake版本
-cmake_minimum_required(VERSION 3.7.2)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.7.2)
 
 # 项目名
-project(libnet VERSION 1.0.1)
+PROJECT(libnet VERSION 1.0.1)
 
-# Include files
-FILE(GLOB all_headers "*.h*")
-source_group("include" FILES ${all_headers})
-
-# Source files
-FILE(GLOB all_srcs "*.c*")
-source_group("src" FILES ${all_srcs})
+# 添加文件
+FILE(GLOB all_headers "*.h")
+FILE(GLOB all_srcs "*.cc")
+SOURCE_GROUP("" FILES ${all_headers} ${all_srcs})
+SET(directory "Address" "Sockets" "Reactor" "Notifications")
+FOREACH(_dir ${directory})
+    FILE(GLOB ${_dir}_headers "${_dir}/*.h")
+    FILE(GLOB ${_dir}_srcs "${_dir}/*.cc")
+    SOURCE_GROUP("${_dir}" FILES ${${_dir}_headers} ${${_dir}_srcs})
+    FOREACH(_file ${${_dir}_headers})
+        LIST(APPEND all_headers ${_file})
+    ENDFOREACH()
+    FOREACH(_file ${${_dir}_srcs})
+        LIST(APPEND all_srcs ${_file})
+    ENDFOREACH()
+ENDFOREACH()
+# MESSAGE(${all_headers})
+# MESSAGE(${all_srcs})
 
 # 设置
-set(CMAKE_BUILD_TYPE Debug)
-set(CMAKE_SUPPRESS_REGENERATION true)
+SET(CMAKE_BUILD_TYPE Debug)
+SET(CMAKE_SUPPRESS_REGENERATION true)
 
-if (MSVC)
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-endif()
+IF (MSVC)
+    SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
+    SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
+    ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
+ENDIF()
 
-if (CMAKE_COMPILER_IS_GNUCXX)
-    add_definitions(-std=c++11)
-endif()
+IF (CMAKE_COMPILER_IS_GNUCXX)
+    ADD_DEFINITIONS(-std=c++11)
+ENDIF()
 
 # 第三方类库
-include_directories(${libnet_SOURCE_DIR})
-include_directories(${libnet_SOURCE_DIR}/libuv/include)
+INCLUDE_DIRECTORIES(${libnet_SOURCE_DIR})
+INCLUDE_DIRECTORIES(${libnet_SOURCE_DIR}/libuv/include)
 
 # 生成静态库
-if (MSVC)
-    add_library(libnet STATIC ${all_headers} ${all_srcs})
-else()
-    add_library(net STATIC ${all_headers} ${all_srcs})
-endif()
+IF (MSVC)
+    ADD_LIBRARY(libnet STATIC ${all_headers} ${all_srcs})
+ELSE()
+    ADD_LIBRARY(net STATIC ${all_headers} ${all_srcs})
+ENDIF()
