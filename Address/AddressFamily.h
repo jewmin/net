@@ -27,10 +27,7 @@
 
 namespace Net {
 	struct AddressFamily {
-		enum Family {
-			IPv4,
-			IPv6
-		};
+		enum Family { IPv4, IPv6 };
 	};
 }
 

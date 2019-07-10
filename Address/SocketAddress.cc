@@ -28,18 +28,6 @@ Net::SocketAddress::SocketAddress() {
 	NewIPv4();
 }
 
-Net::SocketAddress::SocketAddress(AddressFamily::Family family) {
-	Init(IPAddress(family), 0);
-}
-
-Net::SocketAddress::SocketAddress(AddressFamily::Family family, u16 port) {
-	Init(IPAddress(family), port);
-}
-
-Net::SocketAddress::SocketAddress(AddressFamily::Family family, const std::string & hostAddress, u16 port) {
-	Init(family, hostAddress, port);
-}
-
 Net::SocketAddress::SocketAddress(u16 port) {
 	Init(IPAddress(), port);
 }
@@ -100,26 +88,12 @@ void Net::SocketAddress::Init(const IPAddress & hostAddress, u16 port) {
 		NewIPv4(hostAddress, port);
 	} else if (IPv6 == hostAddress.Family()) {
 		NewIPv6(hostAddress, port);
-	} else {
-		throw std::invalid_argument("Init(): unsupported IP address family");
 	}
 }
 
 void Net::SocketAddress::Init(const std::string & hostAddress, u16 port) {
 	IPAddress ip;
 	if (IPAddress::TryParse(hostAddress, ip)) {
-		Init(ip, port);
-	} else {
-		throw std::invalid_argument(std::string("Init(): No address found for host - ") + hostAddress);
-	}
-}
-
-void Net::SocketAddress::Init(AddressFamily::Family family, const std::string & hostAddress, u16 port) {
-	IPAddress ip;
-	if (IPAddress::TryParse(hostAddress, ip)) {
-		if (ip.Family() != family) {
-			throw std::invalid_argument(std::string("Init(): IP address family not match - ") + hostAddress);
-		}
 		Init(ip, port);
 	} else {
 		throw std::invalid_argument(std::string("Init(): No address found for host - ") + hostAddress);

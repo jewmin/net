@@ -28,16 +28,6 @@ Net::IPAddress::IPAddress() {
 	NewIPv4();
 }
 
-Net::IPAddress::IPAddress(AddressFamily::Family family) {
-	if (IPv4 == family) {
-		NewIPv4();
-	} else if (IPv6 == family) {
-		NewIPv6();
-	} else {
-		throw std::invalid_argument("IPAddress(): invalid or unsupported address family");
-	}
-}
-
 Net::IPAddress::IPAddress(const std::string & addr) {
 	if (addr.empty() || Trim(addr) == "0.0.0.0") {
 		NewIPv4();
@@ -64,13 +54,12 @@ Net::IPAddress::IPAddress(const std::string & addr) {
 	throw std::invalid_argument(std::string("IPAddress(): invalid or unsupported address - ") + addr);
 }
 
-Net::IPAddress::IPAddress(const std::string & addr, AddressFamily::Family family) {
-	if (IPv4 == family) {
-		IPv4AddressImpl addr4(IPv4AddressImpl::Parse(addr));
-		NewIPv4(addr4.Addr());
-	} else if (IPv6 == family) {
-		IPv6AddressImpl addr6(IPv6AddressImpl::Parse(addr));
-		NewIPv6(addr6.Addr(), addr6.Scope());
+Net::IPAddress::IPAddress(const struct sockaddr & sockaddr) {
+	u16 family = sockaddr.sa_family;
+	if (AF_INET == family) {
+		NewIPv4(&reinterpret_cast<const struct sockaddr_in *>(&sockaddr)->sin_addr);
+	} else if (AF_INET6 == family) {
+		NewIPv6(&reinterpret_cast<const struct sockaddr_in6 *>(&sockaddr)->sin6_addr, reinterpret_cast<const struct sockaddr_in6 *>(&sockaddr)->sin6_scope_id);
 	} else {
 		throw std::invalid_argument("IPAddress(): invalid or unsupported address family");
 	}
@@ -83,17 +72,6 @@ Net::IPAddress::IPAddress(const void * addr, socklen_t length, u32 scope) {
 		NewIPv6(addr, scope);
 	} else {
 		throw std::invalid_argument("IPAddress(): invalid address length");
-	}
-}
-
-Net::IPAddress::IPAddress(const struct sockaddr & sockaddr) {
-	u16 family = sockaddr.sa_family;
-	if (AF_INET == family) {
-		NewIPv4(&reinterpret_cast<const struct sockaddr_in *>(&sockaddr)->sin_addr);
-	} else if (AF_INET6 == family) {
-		NewIPv6(&reinterpret_cast<const struct sockaddr_in6 *>(&sockaddr)->sin6_addr, reinterpret_cast<const struct sockaddr_in6 *>(&sockaddr)->sin6_scope_id);
-	} else {
-		throw std::invalid_argument("IPAddress(): invalid or unsupported address family");
 	}
 }
 
@@ -112,8 +90,6 @@ Net::IPAddress & Net::IPAddress::operator=(const IPAddress & rhs) {
 			NewIPv4(rhs.Addr());
 		} else if (IPv6 == rhs.Family()) {
 			NewIPv6(rhs.Addr(), rhs.Scope());
-		} else {
-			throw std::invalid_argument("operator=(): invalid or unsupported address family");
 		}
 	}
 
@@ -122,6 +98,34 @@ Net::IPAddress & Net::IPAddress::operator=(const IPAddress & rhs) {
 
 Net::IPAddress::~IPAddress() {
 	Destroy();
+}
+
+bool Net::IPAddress::operator==(const IPAddress & addr) const {
+	return Length() == addr.Length() && Scope() == addr.Scope() && 0 == std::memcmp(Addr(), addr.Addr(), Length());
+}
+
+bool Net::IPAddress::operator!=(const IPAddress & addr) const {
+	return !(*this == addr);
+}
+
+void Net::IPAddress::NewIPv4() {
+	new(Storage())IPv4AddressImpl();
+}
+
+void Net::IPAddress::NewIPv4(const void * host) {
+	new(Storage())IPv4AddressImpl(host);
+}
+
+void Net::IPAddress::NewIPv6() {
+	new(Storage())IPv6AddressImpl();
+}
+
+void Net::IPAddress::NewIPv6(const void * host, u32 scope) {
+	new(Storage())IPv6AddressImpl(host, scope);
+}
+
+void Net::IPAddress::Destroy() {
+	Impl()->~IPAddressImpl();
 }
 
 Net::IPAddress Net::IPAddress::Parse(const std::string & addr) {
@@ -152,40 +156,4 @@ bool Net::IPAddress::TryParse(const std::string & addr, IPAddress & result) {
 	}
 
 	return false;
-}
-
-bool Net::IPAddress::operator==(const IPAddress & addr) const {
-	if (Length() != addr.Length()) {
-		return false;
-	}
-
-	if (Scope() != addr.Scope()) {
-		return false;
-	}
-
-	return 0 == std::memcmp(Addr(), addr.Addr(), Length());
-}
-
-bool Net::IPAddress::operator!=(const IPAddress & addr) const {
-	return !(*this == addr);
-}
-
-void Net::IPAddress::NewIPv4() {
-	new(Storage())IPv4AddressImpl();
-}
-
-void Net::IPAddress::NewIPv4(const void * host) {
-	new(Storage())IPv4AddressImpl(host);
-}
-
-void Net::IPAddress::NewIPv6() {
-	new(Storage())IPv6AddressImpl();
-}
-
-void Net::IPAddress::NewIPv6(const void * host, u32 scope) {
-	new(Storage())IPv6AddressImpl(host, scope);
-}
-
-void Net::IPAddress::Destroy() {
-	Impl()->~IPAddressImpl();
 }

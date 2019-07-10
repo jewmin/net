@@ -65,21 +65,8 @@ std::string Net::IPv4AddressImpl::ToString() const {
 	if (0 == err) {
 		result = buf;
 	}
+
 	return result;
-}
-
-Net::IPv4AddressImpl Net::IPv4AddressImpl::Parse(const std::string & addr) {
-	if (addr.empty()) {
-		return IPv4AddressImpl();
-	}
-
-	struct in_addr ia;
-	int err = uv_inet_pton(AF_INET, addr.c_str(), &ia.s_addr);
-	if (0 != err) {
-		return IPv4AddressImpl();
-	} else {
-		return IPv4AddressImpl(&ia);
-	}
 }
 
 bool Net::IPv4AddressImpl::operator==(const IPv4AddressImpl & addr) const {
@@ -90,22 +77,33 @@ bool Net::IPv4AddressImpl::operator!=(const IPv4AddressImpl & addr) const {
 	return !(*this == addr);
 }
 
+Net::IPv4AddressImpl Net::IPv4AddressImpl::Parse(const std::string & addr) {
+	if (addr.empty()) {
+		return IPv4AddressImpl();
+	}
+
+	struct sockaddr_in si;
+	int err = uv_ip4_addr(addr.c_str(), 0, &si);
+	if (0 != err) {
+		return IPv4AddressImpl();
+	} else {
+		return IPv4AddressImpl(&si.sin_addr);
+	}
+}
+
 //*********************************************************************
 //IPv6AddressImpl
 //*********************************************************************
 
-Net::IPv6AddressImpl::IPv6AddressImpl()
-	: scope_(0) {
+Net::IPv6AddressImpl::IPv6AddressImpl() : scope_(0) {
 	std::memset(&addr_, 0, sizeof(addr_));
 }
 
-Net::IPv6AddressImpl::IPv6AddressImpl(const void * addr, u32 scope)
-	: scope_(scope) {
+Net::IPv6AddressImpl::IPv6AddressImpl(const void * addr, u32 scope) : scope_(scope) {
 	std::memcpy(&addr_, addr, sizeof(addr_));
 }
 
-Net::IPv6AddressImpl::IPv6AddressImpl(const IPv6AddressImpl & rhs)
-	: scope_(rhs.scope_) {
+Net::IPv6AddressImpl::IPv6AddressImpl(const IPv6AddressImpl & rhs) : scope_(rhs.scope_) {
 	std::memcpy(&addr_, &rhs.addr_, sizeof(addr_));
 }
 
@@ -129,21 +127,8 @@ std::string Net::IPv6AddressImpl::ToString() const {
 	if (0 == err) {
 		result = buf;
 	}
-	return result;
-}
 
-Net::IPv6AddressImpl Net::IPv6AddressImpl::Parse(const std::string & addr) {
-	if (addr.empty()) {
-		return IPv6AddressImpl();
-	}
-	
-	struct sockaddr_in6 saddr;
-	int err = uv_ip6_addr(addr.c_str(), 0, &saddr);
-	if (0 != err) {
-		return IPv6AddressImpl();
-	} else {
-		return IPv6AddressImpl(&saddr.sin6_addr, saddr.sin6_scope_id);
-	}
+	return result;
 }
 
 bool Net::IPv6AddressImpl::operator==(const IPv6AddressImpl & addr) const {
@@ -152,4 +137,18 @@ bool Net::IPv6AddressImpl::operator==(const IPv6AddressImpl & addr) const {
 
 bool Net::IPv6AddressImpl::operator!=(const IPv6AddressImpl & addr) const {
 	return !(*this == addr);
+}
+
+Net::IPv6AddressImpl Net::IPv6AddressImpl::Parse(const std::string & addr) {
+	if (addr.empty()) {
+		return IPv6AddressImpl();
+	}
+	
+	struct sockaddr_in6 si;
+	int err = uv_ip6_addr(addr.c_str(), 0, &si);
+	if (0 != err) {
+		return IPv6AddressImpl();
+	} else {
+		return IPv6AddressImpl(&si.sin6_addr, si.sin6_scope_id);
+	}
 }

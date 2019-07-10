@@ -32,8 +32,6 @@
 namespace Net {
 	class IPAddressImpl {
 	public:
-		IPAddressImpl(const IPAddressImpl &) = delete;
-		IPAddressImpl & operator=(const IPAddressImpl &) = delete;
 		virtual ~IPAddressImpl();
 		
 		virtual IPAddressImpl * Clone() const = 0;
@@ -46,6 +44,10 @@ namespace Net {
 
 	protected:
 		IPAddressImpl();
+
+	private:
+		IPAddressImpl(const IPAddressImpl &) = delete;
+		IPAddressImpl & operator=(const IPAddressImpl &) = delete;
 	};
 
 	class IPv4AddressImpl : public IPAddressImpl {
@@ -62,10 +64,10 @@ namespace Net {
 		virtual AddressFamily::Family Family() const;
 		virtual int AF() const;
 		virtual u32 Scope() const;
-
-		static IPv4AddressImpl Parse(const std::string & addr);
 		bool operator==(const IPv4AddressImpl & addr) const;
 		bool operator!=(const IPv4AddressImpl & addr) const;
+
+		static IPv4AddressImpl Parse(const std::string & addr);
 
 	private:
 		struct in_addr addr_;
@@ -85,10 +87,10 @@ namespace Net {
 		virtual AddressFamily::Family Family() const;
 		virtual int AF() const;
 		virtual u32 Scope() const;
-		
-		static IPv6AddressImpl Parse(const std::string & addr);
 		bool operator==(const IPv6AddressImpl & addr) const;
 		bool operator!=(const IPv6AddressImpl & addr) const;
+		
+		static IPv6AddressImpl Parse(const std::string & addr);
 
 	private:
 		struct in6_addr addr_;

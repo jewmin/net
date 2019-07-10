@@ -30,8 +30,6 @@
 namespace Net {
 	class SocketAddressImpl {
 	public:
-		SocketAddressImpl(const SocketAddressImpl &) = delete;
-		SocketAddressImpl & operator=(const SocketAddressImpl &) = delete;
 		virtual ~SocketAddressImpl();
 
 		virtual IPAddress Host() const = 0;
@@ -44,6 +42,10 @@ namespace Net {
 
 	protected:
 		SocketAddressImpl();
+
+	private:
+		SocketAddressImpl(const SocketAddressImpl &) = delete;
+		SocketAddressImpl & operator=(const SocketAddressImpl &) = delete;
 	};
 
 	class IPv4SocketAddressImpl : public SocketAddressImpl {
@@ -80,7 +82,6 @@ namespace Net {
 
 	private:
 		struct sockaddr_in6 addr_;
-
 	};
 }
 

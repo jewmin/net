@@ -31,11 +31,9 @@ namespace Net {
 	class IPAddress {
 	public:
 		IPAddress();
-		explicit IPAddress(AddressFamily::Family family);
 		explicit IPAddress(const std::string & addr);
-		IPAddress(const std::string & addr, AddressFamily::Family family);
-		IPAddress(const void * addr, socklen_t length, u32 scope = 0);
 		explicit IPAddress(const struct sockaddr & sockaddr);
+		IPAddress(const void * addr, socklen_t length, u32 scope = 0);
 		IPAddress(const IPAddress & rhs);
 		IPAddress & operator=(const IPAddress & rhs);
 		~IPAddress();
@@ -46,11 +44,11 @@ namespace Net {
 		AddressFamily::Family Family() const;
 		int AF() const;
 		u32 Scope() const;
+		bool operator==(const IPAddress & addr) const;
+		bool operator!=(const IPAddress & addr) const;
 
 		static IPAddress Parse(const std::string & addr);
 		static bool TryParse(const std::string & addr, IPAddress & result);
-		bool operator==(const IPAddress & addr) const;
-		bool operator!=(const IPAddress & addr) const;
 
 		static const AddressFamily::Family IPv4 = AddressFamily::IPv4;
 		static const AddressFamily::Family IPv6 = AddressFamily::IPv6;
@@ -64,11 +62,10 @@ namespace Net {
 		void Destroy();
 		char * Storage();
 
-		static const u32 kSize = sizeof(IPv6AddressImpl);
 		union {
-			char buffer[kSize];
+			char buffer[sizeof(IPv6AddressImpl)];
 		private:
-			std::aligned_storage<kSize>::type aligner;
+			std::aligned_storage<sizeof(IPv6AddressImpl)>::type aligner;
 		} memory_;
 	};
 }

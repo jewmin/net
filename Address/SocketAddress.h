@@ -31,9 +31,6 @@ namespace Net {
 	class SocketAddress {
 	public:
 		SocketAddress();
-		explicit SocketAddress(AddressFamily::Family family);
-		SocketAddress(AddressFamily::Family family, u16 port);
-		SocketAddress(AddressFamily::Family family, const std::string & hostAddress, u16 port);
 		explicit SocketAddress(u16 port);
 		SocketAddress(const IPAddress & hostAddress, u16 port);
 		SocketAddress(const std::string & hostAddress, u16 port);
@@ -49,7 +46,6 @@ namespace Net {
 		int AF() const;
 		AddressFamily::Family Family() const;
 		std::string ToString() const;
-
 		bool operator==(const SocketAddress & socketAddress) const;
 		bool operator!=(const SocketAddress & socketAddress) const;
 
@@ -59,7 +55,6 @@ namespace Net {
 	protected:
 		void Init(const IPAddress & hostAddress, u16 port);
 		void Init(const std::string & hostAddress, u16 port);
-		void Init(AddressFamily::Family family, const std::string & hostAddress, u16 port);
 
 	private:
 		SocketAddressImpl * Impl() const;
@@ -72,11 +67,10 @@ namespace Net {
 		void Destroy();
 		char * Storage();
 
-		static const u32 kSize = sizeof(IPv6SocketAddressImpl);
 		union {
-			char buffer[kSize];
+			char buffer[sizeof(IPv6SocketAddressImpl)];
 		private:
-			std::aligned_storage<kSize>::type aligner;
+			std::aligned_storage<sizeof(IPv6SocketAddressImpl)>::type aligner;
 		} memory_;
 	};
 }
