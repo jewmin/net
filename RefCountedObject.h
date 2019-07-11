@@ -30,12 +30,11 @@
 namespace Foundation {
 	class RefCounter {
 	public:
-		RefCounter();
-		RefCounter(RefCounter &&) = delete;
-		RefCounter(const RefCounter &) = delete;
-		RefCounter & operator=(RefCounter &&) = delete;
-		RefCounter & operator=(const RefCounter &) = delete;
-		~RefCounter();
+		RefCounter() : counter_(1) {
+		}
+
+		~RefCounter() {
+		}
 
 		int operator++();
 		int operator++(int);
@@ -44,25 +43,33 @@ namespace Foundation {
 		operator int();
 
 	private:
+		RefCounter(RefCounter &&) = delete;
+		RefCounter(const RefCounter &) = delete;
+		RefCounter & operator=(RefCounter &&) = delete;
+		RefCounter & operator=(const RefCounter &) = delete;
+
 		mutable std::atomic<int> counter_;
 	};
 
 	class RefCountedObject {
 	public:
-		RefCountedObject();
-		RefCountedObject(RefCountedObject &&) = delete;
-		RefCountedObject(const RefCountedObject &) = delete;
-		RefCountedObject & operator=(RefCountedObject &&) = delete;
-		RefCountedObject & operator=(const RefCountedObject &) = delete;
+		RefCountedObject() {
+		}
 
 		void Duplicate() const;
 		void Release();
 		int ReferenceCount() const;
 
 	protected:
-		virtual ~RefCountedObject();
+		virtual ~RefCountedObject() {
+		}
 
 	private:
+		RefCountedObject(RefCountedObject &&) = delete;
+		RefCountedObject(const RefCountedObject &) = delete;
+		RefCountedObject & operator=(RefCountedObject &&) = delete;
+		RefCountedObject & operator=(const RefCountedObject &) = delete;
+
 		mutable RefCounter counter_;
 	};
 
