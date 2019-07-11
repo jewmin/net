@@ -47,3 +47,6 @@ IF (MSVC)
 ELSE()
     ADD_LIBRARY(net STATIC ${all_headers} ${all_srcs})
 ENDIF()
+
+# 添加单元测试项目
+ADD_SUBDIRECTORY(TestSuite)
