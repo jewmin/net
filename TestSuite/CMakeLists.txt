@@ -1,0 +1,50 @@
+# cmake版本
+CMAKE_MINIMUM_REQUIRED(VERSION 3.7.2)
+
+# 项目名
+PROJECT(test_suite VERSION 1.0.0)
+
+# 添加文件
+FILE(GLOB all_headers "*.h")
+FILE(GLOB all_srcs "*.cc")
+# MESSAGE(${all_headers})
+# MESSAGE(${all_srcs})
+
+# 设置
+SET(CMAKE_BUILD_TYPE Debug)
+SET(CMAKE_SUPPRESS_REGENERATION true)
+
+IF (MSVC)
+    SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
+    SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
+    ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
+    ADD_DEFINITIONS(-DUSE_VLD)
+ELSE()
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+ENDIF()
+
+IF(CMAKE_COMPILER_IS_GNUCXX)
+    ADD_DEFINITIONS(-std=c++11)
+ENDIF()
+
+# 第三方类库
+INCLUDE_DIRECTORIES(${libnet_SOURCE_DIR})
+INCLUDE_DIRECTORIES(${libnet_SOURCE_DIR}/libuv/include)
+INCLUDE_DIRECTORIES(${test_suite_SOURCE_DIR}/gtest/include)
+IF (MSVC)
+    INCLUDE_DIRECTORIES(${test_suite_SOURCE_DIR}/vld/include)
+ENDIF()
+
+LINK_DIRECTORIES(${libnet_SOURCE_DIR}/libuv/lib)
+LINK_DIRECTORIES(${test_suite_SOURCE_DIR}/gtest/lib)
+IF (MSVC)
+    LINK_DIRECTORIES(${test_suite_SOURCE_DIR}/vld/lib)
+ENDIF()
+
+# 生成可执行文件
+ADD_EXECUTABLE(${PROJECT_NAME} ${all_headers} ${all_srcs})
+IF (MSVC)
+    TARGET_LINK_LIBRARIES(${PROJECT_NAME} libnet libuv gtestd gmockd advapi32 iphlpapi psapi ws2_32 userenv vld)
+ELSE()
+    TARGET_LINK_LIBRARIES(${PROJECT_NAME} net uv gtest gmock)
+ENDIF()
