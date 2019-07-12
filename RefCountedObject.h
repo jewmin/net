@@ -300,8 +300,7 @@ template<class C>
 inline C * Foundation::RefPtr<C>::Deref() const {
 	if (ptr_) {
 		return ptr_;
-	}
-	else {
+	} else {
 		throw std::invalid_argument("Deref(): ptr_ is null");
 	}
 }
