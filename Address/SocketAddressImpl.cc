@@ -52,7 +52,7 @@ Net::IPv4SocketAddressImpl::IPv4SocketAddressImpl(const void * addr, u16 port) {
 
 std::string Net::IPv4SocketAddressImpl::ToString() const {
 	std::stringstream result;
-	result << Host().ToString() << ":" << ::ntohs(Port());
+	result << Host().ToString() << ":" << Port();
 	return result.str();
 }
 
@@ -79,6 +79,6 @@ Net::IPv6SocketAddressImpl::IPv6SocketAddressImpl(const void * addr, u16 port, u
 
 std::string Net::IPv6SocketAddressImpl::ToString() const {
 	std::stringstream result;
-	result << "[" << Host().ToString() << "]:" << ::ntohs(Port());
+	result << "[" << Host().ToString() << "]:" << Port();
 	return result.str();
 }

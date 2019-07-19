@@ -117,7 +117,7 @@ void Net::SocketAddress::NewIPv6(const struct sockaddr_in6 * addr) {
 }
 
 void Net::SocketAddress::NewIPv6(const IPAddress & hostAddress, u16 port) {
-	new(Storage())IPv6SocketAddressImpl(hostAddress.Addr(), port);
+	new(Storage())IPv6SocketAddressImpl(hostAddress.Addr(), port, hostAddress.Scope());
 }
 
 void Net::SocketAddress::Destroy() {

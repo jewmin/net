@@ -94,7 +94,7 @@ inline Net::IPAddress Net::IPv4SocketAddressImpl::Host() const {
 }
 
 inline u16 Net::IPv4SocketAddressImpl::Port() const {
-	return addr_.sin_port;
+	return ::ntohs(addr_.sin_port);
 }
 
 inline socklen_t Net::IPv4SocketAddressImpl::Length() const {
@@ -122,7 +122,7 @@ inline Net::IPAddress Net::IPv6SocketAddressImpl::Host() const {
 }
 
 inline u16 Net::IPv6SocketAddressImpl::Port() const {
-	return addr_.sin6_port;
+	return ::ntohs(addr_.sin6_port);
 }
 
 inline socklen_t Net::IPv6SocketAddressImpl::Length() const {
