@@ -31,9 +31,11 @@
 #include <atomic>
 #include <vector>
 #include <string>
+#include <memory>
 #include <cstring>
 #include <cstdint>
 #include <sstream>
+#include <typeinfo>
 #include <stdexcept>
 #include <unordered_map>
 
