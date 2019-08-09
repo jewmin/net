@@ -34,6 +34,7 @@
 #include <memory>
 #include <cstring>
 #include <cstdint>
+#include <cstdarg>
 #include <sstream>
 #include <typeinfo>
 #include <stdexcept>
@@ -58,6 +59,33 @@ S Trim(const S & str) {
 	while (last >= first && 0x20 == str[last]) --last;
 
 	return S(str, first, last - first + 1);
+}
+
+void LogInfo(const char * fmt, ...) {
+	va_list ap;
+	va_start(ap, fmt);
+	Log(stdout, "info", fmt, ap);
+	va_end(ap);
+}
+
+void LogWarn(const char * fmt, ...) {
+	va_list ap;
+	va_start(ap, fmt);
+	Log(stderr, "warn", fmt, ap);
+	va_end(ap);
+}
+
+void LogErr(const char * fmt, ...) {
+	va_list ap;
+	va_start(ap, fmt);
+	Log(stderr, "error", fmt, ap);
+	va_end(ap);
+}
+
+static void Log(FILE * stream, const char * label, const char * fmt, va_list ap) {
+	char fmtbuf[1024];
+	std::vsnprintf(fmtbuf, sizeof(fmtbuf), fmt, ap);
+	std::fprintf(stream, "%s %s\n", label, fmtbuf);
 }
 
 #endif
