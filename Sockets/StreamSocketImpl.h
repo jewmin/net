@@ -22,12 +22,18 @@
  * SOFTWARE.
  */
 
-#ifndef Net_AddressFamily_INCLUDED
-#define Net_AddressFamily_INCLUDED
+#ifndef Net_StreamSocketImpl_INCLUDED
+#define Net_StreamSocketImpl_INCLUDED
+
+#include "SocketImpl.h"
 
 namespace Net {
-	struct AddressFamily {
-		enum Family { IPv4, IPv6 };
+	class StreamSocketImpl : public SocketImpl {
+	public:
+		StreamSocketImpl();
+
+	protected:
+		virtual ~StreamSocketImpl();
 	};
 }
 

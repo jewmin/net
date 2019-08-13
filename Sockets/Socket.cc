@@ -22,13 +22,32 @@
  * SOFTWARE.
  */
 
-#ifndef Net_AddressFamily_INCLUDED
-#define Net_AddressFamily_INCLUDED
+#include "Socket.h"
+#include "StreamSocketImpl.h"
 
-namespace Net {
-	struct AddressFamily {
-		enum Family { IPv4, IPv6 };
-	};
+Net::Socket::Socket() : impl_(new StreamSocketImpl()) {
 }
 
-#endif
+Net::Socket::Socket(SocketImpl * impl) : impl_(impl) {
+}
+
+Net::Socket::Socket(const Socket & rhs) : impl_(rhs.impl_) {
+	impl_->Duplicate();
+}
+
+Net::Socket & Net::Socket::operator=(const Socket & rhs) {
+	if (this != &rhs) {
+		if (impl_) {
+			impl_->Release();
+		}
+		impl_ = rhs.impl_;
+		if (impl_) {
+			impl_->Duplicate();
+		}
+	}
+	return *this;
+}
+
+Net::Socket::~Socket() {
+	impl_->Release();
+}

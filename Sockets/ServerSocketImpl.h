@@ -22,12 +22,19 @@
  * SOFTWARE.
  */
 
-#ifndef Net_AddressFamily_INCLUDED
-#define Net_AddressFamily_INCLUDED
+
+#ifndef Net_ServerSocketImpl_INCLUDED
+#define Net_ServerSocketImpl_INCLUDED
+
+#include "SocketImpl.h"
 
 namespace Net {
-	struct AddressFamily {
-		enum Family { IPv4, IPv6 };
+	class ServerSocketImpl : public SocketImpl {
+	public:
+		ServerSocketImpl();
+
+	protected:
+		virtual ~ServerSocketImpl();
 	};
 }
 

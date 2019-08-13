@@ -1,3 +1,4 @@
+#include "ServerSocketImpl.h"
 /*
  * MIT License
  *
@@ -22,13 +23,8 @@
  * SOFTWARE.
  */
 
-#ifndef Net_AddressFamily_INCLUDED
-#define Net_AddressFamily_INCLUDED
-
-namespace Net {
-	struct AddressFamily {
-		enum Family { IPv4, IPv6 };
-	};
+Net::ServerSocketImpl::ServerSocketImpl() : SocketImpl() {
 }
 
-#endif
+Net::ServerSocketImpl::~ServerSocketImpl() {
+}

@@ -22,13 +22,32 @@
  * SOFTWARE.
  */
 
-#ifndef Net_AddressFamily_INCLUDED
-#define Net_AddressFamily_INCLUDED
+#include "StreamSocket.h"
+#include "StreamSocketImpl.h"
 
-namespace Net {
-	struct AddressFamily {
-		enum Family { IPv4, IPv6 };
-	};
+Net::StreamSocket::StreamSocket() : Socket(new StreamSocketImpl()) {
 }
 
-#endif
+Net::StreamSocket::StreamSocket(SocketImpl * impl) : Socket(impl) {
+	if (!dynamic_cast<StreamSocketImpl *>(Impl())) {
+		throw std::invalid_argument("Cannot assign incompatible socket");
+	}
+}
+
+Net::StreamSocket::StreamSocket(const Socket & socket) : Socket(socket) {
+	if (!dynamic_cast<StreamSocketImpl *>(Impl())) {
+		throw std::invalid_argument("Cannot assign incompatible socket");
+	}
+}
+
+Net::StreamSocket & Net::StreamSocket::operator=(const Socket & socket) {
+	if (dynamic_cast<StreamSocketImpl *>(socket.Impl())) {
+		Socket::operator=(socket);
+	} else {
+		throw std::invalid_argument("Cannot assign incompatible socket");
+	}
+	return *this;
+}
+
+Net::StreamSocket::~StreamSocket() {
+}

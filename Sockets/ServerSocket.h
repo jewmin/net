@@ -22,13 +22,36 @@
  * SOFTWARE.
  */
 
-#ifndef Net_AddressFamily_INCLUDED
-#define Net_AddressFamily_INCLUDED
+#ifndef Net_ServerSocket_INCLUDED
+#define Net_ServerSocket_INCLUDED
+
+#include "Socket.h"
+#include "StreamSocket.h"
 
 namespace Net {
-	struct AddressFamily {
-		enum Family { IPv4, IPv6 };
+	class ServerSocket : public Socket {
+	public:
+		ServerSocket();
+		ServerSocket(const Socket & socket);
+		ServerSocket & operator=(const Socket & socket);
+		virtual ~ServerSocket();
+
+		int Bind(const SocketAddress & address, bool ipV6Only = false, bool reuseAddress = false);
+		int Listen(int backlog, uv_connection_cb cb);
+		bool AcceptConnection(StreamSocket & socket, SocketAddress & clientAddr);
+		bool AcceptConnection(StreamSocket & socket);
+
+	protected:
+		explicit ServerSocket(SocketImpl * impl);
 	};
+}
+
+inline int Net::ServerSocket::Bind(const SocketAddress & address, bool ipV6Only, bool reuseAddress) {
+	return Impl()->Bind(address, ipV6Only, reuseAddress);
+}
+
+inline int Net::ServerSocket::Listen(int backlog, uv_connection_cb cb) {
+	return Impl()->Listen(backlog, cb);
 }
 
 #endif

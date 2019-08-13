@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef Net_IPAddress_INCLUDE
-#define Net_IPAddress_INCLUDE
+#ifndef Net_IPAddress_INCLUDED
+#define Net_IPAddress_INCLUDED
 
 #include "IPAddressImpl.h"
 
