@@ -77,17 +77,13 @@ int Net::SocketImpl::Listen(int backlog, uv_connection_cb cb) {
 	return status;
 }
 
-int Net::SocketImpl::Connect(const SocketAddress & address, void * ud, uv_connect_cb cb) {
+int Net::SocketImpl::Connect(const SocketAddress & address, uv_connect_t * req, uv_connect_cb cb) {
 	int status = UV_UNKNOWN;
 	if (handle_ && UV_TCP == handle_->type) {
-		uv_connect_t * req = static_cast<uv_connect_t *>(malloc(sizeof(uv_connect_t)));
 		status = uv_tcp_connect(req, reinterpret_cast<uv_tcp_t *>(handle_), address.Addr(), cb);
 		if (status < 0) {
-			free(req);
 			LogErr("连接远端(%s)失败. %s", address.ToString().c_str(), uv_strerror(status));
 			Close();
-		} else {
-			req->data = ud;
 		}
 	}
 	return status;

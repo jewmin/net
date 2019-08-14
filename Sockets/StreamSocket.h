@@ -36,7 +36,7 @@ namespace Net {
 		virtual ~StreamSocket();
 
 		int Bind(const SocketAddress & address, bool ipV6Only = false, bool reuseAddress = false);
-		int Connect(const SocketAddress & address, void * ud, uv_connect_cb cb);
+		int Connect(const SocketAddress & address, uv_connect_t * req, uv_connect_cb cb);
 		void ShutdownReceive();
 		void ShutdownSend(uv_shutdown_cb cb = reinterpret_cast<uv_shutdown_cb>(free));
 		void Shutdown(uv_shutdown_cb cb = reinterpret_cast<uv_shutdown_cb>(free));
@@ -54,8 +54,8 @@ inline int Net::StreamSocket::Bind(const SocketAddress & address, bool ipV6Only,
 	return Impl()->Bind(address, ipV6Only, reuseAddress);
 }
 
-inline int Net::StreamSocket::Connect(const SocketAddress & address, void * ud, uv_connect_cb cb) {
-	return Impl()->Connect(address, ud, cb);
+inline int Net::StreamSocket::Connect(const SocketAddress & address, uv_connect_t * req, uv_connect_cb cb) {
+	return Impl()->Connect(address, req, cb);
 }
 
 inline void Net::StreamSocket::ShutdownReceive() {

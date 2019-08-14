@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef Net_SocketAddress_INCLUDE
-#define Net_SocketAddress_INCLUDE
+#ifndef Net_SocketAddress_INCLUDED
+#define Net_SocketAddress_INCLUDED
 
 #include "SocketAddressImpl.h"
 

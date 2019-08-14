@@ -38,7 +38,7 @@ namespace Net {
 		virtual void Close(uv_close_cb cb = reinterpret_cast<uv_close_cb>(free));
 		virtual int Bind(const SocketAddress & address, bool ipV6Only = false, bool reuseAddress = false);
 		virtual int Listen(int backlog, uv_connection_cb cb);
-		virtual int Connect(const SocketAddress & address, void * ud, uv_connect_cb cb);
+		virtual int Connect(const SocketAddress & address, uv_connect_t * req, uv_connect_cb cb);
 		virtual SocketImpl * AcceptConnection(SocketAddress & clientAddr);
 		virtual void ShutdownReceive();
 		virtual void ShutdownSend(uv_shutdown_cb cb = reinterpret_cast<uv_shutdown_cb>(free));
@@ -52,7 +52,8 @@ namespace Net {
 		virtual SocketAddress RemoteAddress();
 		virtual void SetNoDelay();
 		virtual void SetKeepAlive(int interval);
-		virtual void SetHandle(uv_handle_t * handle);
+		virtual void Attach(uv_handle_t * handle);
+		virtual uv_handle_t * Detatch();
 		virtual uv_handle_t * GetHandle();
 
 	protected:
@@ -64,8 +65,17 @@ namespace Net {
 	};
 }
 
-inline void Net::SocketImpl::SetHandle(uv_handle_t * handle) {
+inline void Net::SocketImpl::Attach(uv_handle_t * handle) {
+	if (handle_) {
+		throw std::invalid_argument("Socket already attached");
+	}
 	handle_ = handle;
+}
+
+inline uv_handle_t * Net::SocketImpl::Detatch() {
+	uv_handle_t * handle = handle_;
+	handle_ = nullptr;
+	return handle;
 }
 
 inline uv_handle_t * Net::SocketImpl::GetHandle() {

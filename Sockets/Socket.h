@@ -45,7 +45,8 @@ namespace Net {
 		SocketAddress RemoteAddress();
 		void SetNoDelay();
 		void SetKeepAlive(int interval);
-		void SetHandle(uv_handle_t * handle);
+		void Attach(uv_handle_t * handle);
+		uv_handle_t * Detatch();
 		uv_handle_t * GetHandle();
 		SocketImpl * Impl() const;
 
@@ -104,8 +105,12 @@ inline void Net::Socket::SetKeepAlive(int interval) {
 	impl_->SetKeepAlive(interval);
 }
 
-inline void Net::Socket::SetHandle(uv_handle_t * handle) {
-	impl_->SetHandle(handle);
+inline void Net::Socket::Attach(uv_handle_t * handle) {
+	impl_->Attach(handle);
+}
+
+inline uv_handle_t * Net::Socket::Detatch() {
+	return impl_->Detatch();
 }
 
 inline uv_handle_t * Net::Socket::GetHandle() {
