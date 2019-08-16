@@ -46,9 +46,14 @@ TEST(IPAddressTestSuite, IPv4Error) {
 
 TEST(IPAddressTestSuite, IPv6) {
 	IPAddress addr1("fe80::a4f5:9de3:78bd:31d3%9"), addr2("::"), addr3(addr1.Addr(), addr1.Length(), addr1.Scope());
+	IPAddress addr4("fe80::a4f5:9de3:78bd:31d3%eth0");
 	EXPECT_EQ(addr1.AF(), AF_INET6);
 	EXPECT_EQ(addr1.Family(), IPAddress::IPv6);
+#ifdef _WIN32
 	EXPECT_EQ(addr1.Scope(), 9);
+#else
+	EXPECT_EQ(addr4.Scope(), 9);
+#endif
 	EXPECT_STREQ(addr1.ToString().c_str(), "fe80::a4f5:9de3:78bd:31d3");
 	EXPECT_NE(std::memcmp(addr1.Addr(), addr2.Addr(), addr1.Length()), 0);
 	EXPECT_TRUE(addr1 != addr2);
