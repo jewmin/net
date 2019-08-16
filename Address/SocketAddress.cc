@@ -24,6 +24,9 @@
 
 #include "SocketAddress.h"
 
+const Net::AddressFamily::Family Net::SocketAddress::IPv4;
+const Net::AddressFamily::Family Net::SocketAddress::IPv6;
+
 Net::SocketAddress::SocketAddress() {
 	NewIPv4();
 }

@@ -24,6 +24,9 @@
 
 #include "IPAddress.h"
 
+const Net::AddressFamily::Family Net::IPAddress::IPv4;
+const Net::AddressFamily::Family Net::IPAddress::IPv6;
+
 Net::IPAddress::IPAddress() {
 	NewIPv4();
 }
