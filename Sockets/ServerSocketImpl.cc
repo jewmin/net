@@ -1,4 +1,3 @@
-#include "ServerSocketImpl.h"
 /*
  * MIT License
  *
@@ -22,6 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
+#include "ServerSocketImpl.h"
 
 Net::ServerSocketImpl::ServerSocketImpl() : SocketImpl() {
 }

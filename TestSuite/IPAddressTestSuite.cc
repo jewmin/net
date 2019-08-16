@@ -3,22 +3,44 @@
 
 using namespace Net;
 
+TEST(IPAddressTestSuite, IPv4Construct) {
+	sockaddr_in si;
+	uv_ip4_addr("127.0.0.1", 7890, &si);
+
+	IPAddress addr1;
+	IPAddress addr2("159.75.63.78");
+	IPAddress addr3(*reinterpret_cast<sockaddr *>(&si));
+	IPAddress addr4(&si.sin_addr, sizeof(si.sin_addr));
+	IPAddress addr5(addr1);
+	IPAddress addr6;
+	addr6 = addr2;
+	addr6 = addr6;
+
+	EXPECT_EQ(addr5, addr1);
+	EXPECT_NE(addr2, addr3);
+}
+
 TEST(IPAddressTestSuite, IPv4) {
-	IPAddress addr1, addr2("127.0.0.1"), addr3("0.0.0.0"), addr4(addr2.Addr(), addr2.Length());
-	EXPECT_EQ(addr1.AF(), AF_INET);
-	EXPECT_EQ(addr1.Family(), IPAddress::IPv4);
-	EXPECT_EQ(addr1.Scope(), 0);
-	EXPECT_STREQ(addr1.ToString().c_str(), "0.0.0.0");
-	EXPECT_STREQ(addr2.ToString().c_str(), "127.0.0.1");
-	EXPECT_EQ(std::memcmp(addr1.Addr(), addr3.Addr(), addr1.Length()), 0);
-	EXPECT_TRUE(addr1 != addr2);
+	std::string addresses[] = {"127.0.0.1", "192.168.1.1", "157.255.192.44", "255.255.255.255", "0.0.0.0", "0.0.0.1"};
+	int size = sizeof(addresses) / sizeof(addresses[0]);
+	for (int i = 0; i < size; i++) {
+		IPAddress addr(addresses[i].c_str());
+		EXPECT_EQ(addr.AF(), AF_INET);
+		EXPECT_EQ(addr.Family(), IPAddress::IPv4);
+		EXPECT_EQ(addr.Scope(), 0);
+		EXPECT_STREQ(addr.ToString().c_str(), addresses[i].c_str());
+	}
 }
 
 TEST(IPAddressTestSuite, IPv4Error) {
-	try {
-		IPAddress addr1("haha");
-	} catch (std::exception & e) {
-		printf("IPAddressTestSuite - IPv4Error: %s\n", e.what());
+	std::string addresses[] = {"localhost", "www.google.com", "256.256.256.256", "1234567890", "1.2.3", "1.2.3.4.5", "127.0. 0.1", "-1.2.3.4", "172.16.01.06", " 127.0.0.1 "};
+	int size = sizeof(addresses) / sizeof(addresses[0]);
+	for (int i = 0; i < size; i++) {
+		try {
+			IPAddress addr(addresses[i].c_str());
+		} catch (std::exception & e) {
+			printf("IPAddressTestSuite - IPv4Error: %s\n", e.what());
+		}
 	}
 }
 
