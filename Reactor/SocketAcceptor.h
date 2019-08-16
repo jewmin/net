@@ -46,11 +46,11 @@ namespace Net {
 		virtual bool UnRegisterFromReactor();
 		virtual void MakeConnection(SocketConnection * & connection) = 0;
 		virtual void OnAccepted(SocketConnection * connection) = 0;
+
+	private:
 		void AcceptConnection(SocketConnection * connection, uv_handle_t * handle);
 		bool ActivateConnection(SocketConnection * connection);
 		void Accept();
-
-	private:
 		static void CloseCb(uv_handle_t * handle);
 		static void AcceptCb(uv_stream_t * server, int status);
 

@@ -119,20 +119,18 @@ void Net::SocketImpl::ShutdownReceive() {
 	}
 }
 
-void Net::SocketImpl::ShutdownSend(uv_shutdown_cb cb) {
+void Net::SocketImpl::ShutdownSend(uv_shutdown_t * req, uv_shutdown_cb cb) {
 	if (handle_ && UV_TCP == handle_->type) {
-		uv_shutdown_t * req = static_cast<uv_shutdown_t *>(malloc(sizeof(uv_shutdown_t)));
 		int status = uv_shutdown(req, reinterpret_cast<uv_stream_t *>(handle_), cb);
 		if (status < 0) {
-			free(req);
 			LogErr("关闭发送端失败. %s", uv_strerror(status));
 		}
 	}
 }
 
-void Net::SocketImpl::Shutdown(uv_shutdown_cb cb) {
+void Net::SocketImpl::Shutdown(uv_shutdown_t * req, uv_shutdown_cb cb) {
 	ShutdownReceive();
-	ShutdownSend(cb);
+	ShutdownSend(req, cb);
 }
 
 int Net::SocketImpl::Established(uv_alloc_cb allocCb, uv_read_cb readCb) {
@@ -144,6 +142,22 @@ int Net::SocketImpl::Established(uv_alloc_cb allocCb, uv_read_cb readCb) {
 		}
 	}
 	return status;
+}
+
+int Net::SocketImpl::Send(const char * data, int len, uv_write_t * req, uv_write_cb cb) {
+	if (!handle_ || UV_TCP != handle_->type) {
+		return UV_EPROTONOSUPPORT;
+	}
+	if (!data || len <= 0) {
+		return UV_ENOBUFS;
+	}
+	uv_buf_t buf = uv_buf_init(const_cast<char *>(data), len);
+	int status = uv_write(req, reinterpret_cast<uv_stream_t * >(handle_), &buf, 1, cb);
+	if (status < 0) {
+		LogErr("发送数据失败. %s", uv_strerror(status));
+		return status;
+	}
+	return len;
 }
 
 void Net::SocketImpl::SetSendBufferSize(int size) {

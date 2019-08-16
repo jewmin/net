@@ -38,9 +38,10 @@ namespace Net {
 		int Bind(const SocketAddress & address, bool ipV6Only = false, bool reuseAddress = false);
 		int Connect(const SocketAddress & address, uv_connect_t * req, uv_connect_cb cb);
 		void ShutdownReceive();
-		void ShutdownSend(uv_shutdown_cb cb = reinterpret_cast<uv_shutdown_cb>(free));
-		void Shutdown(uv_shutdown_cb cb = reinterpret_cast<uv_shutdown_cb>(free));
+		void ShutdownSend(uv_shutdown_t * req, uv_shutdown_cb cb);
+		void Shutdown(uv_shutdown_t * req, uv_shutdown_cb cb);
 		int Established(uv_alloc_cb alloc_cb, uv_read_cb read_cb);
+		int Send(const char * data, int len, uv_write_t * req, uv_write_cb cb);
 
 	protected:
 		explicit StreamSocket(SocketImpl * impl);
@@ -62,16 +63,20 @@ inline void Net::StreamSocket::ShutdownReceive() {
 	Impl()->ShutdownReceive();
 }
 
-inline void Net::StreamSocket::ShutdownSend(uv_shutdown_cb cb) {
-	Impl()->ShutdownSend(cb);
+inline void Net::StreamSocket::ShutdownSend(uv_shutdown_t * req, uv_shutdown_cb cb) {
+	Impl()->ShutdownSend(req, cb);
 }
 
-inline void Net::StreamSocket::Shutdown(uv_shutdown_cb cb) {
-	Impl()->Shutdown(cb);
+inline void Net::StreamSocket::Shutdown(uv_shutdown_t * req, uv_shutdown_cb cb) {
+	Impl()->Shutdown(req, cb);
 }
 
 inline int Net::StreamSocket::Established(uv_alloc_cb allocCb, uv_read_cb readCb) {
 	return Impl()->Established(allocCb, readCb);
+}
+
+inline int Net::StreamSocket::Send(const char * data, int len, uv_write_t * req, uv_write_cb cb) {
+	return Impl()->Send(data, len, req, cb);
 }
 
 #endif

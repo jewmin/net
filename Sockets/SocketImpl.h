@@ -41,9 +41,10 @@ namespace Net {
 		virtual int Connect(const SocketAddress & address, uv_connect_t * req, uv_connect_cb cb);
 		virtual SocketImpl * AcceptConnection(SocketAddress & clientAddr);
 		virtual void ShutdownReceive();
-		virtual void ShutdownSend(uv_shutdown_cb cb = reinterpret_cast<uv_shutdown_cb>(free));
-		virtual void Shutdown(uv_shutdown_cb cb = reinterpret_cast<uv_shutdown_cb>(free));
+		virtual void ShutdownSend(uv_shutdown_t * req, uv_shutdown_cb cb);
+		virtual void Shutdown(uv_shutdown_t * req, uv_shutdown_cb cb);
 		virtual int Established(uv_alloc_cb allocCb, uv_read_cb readCb);
+		virtual int Send(const char * data, int len, uv_write_t * req, uv_write_cb cb);
 		virtual void SetSendBufferSize(int size);
 		virtual int GetSendBufferSize();
 		virtual void SetReceiveBufferSize(int size);

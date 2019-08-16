@@ -47,10 +47,10 @@ namespace Net {
 	protected:
 		virtual bool RegisterToReactor();
 		virtual bool UnRegisterFromReactor();
-		void OnOneConnectSuccess(SocketConnection * connection);
-		bool ActivateConnection(SocketConnection * connection);
 
 	private:
+		void OnOneConnectSuccess(SocketConnection * connection);
+		bool ActivateConnection(SocketConnection * connection);
 		static void ConnectCb(uv_connect_t * req, int status);
 	};
 }
