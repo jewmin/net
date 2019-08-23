@@ -28,12 +28,6 @@
 Net::ServerSocket::ServerSocket() : Socket(new ServerSocketImpl()) {
 }
 
-Net::ServerSocket::ServerSocket(SocketImpl * impl) : Socket(impl) {
-	if (!dynamic_cast<ServerSocketImpl *>(Impl())) {
-		throw std::invalid_argument("Cannot assign incompatible socket");
-	}
-}
-
 Net::ServerSocket::ServerSocket(const Socket & socket) : Socket(socket) {
 	if (!dynamic_cast<ServerSocketImpl *>(Impl())) {
 		throw std::invalid_argument("Cannot assign incompatible socket");

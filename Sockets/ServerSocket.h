@@ -40,9 +40,6 @@ namespace Net {
 		int Listen(int backlog, uv_connection_cb cb);
 		bool AcceptConnection(StreamSocket & socket, SocketAddress & clientAddr);
 		bool AcceptConnection(StreamSocket & socket);
-
-	protected:
-		explicit ServerSocket(SocketImpl * impl);
 	};
 }
 
