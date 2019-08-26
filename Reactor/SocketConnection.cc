@@ -38,7 +38,7 @@ Net::SocketConnection::~SocketConnection() {
 }
 
 bool Net::SocketConnection::RegisterToReactor() {
-	if (kConnecting != connect_state_ || kDisconnected != connect_state_) {
+	if (kConnecting != connect_state_ && kDisconnected != connect_state_) {
 		return false;
 	}
 	if (socket_.Established(AllocCb, ReadCb) < 0) {
@@ -52,7 +52,7 @@ bool Net::SocketConnection::RegisterToReactor() {
 }
 
 bool Net::SocketConnection::UnRegisterFromReactor() {
-	if (kConnected != connect_state_ || kDisconnecting != connect_state_) {
+	if (kConnected != connect_state_ && kDisconnecting != connect_state_) {
 		return false;
 	}
 	connect_state_ = kDisconnected;

@@ -71,15 +71,17 @@ void Net::SocketConnector::ConnectCb(uv_connect_t * req, int status) {
 	SocketConnector * connector = nullptr;
 	SocketConnection * connection = nullptr;
 	if (context) {
-		SocketConnector * connector = context->connector_;
-		SocketConnection * connection = context->connection_;
+		connector = context->connector_;
+		connection = context->connection_;
 		delete context;
 	}
 	free(req);
 	if (status < 0) {
-		connection->GetSocket()->Close();
-		connection->OnConnectFailed(status);
-		connection->SetConnectState(SocketConnection::kDisconnected);
+		if (SocketConnection::kConnecting == connection->GetConnectState()) {
+			connection->GetSocket()->Close();
+			connection->OnConnectFailed(status);
+			connection->SetConnectState(SocketConnection::kDisconnected);
+		}
 	} else {
 		connector->OnOneConnectSuccess(connection);
 	}
