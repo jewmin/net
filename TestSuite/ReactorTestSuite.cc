@@ -69,6 +69,8 @@ public:
 	virtual ~ConnectionImpl2() {}
 	virtual void OnConnected() {
 		printf("OnConnected\n");
+		SetMaxOutBufferSize(256);
+		SetMaxInBufferSize(2048);
 		Write("this is a test connection impl message\0", sizeof("this is a test connection impl message\0"));
 		Shutdown(false);
 	}
@@ -89,8 +91,6 @@ public:
 	virtual ~ConnectionImpl3() {}
 	virtual void OnConnected() {
 		printf("OnConnected\n");
-		SetMaxOutBufferSize(256);
-		SetMaxInBufferSize(2048);
 		Write("this is a test connection impl message\0", sizeof("this is a test connection impl message\0"));
 	}
 	virtual void OnDisconnect(bool isRemote) {
@@ -106,6 +106,50 @@ public:
 		buf[readed] = 0;
 		printf("%s\n", buf);
 	}
+};
+
+class ConnectionImpl4 : public SocketConnection {
+public:
+	ConnectionImpl4() : SocketConnection(128, 128) {}
+	virtual ~ConnectionImpl4() {}
+	virtual void OnConnected() {
+		printf("OnConnected\n");
+		Write("this is a test connection impl message\0", sizeof("this is a test connection impl message\0"));
+		Write("this is a test connection impl message\0", sizeof("this is a test connection impl message\0"));
+		Write("this is a test connection impl message\0", sizeof("this is a test connection impl message\0"));
+		Write("this is a test connection impl message\0", sizeof("this is a test connection impl message\0"));
+	}
+	virtual void OnDisconnect(bool isRemote) {
+		printf("OnDisconnect %d\n", isRemote);
+	}
+	virtual void OnDisconnected(bool isRemote) {
+		printf("OnDisconnected %d\n", isRemote);
+	}
+	virtual void OnNewDataReceived() {
+		printf("OnNewDataReceived len=%d\n", GetRecvDataSize());
+	}
+};
+
+class AcceptorImpl4 : public SocketAcceptor {
+public:
+	AcceptorImpl4(EventReactor * reactor) : SocketAcceptor(reactor) {}
+	virtual ~AcceptorImpl4() {
+		while (!list_.empty()) {
+			list_.front()->Release();
+			list_.pop_front();
+		}
+	}
+	virtual void MakeConnection(SocketConnection * & connection) {
+		connection = new ConnectionImpl4();
+		list_.push_back(connection);
+	}
+	virtual void OnAccepted(SocketConnection * connection) {
+		printf("OnAccepted %s\n", connection->GetSocket()->RemoteAddress().ToString().c_str());
+		Close();
+	}
+
+private:
+	std::list<SocketConnection *> list_;
 };
 
 TEST(ReactorTestSuite, use) {
@@ -174,6 +218,21 @@ TEST(ReactorTestSuite, use3) {
 	SocketAcceptor * pAcceptor = new AcceptorImpl(pReactor);
 	SocketConnector * pConnector = new SocketConnector(pReactor);
 	SocketConnection * pConnection = new ConnectionImpl3();
+	pAcceptor->Open(SocketAddress(6789));
+	pConnector->Connect(pConnection, SocketAddress("127.0.0.1", 6789));
+
+	pReactor->Dispatch(UV_RUN_DEFAULT);
+	pConnection->Release();
+	pConnector->Release();
+	pAcceptor->Release();
+	delete pReactor;
+}
+
+TEST(ReactorTestSuite, use4) {
+	EventReactor * pReactor = new EventReactor();
+	SocketAcceptor * pAcceptor = new AcceptorImpl4(pReactor);
+	SocketConnector * pConnector = new SocketConnector(pReactor);
+	SocketConnection * pConnection = new ConnectionImpl4();
 	pAcceptor->Open(SocketAddress(6789));
 	pConnector->Connect(pConnection, SocketAddress("127.0.0.1", 6789));
 
