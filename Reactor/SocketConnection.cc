@@ -27,7 +27,7 @@
 Net::SocketConnection::SocketConnection(int maxOutBufferSize, int maxInBufferSize)
 	: EventHandler(nullptr), connect_state_(kDisconnected), in_buffer_(uv_buf_init(nullptr, 0))
 	, shutdown_req_(new uv_shutdown_t()), max_out_buffer_size_(maxOutBufferSize), max_in_buffer_size_(maxInBufferSize)
-	, shutdown_(false), called_on_disconnect_(false), called_on_disconnected_(false) {
+	, shutdown_(false), called_on_disconnected_(false) {
 }
 
 Net::SocketConnection::~SocketConnection() {
@@ -157,9 +157,6 @@ void Net::SocketConnection::OnConnected() {
 void Net::SocketConnection::OnConnectFailed(int reason) {
 }
 
-void Net::SocketConnection::OnDisconnect(bool isRemote) {
-}
-
 void Net::SocketConnection::OnDisconnected(bool isRemote) {
 }
 
@@ -170,6 +167,10 @@ void Net::SocketConnection::OnSomeDataSent() {
 }
 
 void Net::SocketConnection::OnError(int reason) {
+}
+
+void Net::SocketConnection::Error(int reason) {
+	OnError(reason);
 	if (UV_EOF == reason) {
 		HandleClose4EOF(reason);
 	} else if (UV_ECANCELED != reason) {
@@ -184,7 +185,6 @@ void Net::SocketConnection::HandleClose4EOF(int reason) {
 		if (shutdown_) {
 			socket_.ShutdownReceive();
 		} else {
-			CallOnDisconnect(true);
 			if (GetOutBufferUsedSize() > 0) {
 				shutdown_ = true;
 				socket_.Shutdown(shutdown_req_, ShutdownCb);
@@ -199,14 +199,8 @@ void Net::SocketConnection::HandleClose4EOF(int reason) {
 void Net::SocketConnection::HandleClose4Error(int reason) {
 	if (kConnected == connect_state_ || kDisconnecting == connect_state_) {
 		connect_state_ = kDisconnecting;
-		if (shutdown_) {
-			ShutdownImmediately();
-			CallOnDisconnected(false);
-		} else {
-			CallOnDisconnect(true);
-			ShutdownImmediately();
-			CallOnDisconnected(true);
-		}
+		ShutdownImmediately();
+		CallOnDisconnected(!shutdown_);
 	}
 }
 
@@ -233,13 +227,6 @@ int Net::SocketConnection::GetOutBufferUsedSize() {
 	return static_cast<int>(uv_stream_get_write_queue_size(reinterpret_cast<uv_stream_t *>(socket_.GetHandle())));
 }
 
-void Net::SocketConnection::CallOnDisconnect(bool isRemote) {
-	if (!called_on_disconnect_) {
-		OnDisconnect(isRemote);
-		called_on_disconnect_ = true;
-	}
-}
-
 void Net::SocketConnection::CallOnDisconnected(bool isRemote) {
 	if (!called_on_disconnected_) {
 		OnDisconnected(isRemote);
@@ -252,7 +239,6 @@ void Net::SocketConnection::CloseCb(uv_handle_t * handle) {
 	free(handle);
 	if (connection) {
 		connection->shutdown_ = false;
-		connection->called_on_disconnect_ = false;
 		connection->called_on_disconnected_ = false;
 		connection->Release();
 	}
@@ -272,7 +258,7 @@ void Net::SocketConnection::ReadCb(uv_stream_t * stream, ssize_t nread, const uv
 	SocketConnection * connection = static_cast<SocketConnection *>(stream->data);
 	if (connection) {
 		if (nread < 0) {
-			connection->OnError(static_cast<int>(nread));
+			connection->Error(static_cast<int>(nread));
 		} else if (nread > 0) {
 			connection->in_buffer_.len += static_cast<int>(nread);
 			if (kConnected == connection->connect_state_) {
@@ -295,7 +281,7 @@ void Net::SocketConnection::WriteCb(uv_write_t * req, int status) {
 	delete req;
 	if (connection) {
 		if (status < 0) {
-			connection->OnError(status);
+			connection->Error(status);
 		} else if (kConnected == connection->connect_state_) {
 			connection->OnSomeDataSent();
 		}

@@ -39,10 +39,10 @@ namespace Net {
 		void Shutdown(bool now);
 		virtual void OnConnected();
 		virtual void OnConnectFailed(int reason);
-		virtual void OnDisconnect(bool isRemote);
 		virtual void OnDisconnected(bool isRemote);
 		virtual void OnNewDataReceived();
 		virtual void OnSomeDataSent();
+		virtual void OnError(int reason);
 		int Write(const char * data, int len);
 		int Read(char * data, int len);
 		char * GetRecvData() const;
@@ -63,10 +63,9 @@ namespace Net {
 
 	private:
 		void ShutdownImmediately();
-		void OnError(int reason);
+		void Error(int reason);
 		void HandleClose4EOF(int reason);
 		void HandleClose4Error(int reason);
-		void CallOnDisconnect(bool isRemote);
 		void CallOnDisconnected(bool isRemote);
 		static void CloseCb(uv_handle_t * handle);
 		static void AllocCb(uv_handle_t * handle, size_t suggested_size, uv_buf_t * buf);
@@ -82,7 +81,6 @@ namespace Net {
 		int max_out_buffer_size_;
 		int max_in_buffer_size_;
 		bool shutdown_;
-		bool called_on_disconnect_;
 		bool called_on_disconnected_;
 	};
 }
