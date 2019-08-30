@@ -46,6 +46,7 @@ TEST(SocketAddressTestSuite, Error) {
 	try {
 		struct sockaddr_in si4;
 		struct sockaddr_in6 si6;
+		si6.sin6_family = AF_INET6;
 		SocketAddress address(reinterpret_cast<struct sockaddr *>(&si6), sizeof(si4));
 	} catch (std::exception & e) {
 		printf("SocketAddressTestSuite - Error: %s\n", e.what());
