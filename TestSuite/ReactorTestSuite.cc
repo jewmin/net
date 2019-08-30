@@ -161,9 +161,9 @@ TEST(ReactorTestSuite, use) {
 	pConnector->Connect(pConnection, SocketAddress("127.0.0.1", 6789));
 	
 	pReactor->Dispatch(UV_RUN_DEFAULT);
-	pConnection->Release();
-	pConnector->Release();
-	pAcceptor->Release();
+	pConnection->Destroy();
+	pConnector->Destroy();
+	pAcceptor->Destroy();
 	delete pReactor;
 }
 
@@ -173,8 +173,8 @@ TEST(ReactorTestSuite, ConnectError) {
 	SocketConnection * pConnection = new ConnectionImpl();
 	pConnector->Connect(pConnection, SocketAddress("0.0.0.0", 6789));
 	pReactor->Dispatch(UV_RUN_DEFAULT);
-	pConnection->Release();
-	pConnector->Release();
+	pConnection->Destroy();
+	pConnector->Destroy();
 	delete pReactor;
 }
 
@@ -185,8 +185,8 @@ TEST(ReactorTestSuite, ConnectShutdown) {
 	pConnector->Connect(pConnection, SocketAddress("0.0.0.0", 6789));
 	pConnection->Shutdown(true);
 	pReactor->Dispatch(UV_RUN_DEFAULT);
-	pConnection->Release();
-	pConnector->Release();
+	pConnection->Destroy();
+	pConnector->Destroy();
 	delete pReactor;
 }
 
@@ -195,7 +195,7 @@ TEST(ReactorTestSuite, ClearHandler) {
 	SocketAcceptor * pAcceptor = new AcceptorImpl(pReactor);
 	pAcceptor->Open(SocketAddress(6789));
 	delete pReactor;
-	pAcceptor->Release();
+	pAcceptor->Destroy();
 }
 
 TEST(ReactorTestSuite, use2) {
@@ -207,9 +207,9 @@ TEST(ReactorTestSuite, use2) {
 	pConnector->Connect(pConnection, SocketAddress("127.0.0.1", 6789));
 
 	pReactor->Dispatch(UV_RUN_DEFAULT);
-	pConnection->Release();
-	pConnector->Release();
-	pAcceptor->Release();
+	pConnection->Destroy();
+	pConnector->Destroy();
+	pAcceptor->Destroy();
 	delete pReactor;
 }
 
@@ -222,9 +222,9 @@ TEST(ReactorTestSuite, use3) {
 	pConnector->Connect(pConnection, SocketAddress("127.0.0.1", 6789));
 
 	pReactor->Dispatch(UV_RUN_DEFAULT);
-	pConnection->Release();
-	pConnector->Release();
-	pAcceptor->Release();
+	pConnection->Destroy();
+	pConnector->Destroy();
+	pAcceptor->Destroy();
 	delete pReactor;
 }
 
@@ -237,8 +237,8 @@ TEST(ReactorTestSuite, use4) {
 	pConnector->Connect(pConnection, SocketAddress("127.0.0.1", 6789));
 
 	pReactor->Dispatch(UV_RUN_DEFAULT);
-	pConnection->Release();
-	pConnector->Release();
-	pAcceptor->Release();
+	pConnection->Destroy();
+	pConnector->Destroy();
+	pAcceptor->Destroy();
 	delete pReactor;
 }

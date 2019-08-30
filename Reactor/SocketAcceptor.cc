@@ -41,25 +41,29 @@ bool Net::SocketAcceptor::Open(const SocketAddress & address, int backlog, bool 
 	if (socket_.Listen(backlog, AcceptCb) < 0) {
 		return false;
 	}
-	GetReactor()->AddEventHandler(this);
-	opened_ = true;
-	return true;
+	return GetReactor()->AddEventHandler(this);
 }
 
 void Net::SocketAcceptor::Close() {
 	if (opened_) {
-		opened_ = false;
 		GetReactor()->RemoveEventHandler(this);
 	}
+}
+
+void Net::SocketAcceptor::Destroy() {
+	Close();
+	Release();
 }
 
 bool Net::SocketAcceptor::RegisterToReactor() {
 	uv_handle_set_data(socket_.GetHandle(), this);
 	Duplicate();
+	opened_ = true;
 	return true;
 }
 
 bool Net::SocketAcceptor::UnRegisterFromReactor() {
+	opened_ = false;
 	socket_.Close(CloseCb);
 	return true;
 }

@@ -43,6 +43,7 @@ namespace Net {
 		virtual ~SocketConnector();
 
 		int Connect(SocketConnection * connection, const SocketAddress & address);
+		virtual void Destroy();
 
 	protected:
 		virtual bool RegisterToReactor();

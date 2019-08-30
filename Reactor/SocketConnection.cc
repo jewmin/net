@@ -151,6 +151,11 @@ void Net::SocketConnection::PopRecvData(int size) {
 	}
 }
 
+void Net::SocketConnection::Destroy() {
+	Shutdown(true);
+	Release();
+}
+
 void Net::SocketConnection::OnConnected() {
 }
 

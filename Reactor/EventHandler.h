@@ -36,6 +36,7 @@ namespace Net {
 		EventHandler(const EventHandler &) = delete;
 		EventHandler & operator=(const EventHandler &) = delete;
 
+		virtual void Destroy() = 0;
 		EventReactor * GetReactor() const;
 		void SetReactor(EventReactor * reactor);
 

@@ -45,6 +45,10 @@ int Net::SocketConnector::Connect(SocketConnection * connection, const SocketAdd
 	return status;
 }
 
+void Net::SocketConnector::Destroy() {
+	Release();
+}
+
 bool Net::SocketConnector::RegisterToReactor() {
 	return false;
 }

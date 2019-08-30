@@ -37,6 +37,7 @@ namespace Net {
 
 		bool Open();
 		void Shutdown(bool now);
+		virtual void Destroy();
 		virtual void OnConnected();
 		virtual void OnConnectFailed(int reason);
 		virtual void OnDisconnected(bool isRemote);

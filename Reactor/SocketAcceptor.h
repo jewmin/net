@@ -40,6 +40,7 @@ namespace Net {
 
 		bool Open(const SocketAddress & address, int backlog = 128, bool ipV6Only = false);
 		void Close();
+		virtual void Destroy();
 
 	protected:
 		virtual bool RegisterToReactor();
