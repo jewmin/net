@@ -133,3 +133,13 @@ TEST(SharedPtrTestSuite, Compare) {
 	EXPECT_TRUE(high >= obj6);
 	EXPECT_TRUE(high >= high);
 }
+
+TEST(SharedPtrTestSuite, Catch) {
+	TestObject * obj = nullptr;
+	TestObjectPtr ptr(obj);
+	try {
+		int value = ptr->GetValue();
+	} catch (std::exception & e) {
+		printf("SharedPtrTestSuite - Catch: %s\n", e.what());
+	}
+}

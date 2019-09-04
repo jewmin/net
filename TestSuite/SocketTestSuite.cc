@@ -179,3 +179,119 @@ TEST(SocketTestSuite, Assign) {
 	uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 	uv_loop_close(uv_default_loop());
 }
+
+class MockSocketImpl : public SocketImpl {
+public:
+	MockSocketImpl() : SocketImpl() {}
+	virtual ~MockSocketImpl() {}
+};
+
+class MockSocket : public Socket {
+public:
+	MockSocket() : Socket(new MockSocketImpl()) {}
+	virtual ~MockSocket() {}
+};
+
+class MockStreamSocket : public StreamSocket {
+public:
+	MockStreamSocket(SocketImpl * impl) : StreamSocket(impl) {}
+	virtual ~MockStreamSocket() {}
+};
+
+TEST(SocketTestSuite, Catch) {
+	MockSocket ms;
+	try {
+		ServerSocket s1(ms);
+	} catch (std::exception & e) {
+		printf("SocketTestSuite - Catch: %s\n", e.what());
+	}
+
+	try {
+		ServerSocket s2;
+		s2 = ms;
+	} catch (std::exception & e) {
+		printf("SocketTestSuite - Catch: %s\n", e.what());
+	}
+
+	try {
+		StreamSocket s3(ms);
+	} catch (std::exception & e) {
+		printf("SocketTestSuite - Catch: %s\n", e.what());
+	}
+
+	try {
+		StreamSocket s4;
+		s4 = ms;
+	} catch (std::exception & e) {
+		printf("SocketTestSuite - Catch: %s\n", e.what());
+	}
+
+	try {
+		MockStreamSocket s5(new ServerSocketImpl());
+	} catch (std::exception & e) {
+		printf("SocketTestSuite - Catch: %s\n", e.what());
+	}
+}
+
+TEST(SocketTestSuite, ImplCatch) {
+	MockSocketImpl * impl = new MockSocketImpl();
+
+	try {
+		impl->Open(uv_default_loop());
+		impl->Attach(nullptr);
+	} catch (std::exception & e) {
+		printf("SocketTestSuite - ImplCatch: %s\n", e.what());
+	}
+
+	impl->Established(nullptr, nullptr);
+	impl->LocalAddress();
+	impl->RemoteAddress();
+	impl->GetSendBufferSize();
+	impl->GetReceiveBufferSize();
+	impl->SetSendBufferSize(10);
+	impl->SetReceiveBufferSize(10);
+	impl->Send(nullptr, 0, nullptr, nullptr);
+	uv_write_t * w_req = new uv_write_t();
+	impl->Send("hello", sizeof("hello"), w_req, nullptr);
+	delete w_req;
+	uv_shutdown_t * req = new uv_shutdown_t();
+	impl->ShutdownSend(req, nullptr);
+	delete req;
+	impl->Close();
+	impl->Send(nullptr, 0, nullptr, nullptr);
+
+	impl->Release();
+	uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+	uv_loop_close(uv_default_loop());
+}
+
+TEST(SocketTestSuite, AcceptError) {
+	ServerSocket socket;
+	socket.Open(uv_default_loop());
+	StreamSocket client;
+	EXPECT_EQ(socket.AcceptConnection(client), false);
+	socket.Close();
+	uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+	uv_loop_close(uv_default_loop());
+}
+
+void SocketTestSuite_connect_cb(uv_connect_t* req, int status) {
+	delete req;
+}
+
+void SocketTestSuite_listen_cb(uv_stream_t* server, int status) {
+	
+}
+
+TEST(SocketTestSuite, ConnectError) {
+	StreamSocket client;
+	client.Open(uv_default_loop());
+	uv_connect_t * req1 = new uv_connect_t();
+	uv_connect_t * req2 = new uv_connect_t();
+	client.Connect(SocketAddress("127.0.0.1", 6789), req1, SocketTestSuite_connect_cb);
+	client.Connect(SocketAddress("127.0.0.1", 6789), req2, SocketTestSuite_connect_cb);
+	delete req2;
+	client.Close();
+	uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+	uv_loop_close(uv_default_loop());
+}

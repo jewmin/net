@@ -135,3 +135,13 @@ TEST(IPAddressTestSuite, SocketAddr) {
 	EXPECT_STREQ(addr1.ToString().c_str(), "127.0.0.1");
 	EXPECT_STREQ(addr2.ToString().c_str(), "fe80::a4f5:9de3:78bd:31d3");
 }
+
+TEST(IPAddressTestSuite, ConstructError) {
+	try {
+		struct sockaddr addr;
+		addr.sa_family = AF_UNIX;
+		IPAddress address(addr);
+	} catch (std::exception & e) {
+		printf("IPAddressTestSuite - ConstructError: %s\n", e.what());
+	}
+}

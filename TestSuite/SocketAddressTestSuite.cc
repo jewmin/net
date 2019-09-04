@@ -34,6 +34,7 @@ TEST(SocketAddressTestSuite, Constructor) {
 	EXPECT_STREQ(address1.ToString().c_str(), "[fe80::e56a:23a:b5b8:e855]:9999");
 	EXPECT_STREQ(address5.ToString().c_str(), "192.168.245.81:6666");
 	EXPECT_EQ(address1.Length(), sizeof(si6));
+	EXPECT_EQ(address3.Length(), sizeof(si4));
 }
 
 TEST(SocketAddressTestSuite, Error) {

@@ -81,10 +81,10 @@ void Net::SocketConnector::ConnectCb(uv_connect_t * req, int status) {
 	}
 	free(req);
 	if (status < 0) {
-		if (SocketConnection::kConnecting == connection->GetConnectState()) {
+		if (UV_ECANCELED != status) {
+			connection->SetConnectState(SocketConnection::kDisconnected);
 			connection->GetSocket()->Close();
 			connection->OnConnectFailed(status);
-			connection->SetConnectState(SocketConnection::kDisconnected);
 		}
 	} else {
 		connector->OnOneConnectSuccess(connection);

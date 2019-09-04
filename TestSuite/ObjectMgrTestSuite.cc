@@ -127,3 +127,47 @@ TEST(ObjectMgrTestSuite, Each) {
 	mgr1.EnumEachObj(Func, static_cast<void *>(&sum));
 	EXPECT_EQ(sum, 78);
 }
+
+TEST(ObjectMgrTestSuite, Catch) {
+	ObjectMgr<TestObj> mgr1(5, 8);
+	EXPECT_EQ(mgr1.GetObj(0), nullptr);
+	EXPECT_EQ(mgr1.GetObj(10), nullptr);
+
+	try {
+		mgr1.AddNewObj(nullptr);
+	} catch (std::exception & e) {
+		printf("ObjectMgrTestSuite - Catch: %s\n", e.what());
+	}
+
+	try {
+		mgr1.AddNewObj(0, nullptr);
+	} catch (std::exception & e) {
+		printf("ObjectMgrTestSuite - Catch: %s\n", e.what());
+	}
+
+	try {
+		mgr1.AddNewObj(10, nullptr);
+	} catch (std::exception & e) {
+		printf("ObjectMgrTestSuite - Catch: %s\n", e.what());
+	}
+
+	TestObj * obj = new TestObj(1);
+	mgr1.AddNewObj(1, obj);
+	try {
+		mgr1.AddNewObj(1, obj);
+	} catch (std::exception & e) {
+		printf("ObjectMgrTestSuite - Catch: %s\n", e.what());
+	}
+
+	try {
+		mgr1.RemoveObj(0);
+	} catch (std::exception & e) {
+		printf("ObjectMgrTestSuite - Catch: %s\n", e.what());
+	}
+
+	try {
+		mgr1.RemoveObj(10);
+	} catch (std::exception & e) {
+		printf("ObjectMgrTestSuite - Catch: %s\n", e.what());
+	}
+}

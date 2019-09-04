@@ -142,3 +142,13 @@ TEST(RefCountedObjectTestSuite, RefPtrReset) {
 	obj1.Reset(obj2.Get(), true);
 	EXPECT_EQ(obj1->ReferenceCount(), 2);
 }
+
+TEST(RefCountedObjectTestSuite, Catch) {
+	TestRefObj * obj = nullptr;
+	Foundation::RefPtr<TestRefObj> ptr(obj);
+	try {
+		int value = ptr->GetValue();
+	} catch (std::exception & e) {
+		printf("RefCountedObjectTestSuite - Catch: %s\n", e.what());
+	}
+}

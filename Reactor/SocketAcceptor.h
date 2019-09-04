@@ -35,14 +35,14 @@ namespace Net {
 		SocketAcceptor() = delete;
 		SocketAcceptor(const SocketAcceptor &) = delete;
 		SocketAcceptor & operator=(const SocketAcceptor &) = delete;
-		explicit SocketAcceptor(EventReactor * reactor);
-		virtual ~SocketAcceptor();
 
 		bool Open(const SocketAddress & address, int backlog = 128, bool ipV6Only = false);
 		void Close();
 		virtual void Destroy();
 
 	protected:
+		explicit SocketAcceptor(EventReactor * reactor);
+		virtual ~SocketAcceptor();
 		virtual bool RegisterToReactor();
 		virtual bool UnRegisterFromReactor();
 		virtual void MakeConnection(SocketConnection * & connection) = 0;
