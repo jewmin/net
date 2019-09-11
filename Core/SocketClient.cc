@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 
+#include "Logger.h"
 #include "SocketClient.h"
 
 Net::SocketClient::SocketClient(const std::string & name, EventReactor * reactor, SocketConnector * connector, int maxOutBufferSize, int maxInBufferSize)
@@ -45,7 +46,7 @@ bool Net::SocketClient::Connect(const std::string & address, int port, u32 & id)
 	SocketAddress sa(address, static_cast<u16>(port));
 	int status = connector_->Connect(wrapper->GetConnection(), sa);
 	if (status < 0) {
-		LogWarn("%s: 建立连接[%s]失败", GetName(), sa.ToString());
+		Foundation::LogWarn("%s: 建立连接[%s]失败", GetName(), sa.ToString());
 		return false;
 	}
 	return true;

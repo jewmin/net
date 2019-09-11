@@ -22,11 +22,12 @@
  * SOFTWARE.
  */
 
+#include "Logger.h"
 #include "EventReactor.h"
 #include "EventHandler.h"
 
 Net::EventReactor::EventReactor() {
-	LogInfo("使用网络底层<libuv>");
+	Foundation::LogInfo("使用网络底层<libuv>");
 	loop_ = static_cast<uv_loop_t *>(malloc(sizeof(uv_loop_t)));
 	uv_loop_init(loop_);
 }

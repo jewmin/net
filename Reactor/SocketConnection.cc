@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 
+#include "Logger.h"
 #include "SocketConnection.h"
 
 Net::SocketConnection::SocketConnection(int maxOutBufferSize, int maxInBufferSize)
@@ -100,7 +101,7 @@ int Net::SocketConnection::Write(const char * data, int len) {
 		return UV_ENOTCONN;
 	}
 	if (max_out_buffer_size_ > 0 && GetOutBufferUsedSize() > max_out_buffer_size_) {
-		LogWarn("---当前写缓冲区 数据大小/需要写入大小/上限:%d / %d / %d----", GetOutBufferUsedSize(), len, max_out_buffer_size_);
+		Foundation::LogWarn("---当前写缓冲区 数据大小/需要写入大小/上限:%d / %d / %d----", GetOutBufferUsedSize(), len, max_out_buffer_size_);
 		return UV_ENOBUFS;
 	}
 	uv_write_t * req = new uv_write_t();
@@ -138,7 +139,7 @@ int Net::SocketConnection::GetRecvDataSize() const {
 
 void Net::SocketConnection::PopRecvData(int size) {
 	if (kConnected != connect_state_ && kDisconnecting != connect_state_) {
-		LogErr("---在连接状态为非 kConnected /kDisconnecting 上调用了 PopRecvData(int)!---");
+		Foundation::LogErr("---在连接状态为非 kConnected /kDisconnecting 上调用了 PopRecvData(int)!---");
 	} else if (!in_buffer_.base) {
 		throw std::invalid_argument("未初始化接收缓冲区");
 	} else if (static_cast<int>(in_buffer_.len) < size) {
@@ -179,7 +180,7 @@ void Net::SocketConnection::Error(int reason) {
 	if (UV_EOF == reason) {
 		HandleClose4EOF(reason);
 	} else if (UV_ECANCELED != reason) {
-		LogWarn("网络出错，状态为(%s %s) NO:%d", uv_err_name(reason), uv_strerror(reason), reason);
+		Foundation::LogWarn("网络出错，状态为(%s %s) NO:%d", uv_err_name(reason), uv_strerror(reason), reason);
 		HandleClose4Error(reason);
 	}
 }
