@@ -46,7 +46,7 @@ bool Net::SocketClient::Connect(const std::string & address, int port, u32 & id)
 	SocketAddress sa(address, static_cast<u16>(port));
 	int status = connector_->Connect(wrapper->GetConnection(), sa);
 	if (status < 0) {
-		Foundation::LogWarn("%s: 建立连接[%s]失败", GetName().c_str(), sa.ToString()a.c_str());
+		Foundation::LogWarn("%s: 建立连接[%s]失败", GetName().c_str(), sa.ToString().c_str());
 		return false;
 	}
 	return true;
