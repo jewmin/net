@@ -28,6 +28,7 @@
 #include <set>
 #include <map>
 #include <list>
+#include <ctime>
 #include <atomic>
 #include <vector>
 #include <string>
@@ -59,33 +60,6 @@ S Trim(const S & str) {
 	while (last >= first && 0x20 == str[last]) --last;
 
 	return S(str, first, last - first + 1);
-}
-
-static void Log(FILE * stream, const char * label, const char * fmt, va_list ap) {
-	char fmtbuf[1024];
-	std::vsnprintf(fmtbuf, sizeof(fmtbuf), fmt, ap);
-	std::fprintf(stream, "%s %s\n", label, fmtbuf);
-}
-
-static void LogInfo(const char * fmt, ...) {
-	va_list ap;
-	va_start(ap, fmt);
-	Log(stdout, "info", fmt, ap);
-	va_end(ap);
-}
-
-static void LogWarn(const char * fmt, ...) {
-	va_list ap;
-	va_start(ap, fmt);
-	Log(stderr, "warn", fmt, ap);
-	va_end(ap);
-}
-
-static void LogErr(const char * fmt, ...) {
-	va_list ap;
-	va_start(ap, fmt);
-	Log(stderr, "error", fmt, ap);
-	va_end(ap);
 }
 
 #endif

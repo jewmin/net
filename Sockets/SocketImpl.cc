@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 
+#include "Logger.h"
 #include "SocketImpl.h"
 #include "StreamSocketImpl.h"
 
@@ -58,7 +59,7 @@ int Net::SocketImpl::Bind(const SocketAddress & address, bool ipV6Only, bool reu
 		}
 		status = uv_tcp_bind(reinterpret_cast<uv_tcp_t *>(handle_), address.Addr(), flags);
 		if (status < 0) {
-			LogErr("绑定端口(%s)失败. %s", address.ToString().c_str(), uv_strerror(status));
+			Foundation::LogErr("绑定端口(%s)失败. %s", address.ToString().c_str(), uv_strerror(status));
 			Close();
 		}
 	}
@@ -70,7 +71,7 @@ int Net::SocketImpl::Listen(int backlog, uv_connection_cb cb) {
 	if (handle_ && UV_TCP == handle_->type) {
 		status = uv_listen(reinterpret_cast<uv_stream_t *>(handle_), backlog, cb);
 		if (status < 0) {
-			LogErr("监听端口失败. %s", uv_strerror(status));
+			Foundation::LogErr("监听端口失败. %s", uv_strerror(status));
 			Close();
 		}
 	}
@@ -82,7 +83,7 @@ int Net::SocketImpl::Connect(const SocketAddress & address, uv_connect_t * req, 
 	if (handle_ && UV_TCP == handle_->type) {
 		status = uv_tcp_connect(req, reinterpret_cast<uv_tcp_t *>(handle_), address.Addr(), cb);
 		if (status < 0) {
-			LogErr("连接远端(%s)失败. %s", address.ToString().c_str(), uv_strerror(status));
+			Foundation::LogErr("连接远端(%s)失败. %s", address.ToString().c_str(), uv_strerror(status));
 			Close();
 		}
 	}
@@ -104,7 +105,7 @@ Net::SocketImpl * Net::SocketImpl::AcceptConnection(SocketAddress & clientAddr) 
 				return client;
 			}
 		}
-		LogErr("接受连接失败. %s", uv_strerror(status));
+		Foundation::LogErr("接受连接失败. %s", uv_strerror(status));
 		client->Release();
 	}
 	return nullptr;
@@ -114,7 +115,7 @@ void Net::SocketImpl::ShutdownReceive() {
 	if (handle_ && UV_TCP == handle_->type) {
 		int status = uv_read_stop(reinterpret_cast<uv_stream_t *>(handle_));
 		if (status < 0) {
-			LogErr("关闭接收端失败. %s", uv_strerror(status));
+			Foundation::LogErr("关闭接收端失败. %s", uv_strerror(status));
 		}
 	}
 }
@@ -123,7 +124,7 @@ void Net::SocketImpl::ShutdownSend(uv_shutdown_t * req, uv_shutdown_cb cb) {
 	if (handle_ && UV_TCP == handle_->type) {
 		int status = uv_shutdown(req, reinterpret_cast<uv_stream_t *>(handle_), cb);
 		if (status < 0) {
-			LogErr("关闭发送端失败. %s", uv_strerror(status));
+			Foundation::LogErr("关闭发送端失败. %s", uv_strerror(status));
 		}
 	}
 }
@@ -138,7 +139,7 @@ int Net::SocketImpl::Established(uv_alloc_cb allocCb, uv_read_cb readCb) {
 	if (handle_ && UV_TCP == handle_->type) {
 		status = uv_read_start(reinterpret_cast<uv_stream_t *>(handle_), allocCb, readCb);
 		if (status < 0) {
-			LogErr("开始读数据失败. %s", uv_strerror(status));
+			Foundation::LogErr("开始读数据失败. %s", uv_strerror(status));
 		}
 	}
 	return status;
@@ -154,7 +155,7 @@ int Net::SocketImpl::Send(const char * data, int len, uv_write_t * req, uv_write
 	uv_buf_t buf = uv_buf_init(const_cast<char *>(data), len);
 	int status = uv_write(req, reinterpret_cast<uv_stream_t * >(handle_), &buf, 1, cb);
 	if (status < 0) {
-		LogErr("发送数据失败. %s", uv_strerror(status));
+		Foundation::LogErr("发送数据失败. %s", uv_strerror(status));
 		return status;
 	}
 	return len;
@@ -164,7 +165,7 @@ void Net::SocketImpl::SetSendBufferSize(int size) {
 	if (handle_) {
 		int status = uv_send_buffer_size(handle_, &size);
 		if (status < 0) {
-			LogErr("设置发送缓冲大小失败. %s", uv_strerror(status));
+			Foundation::LogErr("设置发送缓冲大小失败. %s", uv_strerror(status));
 		}
 	}
 }
@@ -174,7 +175,7 @@ int Net::SocketImpl::GetSendBufferSize() {
 	if (handle_) {
 		int status = uv_send_buffer_size(handle_, &size);
 		if (status < 0) {
-			LogErr("获取发送缓冲大小失败. %s", uv_strerror(status));
+			Foundation::LogErr("获取发送缓冲大小失败. %s", uv_strerror(status));
 		}
 	}
 	return size;
@@ -184,7 +185,7 @@ void Net::SocketImpl::SetReceiveBufferSize(int size) {
 	if (handle_) {
 		int status = uv_recv_buffer_size(handle_, &size);
 		if (status < 0) {
-			LogErr("设置接收缓冲大小失败. %s", uv_strerror(status));
+			Foundation::LogErr("设置接收缓冲大小失败. %s", uv_strerror(status));
 		}
 	}
 }
@@ -194,7 +195,7 @@ int Net::SocketImpl::GetReceiveBufferSize() {
 	if (handle_) {
 		int status = uv_recv_buffer_size(handle_, &size);
 		if (status < 0) {
-			LogErr("获取接收缓冲大小失败. %s", uv_strerror(status));
+			Foundation::LogErr("获取接收缓冲大小失败. %s", uv_strerror(status));
 		}
 	}
 	return size;
@@ -207,7 +208,7 @@ Net::SocketAddress Net::SocketImpl::LocalAddress() {
 		socklen_t len = sizeof(buffer);
 		int status = uv_tcp_getsockname(reinterpret_cast<uv_tcp_t *>(handle_), sa, reinterpret_cast<int *>(&len));
 		if (status < 0) {
-			LogErr("获取本地地址失败. %s", uv_strerror(status));
+			Foundation::LogErr("获取本地地址失败. %s", uv_strerror(status));
 		} else {
 			return SocketAddress(sa, len);
 		}
@@ -222,7 +223,7 @@ Net::SocketAddress Net::SocketImpl::RemoteAddress() {
 		socklen_t len = sizeof(buffer);
 		int status = uv_tcp_getpeername(reinterpret_cast<uv_tcp_t *>(handle_), sa, reinterpret_cast<int *>(&len));
 		if (status < 0) {
-			LogErr("获取远端地址失败. %s", uv_strerror(status));
+			Foundation::LogErr("获取远端地址失败. %s", uv_strerror(status));
 		} else {
 			return SocketAddress(sa, len);
 		}
@@ -234,7 +235,7 @@ void Net::SocketImpl::SetNoDelay() {
 	if (handle_ && UV_TCP == handle_->type) {
 		int status = uv_tcp_nodelay(reinterpret_cast<uv_tcp_t *>(handle_), 1);
 		if (status < 0) {
-			LogErr("禁止Negale算法失败. %s", uv_strerror(status));
+			Foundation::LogErr("禁止Negale算法失败. %s", uv_strerror(status));
 		}
 	}
 }
@@ -243,7 +244,7 @@ void Net::SocketImpl::SetKeepAlive(int interval) {
 	if (handle_ && UV_TCP == handle_->type) {
 		int status = uv_tcp_keepalive(reinterpret_cast<uv_tcp_t *>(handle_), 1, interval);
 		if (status < 0) {
-			LogErr("设置KeepAlive机制失败. %s", uv_strerror(status));
+			Foundation::LogErr("设置KeepAlive机制失败. %s", uv_strerror(status));
 		}
 	}
 }

@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 
+#include "Logger.h"
 #include "SocketAcceptor.h"
 
 Net::SocketAcceptor::SocketAcceptor(EventReactor * reactor) : EventHandler(reactor), opened_(false) {
@@ -105,7 +106,7 @@ void Net::SocketAcceptor::AcceptCb(uv_stream_t * server, int status) {
 	SocketAcceptor * acceptor = static_cast<SocketAcceptor *>(server->data);
 	if (acceptor) {
 		if (status < 0) {
-			LogErr("监听回调失败. %s", uv_strerror(status));
+			Foundation::LogErr("监听回调失败. %s", uv_strerror(status));
 			acceptor->Close();
 		} else {
 			acceptor->Accept();

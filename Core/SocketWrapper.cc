@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 
+#include "Logger.h"
 #include "SocketWrapper.h"
 #include "SocketWrapperMgr.h"
 #include "SocketConnectionImpl.h"
@@ -132,8 +133,8 @@ void Net::SocketWrapper::OnSomeDataSent() {
 
 void Net::SocketWrapper::OnError(int reason) {
 	if (UV_EOF == reason) {
-		LogInfo("连接[%u] OnError(%s): 收到对端EOF, 正常断开", id_, uv_err_name(reason));
+		Foundation::LogInfo("连接[%u] OnError(%s): 收到对端EOF, 正常断开", id_, uv_err_name(reason));
 	} else if (UV_ECANCELED != reason) {
-		LogWarn("连接[%u] OnError(%s): %s", id_, uv_err_name(reason), uv_strerror(reason));
+		Foundation::LogWarn("连接[%u] OnError(%s): %s", id_, uv_err_name(reason), uv_strerror(reason));
 	}
 }

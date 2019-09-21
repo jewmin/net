@@ -22,40 +22,18 @@
  * SOFTWARE.
  */
 
-#include "Logger.h"
-#include "SocketClient.h"
+#ifndef Foundation_Logger_INCLUDED
+#define Foundation_Logger_INCLUDED
 
-Net::SocketClient::SocketClient(const std::string & name, EventReactor * reactor, SocketConnector * connector, int maxOutBufferSize, int maxInBufferSize)
-	: SocketWrapperMgr(name), reactor_(reactor), connector_(connector), max_out_buffer_size_(maxOutBufferSize), max_in_buffer_size_(maxInBufferSize) {
-	if (connector_) {
-		connector_->Duplicate();
-	}
+#include "CommonDef.h"
+
+namespace Foundation {
+	typedef void (*LogFunc)(const char * label, const char * msg);
+	void SetLogFunc(LogFunc func);
+	void Log(FILE * stream, const char * label, const char * fmt, va_list ap);
+	void LogInfo(const char * fmt, ...);
+	void LogWarn(const char * fmt, ...);
+	void LogErr(const char * fmt, ...);
 }
 
-Net::SocketClient::~SocketClient() {
-	Terminate();
-}
-
-bool Net::SocketClient::Connect(const std::string & address, int port, u32 & id) {
-	id = 0;
-	if (!connector_) {
-		connector_ = new SocketConnector(reactor_);
-	}
-	SocketWrapper * wrapper = new SocketWrapper(this, max_out_buffer_size_, max_in_buffer_size_);
-	id = Register(wrapper);
-	SocketAddress sa(address, static_cast<u16>(port));
-	int status = connector_->Connect(wrapper->GetConnection(), sa);
-	if (status < 0) {
-		Foundation::LogWarn("%s: 建立连接[%s]失败", GetName().c_str(), sa.ToString()a.c_str());
-		return false;
-	}
-	return true;
-}
-
-bool Net::SocketClient::Terminate() {
-	if (connector_) {
-		connector_->Destroy();
-		connector_ = nullptr;
-	}
-	return true;
-}
+#endif
