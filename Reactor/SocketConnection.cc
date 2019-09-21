@@ -146,7 +146,8 @@ void Net::SocketConnection::PopRecvData(int size) {
 	} else if (size > 0) {
 		in_buffer_.len -= size;
 		if (in_buffer_.len > 0) {
-			std::memcpy(in_buffer_.base, in_buffer_.base + size, in_buffer_.len);
+			// std::memcpy(in_buffer_.base, in_buffer_.base + size, in_buffer_.len);
+            std::memmove(in_buffer_.base, in_buffer_.base + size, in_buffer_.len);
 		}
 	}
 }
