@@ -53,6 +53,8 @@ namespace Net {
 		void SetIsRegister2Mgr(bool reg);
 		bool GetIsRegister2Mgr() const;
 		SocketConnection * GetConnection() const;
+		void SetRawRecv(bool isRaw);
+		bool IsRawRecv() const;
 
 	protected:
 		virtual void OnConnected();
@@ -64,6 +66,7 @@ namespace Net {
 
 	private:
 		u32 id_;
+		bool is_raw_recv_;
 		bool register_mgr_;
 		SocketWrapperMgr * mgr_;
 		SocketConnection * connection_;
@@ -88,6 +91,14 @@ inline void Net::SocketWrapper::SetIsRegister2Mgr(bool reg) {
 
 inline bool Net::SocketWrapper::GetIsRegister2Mgr() const {
 	return register_mgr_;
+}
+
+inline void Net::SocketWrapper::SetRawRecv(bool isRaw) {
+	is_raw_recv_ = isRaw;
+}
+
+inline bool Net::SocketWrapper::IsRawRecv() const {
+	return is_raw_recv_;
 }
 
 #endif

@@ -3,9 +3,9 @@
 #include "Core/SocketClient.h"
 #include "Logger.h"
 
-BenchClient::BenchClient(int client_count, int packet_count, int packet_size)
+BenchClient::BenchClient(int clientCount, int packetCount, int packetSize)
 	: reactor_(new Net::EventReactor()), connector_(new Net::SocketConnector(reactor_)), quit_(false)
-	, client_count_(client_count), packet_count_(packet_count), packet_size_(packet_size)
+	, client_count_(clientCount), packet_count_(packetCount), packet_size_(packetSize)
 	, connected_counter_(0), connect_failed_counter_(0), disconnected_counter_(0) {
 	if (packet_size_ <= PACK_HEADER_LEN) {
 		packet_size_ = PACK_HEADER_LEN + 10;

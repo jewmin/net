@@ -44,6 +44,7 @@ namespace Net {
 		virtual void OnNewDataReceived();
 		virtual void OnSomeDataSent();
 		virtual void OnError(int reason);
+		void Error(int reason);
 		int Write(const char * data, int len);
 		int Read(char * data, int len);
 		char * GetRecvData() const;
@@ -64,7 +65,6 @@ namespace Net {
 
 	private:
 		void ShutdownImmediately();
-		void Error(int reason);
 		void HandleClose4EOF(int reason);
 		void HandleClose4Error(int reason);
 		void CallOnDisconnected(bool isRemote);

@@ -8,7 +8,7 @@
 
 class BenchClient : public Net::IEvent {
 public:
-	BenchClient(int client_count, int packet_count, int packet_size);
+	BenchClient(int clientCount, int packetCount, int packetSize);
 	~BenchClient();
 	void Run(const std::string & address, int port);
 	void ShowStatus();

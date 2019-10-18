@@ -27,7 +27,7 @@
 #include "SocketWrapperMgr.h"
 #include "SocketConnectionImpl.h"
 
-Net::SocketWrapper::SocketWrapper(SocketWrapperMgr * mgr, int maxOutBufferSize, int maxInBufferSize) : mgr_(mgr), id_(0), register_mgr_(false) {
+Net::SocketWrapper::SocketWrapper(SocketWrapperMgr * mgr, int maxOutBufferSize, int maxInBufferSize) : mgr_(mgr), id_(0), is_raw_recv_(false), register_mgr_(false) {
 	if (!mgr_) {
 		throw std::invalid_argument("mgr is nullptr");
 	}
@@ -50,7 +50,14 @@ void Net::SocketWrapper::ShutdownNow() {
 }
 
 int Net::SocketWrapper::Write(const char * data, int len) {
-	return connection_->Write(data, len);
+	int status = 0;
+	if (len > 0) {
+		status = connection_->Write(data, len);
+		if (status < 0) {
+			connection_->Error(status);
+		}
+	}
+	return status;
 }
 
 int Net::SocketWrapper::Read(char * data, int len) {

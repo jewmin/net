@@ -28,9 +28,11 @@
 #include "CommonDef.h"
 
 namespace Foundation {
-	typedef void (*LogFunc)(const char * label, const char * msg);
+	enum LogLevel { kDebug = 0, kInfo = 1, kWarning = 2, kError = 3 };
+	typedef void (*LogFunc)(int level, const char * msg);
 	void SetLogFunc(LogFunc func);
-	void Log(FILE * stream, const char * label, const char * fmt, va_list ap);
+	void Log(FILE * stream, LogLevel level, const char * fmt, va_list ap);
+	void LogDebug(const char * fmt, ...);
 	void LogInfo(const char * fmt, ...);
 	void LogWarn(const char * fmt, ...);
 	void LogErr(const char * fmt, ...);

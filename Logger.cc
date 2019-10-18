@@ -30,36 +30,44 @@ void Foundation::SetLogFunc(LogFunc func) {
 	g_logger = func;
 }
 
-void Foundation::Log(FILE * stream, const char * label, const char * fmt, va_list ap) {
+void Foundation::Log(FILE * stream, LogLevel level, const char * fmt, va_list ap) {
 	static char msg[1024];
 	static char time_string[32];
 	std::vsnprintf(msg, sizeof(msg), fmt, ap);
 	if (g_logger) {
-		g_logger(label, msg);
+		g_logger(level, msg);
 	} else {
+		static const char * labels[] = { "debug", "info", "warn", "error" };
 		std::time_t raw_time = std::time(nullptr);
 		std::strftime(time_string, sizeof(time_string), "%F %T", std::localtime(&raw_time));
-		std::fprintf(stream, "%s %s %s\n", time_string, label, msg);
+		std::fprintf(stream, "%s [%s] %s\n", time_string, labels[level], msg);
 	}
+}
+
+void Foundation::LogDebug(const char * fmt, ...) {
+	va_list ap;
+	va_start(ap, fmt);
+	Log(stdout, kDebug, fmt, ap);
+	va_end(ap);
 }
 
 void Foundation::LogInfo(const char * fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
-	Log(stdout, "[info]", fmt, ap);
+	Log(stdout, kInfo, fmt, ap);
 	va_end(ap);
 }
 
 void Foundation::LogWarn(const char * fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
-	Log(stderr, "[warn]", fmt, ap);
+	Log(stderr, kWarning, fmt, ap);
 	va_end(ap);
 }
 
 void Foundation::LogErr(const char * fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
-	Log(stderr, "[error]", fmt, ap);
+	Log(stderr, kError, fmt, ap);
 	va_end(ap);
 }
