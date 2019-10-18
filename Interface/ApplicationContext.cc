@@ -1,0 +1,360 @@
+/*
+ * MIT License
+ *
+ * Copyright (c) 2019 jewmin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+#include "ApplicationContext.h"
+#include "Logger.h"
+#include "packet.hpp"
+
+#pragma pack(1)
+struct tagMsgHeader {
+	u8 tag_begin;
+	u8 header_len;
+	u8 data_len_len;
+	u8 tag_end;
+};
+#pragma pack()
+
+#define HEADER_BEGIN 0xbf
+#define HEADER_END 0xef
+
+static Interface::ApplicationContext * instance_ = nullptr;
+
+Interface::ApplicationContext::ApplicationContext(OnSignalFunc onSignal, OnLogFunc onLog)
+	: reactor_(new Net::EventReactor()), connector_(new Net::SocketConnector(reactor_))
+	, sig_handle_int_(new uv_signal_t()), sig_handle_term_(new uv_signal_t())
+	, is_set_signal_(false), signal_num_(0), signal_func_(onSignal)
+	, servers_(new ServerMap()), clients_(new ClientMap())
+	, on_connected_func_(nullptr), on_connect_failed_func_(nullptr), on_disconnected_func_(nullptr)
+	, on_recv_msg_func_(nullptr), on_recv_raw_msg_func_(nullptr) {
+	Foundation::SetLogFunc(onLog);
+	SetupSignalHandler(sig_handle_int_, SIGINT);
+	SetupSignalHandler(sig_handle_term_, SIGTERM);
+}
+
+Interface::ApplicationContext::~ApplicationContext() {
+	for (auto & it: *servers_) {
+		delete it.second;
+	}
+	delete servers_;
+	for (auto & it: *clients_) {
+		delete it.second;
+	}
+	delete clients_;
+	ReleaseSignalHandler(sig_handle_int_);
+	ReleaseSignalHandler(sig_handle_term_);
+	connector_->Destroy();
+	delete reactor_;
+}
+
+void Interface::ApplicationContext::RunOnce() {
+	if (is_set_signal_) {
+		Foundation::LogInfo("---处理关服信号 %d---", signal_num_);
+		DispatchSignal(signal_num_);
+	}
+	reactor_->Dispatch();
+}
+
+u64 Interface::ApplicationContext::CreateServer(const char * name, int maxOutBufferSize, int maxInBufferSize) {
+	Net::SocketServer * server = new Net::SocketServer(name, reactor_, maxOutBufferSize, maxInBufferSize);
+	server->SetEvent(this);
+	servers_->insert(ServerPair(reinterpret_cast<u64>(server), server));
+	return reinterpret_cast<u64>(server);
+}
+
+bool Interface::ApplicationContext::ServerListen(u64 serverId, const char * address, int port) {
+	ServerMapIter it = servers_->find(serverId);
+	if (it != servers_->end()) {
+		Foundation::LogInfo("监听服务[%s:%s:%d]", it->second->GetName().c_str(), address, port);
+		return it->second->Listen(address, port);
+	}
+	return false;
+}
+
+bool Interface::ApplicationContext::EndServer(u64 serverId) {
+	ServerMapIter it = servers_->find(serverId);
+	if (it != servers_->end()) {
+		Foundation::LogInfo("终止服务[%s]", it->second->GetName().c_str());
+		return it->second->Terminate();
+	}
+	return false;
+}
+
+void Interface::ApplicationContext::DeleteServer(u64 serverId) {
+	ServerMapIter it = servers_->find(serverId);
+	if (it != servers_->end()) {
+		delete it->second;
+		servers_->erase(it);
+	}
+}
+
+u64 Interface::ApplicationContext::CreateClient(const char * name, int maxOutBufferSize, int maxInBufferSize) {
+	Net::SocketClient * client = new Net::SocketClient(name, reactor_, connector_, maxOutBufferSize, maxInBufferSize);
+	client->SetEvent(this);
+	clients_->insert(ClientPair(reinterpret_cast<u64>(client), client));
+	return reinterpret_cast<u64>(client);
+}
+
+u32 Interface::ApplicationContext::ClientConnect(u64 clientId, const char * address, int port) {
+	u32 id = 0;
+	ClientMapIter it = clients_->find(clientId);
+	if (it != clients_->end()) {
+		Foundation::LogInfo("连接服务[%s:%s:%d]", it->second->GetName().c_str(), address, port);
+		it->second->Connect(address, port, id);
+	}
+	return id;
+}
+
+void Interface::ApplicationContext::DeleteClient(u64 clientId) {
+	ClientMapIter it = clients_->find(clientId);
+	if (it != clients_->end()) {
+		delete it->second;
+		clients_->erase(it);
+	}
+}
+
+void Interface::ApplicationContext::ShutdownAllConnection(u64 mgrId) {
+	ServerMapIter it = servers_->find(mgrId);
+	if (it != servers_->end()) {
+		it->second->ShutDownAllSocketWrappers();
+	} else {
+		ClientMapIter it2 = clients_->find(mgrId);
+		if (it2 != clients_->end()) {
+			it2->second->ShutDownAllSocketWrappers();
+		}
+	}
+}
+
+void Interface::ApplicationContext::ShutdownConnection(u64 mgrId, u32 id) {
+	ServerMapIter it = servers_->find(mgrId);
+	if (it != servers_->end()) {
+		it->second->ShutDownOneSocketWrapper(id);
+	} else {
+		ClientMapIter it2 = clients_->find(mgrId);
+		if (it2 != clients_->end()) {
+			it2->second->ShutDownOneSocketWrapper(id);
+		}
+	}
+}
+
+void Interface::ApplicationContext::ShutdownConnectionNow(u64 mgrId, u32 id) {
+	ServerMapIter it = servers_->find(mgrId);
+	if (it != servers_->end()) {
+		Net::SocketWrapper * wrapper = it->second->GetSocketWrapper(id);
+		if (wrapper) {
+			wrapper->ShutdownNow();
+		}
+	} else {
+		ClientMapIter it2 = clients_->find(mgrId);
+		if (it2 != clients_->end()) {
+			Net::SocketWrapper * wrapper = it2->second->GetSocketWrapper(id);
+			if (wrapper) {
+				wrapper->ShutdownNow();
+			}
+		}
+	}
+}
+
+void Interface::ApplicationContext::SendMsg(u64 mgrId, u32 id, int msgId, const char * data, int size) {
+	ServerMapIter it = servers_->find(mgrId);
+	if (it != servers_->end()) {
+		Net::SocketWrapper * wrapper = it->second->GetSocketWrapper(id);
+		if (wrapper) {
+			struct tagMsgHeader header;
+			header.tag_begin = HEADER_BEGIN;
+			header.tag_end = HEADER_END;
+			if (msgId <= 0xff) {
+				header.header_len = 1;
+			} else if (msgId <= 0xffff) {
+				header.header_len = 2;
+			} else {
+				header.header_len = 4;
+			}
+			if (size <= 0xff) {
+				header.data_len_len = 1;
+			} else if (size <= 0xffff) {
+				header.data_len_len = 2;
+			} else {
+				header.data_len_len = 4;
+			}
+			Foundation::Packet packet;
+			packet.Reserve(sizeof(int) + size);
+			packet.WriteBinary(data, size);
+			wrapper->Write(packet.GetMemoryPtr(), packet.GetDataLength());
+		}
+	} else {
+		ClientMapIter it2 = clients_->find(mgrId);
+		if (it2 != clients_->end()) {
+			Net::SocketWrapper * wrapper = it2->second->GetSocketWrapper(id);
+			if (wrapper) {
+				
+			}
+		}
+	}
+}
+
+void Interface::ApplicationContext::SendRawMsg(u64 mgrId, u32 id, const char * data, int size) {
+	ServerMapIter it = servers_->find(mgrId);
+	if (it != servers_->end()) {
+		Net::SocketWrapper * wrapper = it->second->GetSocketWrapper(id);
+		if (wrapper) {
+			wrapper->Write(data, size);
+		}
+	} else {
+		ClientMapIter it2 = clients_->find(mgrId);
+		if (it2 != clients_->end()) {
+			Net::SocketWrapper * wrapper = it2->second->GetSocketWrapper(id);
+			if (wrapper) {
+				wrapper->Write(data, size);
+			}
+		}
+	}
+}
+
+void Interface::ApplicationContext::SetRawRecv(u64 mgrId, u32 id, bool isRaw) {
+	ServerMapIter it = servers_->find(mgrId);
+	if (it != servers_->end()) {
+		Net::SocketWrapper * wrapper = it->second->GetSocketWrapper(id);
+		if (wrapper) {
+			wrapper->SetRawRecv(isRaw);
+		}
+	} else {
+		ClientMapIter it2 = clients_->find(mgrId);
+		if (it2 != clients_->end()) {
+			Net::SocketWrapper * wrapper = it2->second->GetSocketWrapper(id);
+			if (wrapper) {
+				wrapper->SetRawRecv(isRaw);
+			}
+		}
+	}
+}
+
+void Interface::ApplicationContext::SetCallback(OnConnectedFunc onConnected, OnConnectFailedFunc onConnectFailed, OnDisconnectedFunc onDisconnected, OnRecvMsgFunc onRecvMsg, OnRecvRawMsgFunc onRecvRawMsg) {
+	on_connected_func_ = onConnected;
+	on_connect_failed_func_ = onConnectFailed;
+	on_disconnected_func_ = onDisconnected;
+	on_recv_msg_func_ = onRecvMsg;
+	on_recv_raw_msg_func_ = onRecvRawMsg;
+}
+
+Interface::ApplicationContext * Interface::ApplicationContext::GetInstance() {
+	return instance_;
+}
+
+Interface::ApplicationContext * Interface::ApplicationContext::CreateInstance(OnSignalFunc onSignal, OnLogFunc onLog) {
+	if (!instance_) {
+		instance_ = new ApplicationContext(onSignal, onLog);
+	}
+	return instance_;
+}
+
+void Interface::ApplicationContext::ReleaseInstance() {
+	if (instance_) {
+		delete instance_;
+		instance_ = nullptr;
+	}
+}
+
+void Interface::ApplicationContext::SetupSignalHandler(uv_signal_t * handle, int signum) {
+	uv_signal_init(reactor_->GetEventLoop(), handle);
+	uv_signal_start(handle, SignalCb, signum);
+	// uv_handle_set_data(reinterpret_cast<uv_handle_t *>(handle), this);
+}
+
+void Interface::ApplicationContext::ReleaseSignalHandler(uv_signal_t * handle) {
+	if (!uv_is_closing(reinterpret_cast<uv_handle_t *>(handle))) {
+		uv_close(reinterpret_cast<uv_handle_t *>(handle), CloseCb);
+	}
+}
+
+void Interface::ApplicationContext::SetSignal(int signum) {
+	is_set_signal_ = true;
+	signal_num_ = signum;
+}
+
+void Interface::ApplicationContext::DispatchSignal(int signum) {
+	is_set_signal_ = false;
+	OnSignal(signum);
+}
+
+void Interface::ApplicationContext::OnSignal(int signum) {
+	signal_func_(signum);
+}
+
+void Interface::ApplicationContext::OnConnected(Net::SocketWrapper * wrapper) {
+	Foundation::LogDebug("---一个Connection %u连上了---", wrapper->GetId());
+	if (on_connected_func_) {
+		on_connected_func_(reinterpret_cast<u64>(wrapper->GetMgr()), wrapper->GetId());
+	}
+}
+
+void Interface::ApplicationContext::OnConnectFailed(Net::SocketWrapper * wrapper, int reason) {
+	if (on_connect_failed_func_) {
+		on_connect_failed_func_(reinterpret_cast<u64>(wrapper->GetMgr()), wrapper->GetId(), reason);
+	}
+}
+
+void Interface::ApplicationContext::OnDisconnected(Net::SocketWrapper * wrapper, bool isRemote) {
+	Foundation::LogDebug("---一个Connection %u断开了---", wrapper->GetId());
+	if (on_disconnected_func_) {
+		on_disconnected_func_(reinterpret_cast<u64>(wrapper->GetMgr()), wrapper->GetId(), isRemote);
+	}
+}
+
+void Interface::ApplicationContext::OnNewDataReceived(Net::SocketWrapper * wrapper) {
+	if (wrapper->IsRawRecv()) {
+		if (on_recv_raw_msg_func_) {
+			on_recv_raw_msg_func_(reinterpret_cast<u64>(wrapper->GetMgr()), wrapper->GetId(), wrapper->GetRecvData(), wrapper->GetRecvDataSize());
+		}
+		wrapper->PopRecvData(wrapper->GetRecvDataSize());
+	} else {
+
+	}
+}
+
+void Interface::ApplicationContext::OnSomeDataSent(Net::SocketWrapper * wrapper) {
+}
+
+void Interface::ApplicationContext::SignalCb(uv_signal_t * handle, int signum) {
+	char * msg;
+	switch (signum) {
+		case SIGINT:
+			msg = "Received SIGINT scheduling shutdown...";
+			break;
+
+		case SIGTERM:
+			msg = "Received SIGTERM scheduling shutdown...";
+			break;
+
+		default:
+			msg = "Received shutdown signal, scheduling shutdown...";
+			break;
+	}
+
+	Foundation::LogWarn(msg);
+	GetInstance()->SetSignal(signum);
+}
+
+void Interface::ApplicationContext::CloseCb(uv_handle_t * handle) {
+	delete handle;
+}
