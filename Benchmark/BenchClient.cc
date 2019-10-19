@@ -27,7 +27,7 @@ BenchClient::BenchClient(int clientCount, int packetCount, int packetSize)
 BenchClient::~BenchClient() {
 	connector_->Destroy();
 	delete reactor_;
-	delete buffer_;
+	free(buffer_);
 }
 
 void BenchClient::Run(const std::string & address, int port) {
