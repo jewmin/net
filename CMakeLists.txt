@@ -2,25 +2,16 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.7.2)
 
 # 项目名
-PROJECT(libnet VERSION 1.0.1)
+PROJECT(libnet VERSION 2.0.0)
+# MESSAGE(${PROJECT_NAME})
+# MESSAGE(${PROJECT_SOURCE_DIR})
 
-# 添加文件
-FILE(GLOB all_headers "*.h")
-FILE(GLOB all_srcs "*.cc")
-SOURCE_GROUP("" FILES ${all_headers} ${all_srcs})
-SET(directory "Address" "Sockets" "Reactor" "Core")
+# 添加源文件
+AUX_SOURCE_DIRECTORY(${PROJECT_SOURCE_DIR} all_srcs)
+SET(directory "Address" "Sockets" "Reactor" "Core" "Interface")
 FOREACH(_dir ${directory})
-	FILE(GLOB ${_dir}_headers "${_dir}/*.h")
-	FILE(GLOB ${_dir}_srcs "${_dir}/*.cc")
-	SOURCE_GROUP("${_dir}" FILES ${${_dir}_headers} ${${_dir}_srcs})
-	FOREACH(_file ${${_dir}_headers})
-		LIST(APPEND all_headers ${_file})
-	ENDFOREACH()
-	FOREACH(_file ${${_dir}_srcs})
-		LIST(APPEND all_srcs ${_file})
-	ENDFOREACH()
+	AUX_SOURCE_DIRECTORY(${PROJECT_SOURCE_DIR}/${_dir} all_srcs)
 ENDFOREACH()
-# MESSAGE(${all_headers})
 # MESSAGE(${all_srcs})
 
 # 设置
@@ -39,16 +30,19 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
 ENDIF()
 
 # 第三方类库
-INCLUDE_DIRECTORIES(${libnet_SOURCE_DIR})
-INCLUDE_DIRECTORIES(${libnet_SOURCE_DIR}/libuv/include)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR})
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/libuv/include)
+
+# 输出目录
+SET(LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
 # 生成静态库
 IF (MSVC)
-	ADD_LIBRARY(libnet STATIC ${all_headers} ${all_srcs})
+	ADD_LIBRARY(libnet STATIC ${all_srcs})
 ELSE()
-	ADD_LIBRARY(net STATIC ${all_headers} ${all_srcs})
+	ADD_LIBRARY(net STATIC ${all_srcs})
 ENDIF()
 
-# 添加单元测试项目
-ADD_SUBDIRECTORY(TestSuite)
-ADD_SUBDIRECTORY(Benchmark)
+# # 添加单元测试项目、压测项目
+# ADD_SUBDIRECTORY(TestSuite)
+# ADD_SUBDIRECTORY(Benchmark)

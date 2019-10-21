@@ -78,17 +78,17 @@ void ShutdownConnectionNow(u64 mgrId, u32 id) {
 }
 
 int SendMsg(u64 mgrId, u32 id, int msgId, const char * data, int size) {
-
+	Interface::ApplicationContext::GetInstance()->SendMsg(mgrId, id, msgId, data, size);
 }
 
 int SendRawMsg(u64 mgrId, u32 id, const char * data, int size) {
-
+	Interface::ApplicationContext::GetInstance()->SendRawMsg(mgrId, id, data, size);
 }
 
 void SetRawRecv(u64 mgrId, u32 id, bool isRaw) {
-
+	Interface::ApplicationContext::GetInstance()->SetRawRecv(mgrId, id, isRaw);
 }
 
 void SetCallback(OnConnectedFunc onConnected, OnConnectFailedFunc onConnectFailed, OnDisconnectedFunc onDisconnected, OnRecvMsgFunc onRecvMsg, OnRecvRawMsgFunc onRecvRawMsg) {
-
+	Interface::ApplicationContext::GetInstance()->SetCallback(onConnected, onConnectFailed, onDisconnected, onRecvMsg, onRecvRawMsg);
 }

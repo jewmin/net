@@ -40,6 +40,7 @@
 #include <typeinfo>
 #include <stdexcept>
 #include <unordered_map>
+#include <assert.h>
 
 typedef std::int8_t		i8;
 typedef std::int16_t	i16;

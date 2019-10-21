@@ -66,6 +66,7 @@ namespace Interface {
 		void SetSignal(int signum);
 		void DispatchSignal(int signum);
 		void OnSignal(int signum);
+		void SendMsg(Net::SocketWrapper * wrapper, int msgId, const char * data, int size);
 
 		virtual void OnConnected(Net::SocketWrapper * wrapper);
 		virtual void OnConnectFailed(Net::SocketWrapper * wrapper, int reason);

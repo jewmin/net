@@ -24,19 +24,20 @@
 
 #include "ApplicationContext.h"
 #include "Logger.h"
-#include "packet.hpp"
+#include "Packet.hpp"
 
 #pragma pack(1)
 struct tagMsgHeader {
 	u8 tag_begin;
-	u8 header_len;
-	u8 data_len_len;
+	u16 crc_data;
 	u8 tag_end;
 };
 #pragma pack()
 
 #define HEADER_BEGIN 0xbf
 #define HEADER_END 0xef
+#define PRIVATE_MAKE_CRC_DATA(x, y, z) (((x) << 8 | (y)) | (z))
+#define MAKE_CRC_DATA(x, y, z) PRIVATE_MAKE_CRC_DATA(x, y, z)
 
 static Interface::ApplicationContext * instance_ = nullptr;
 
@@ -175,39 +176,66 @@ void Interface::ApplicationContext::ShutdownConnectionNow(u64 mgrId, u32 id) {
 	}
 }
 
+void Interface::ApplicationContext::SendMsg(Net::SocketWrapper * wrapper, int msgId, const char * data, int size) {
+#define _MAKE_HEADER_BYTES(bytes, header) do {				\
+	if (header < 0x100) {									\
+		bytes = 1;											\
+	} else if (header < 0x10000) {							\
+		bytes = 2;											\
+	} else {												\
+		bytes = 4;											\
+	}														\
+} while (/*CONSTCOND*/ 0)
+
+#define _WRITE_DATA_LENGTH(packet, header, length) do {		\
+	switch (header) {										\
+		case 1:												\
+			packet.WriteAtom<u8>(length);					\
+			break;											\
+		case 2:												\
+			packet.WriteAtom<u16>(length);					\
+			break;											\
+		case 4:												\
+			packet.WriteAtom<u32>(length);					\
+			break;											\
+	}														\
+} while (/*CONSTCOND*/ 0)
+
+	static struct tagMsgHeader header;
+	u8 msg_id_header = 0;
+	u8 data_header = 0;
+	u8 header_len = 0;
+	_MAKE_HEADER_BYTES(msg_id_header, msgId);
+	_MAKE_HEADER_BYTES(data_header, size);
+	header_len = msg_id_header << 4 & data_header;
+	// 头赋值，简单计算crc，以后替换
+	header.tag_begin = HEADER_BEGIN;
+	header.tag_end = HEADER_END;
+	header.crc_data = MAKE_CRC_DATA(header.tag_begin, header.tag_end, size);
+	// 使用Packet序列化输入
+	Foundation::Packet packet;
+	packet.Reserve(size + 13);
+	packet.WriteBinary(reinterpret_cast<const char *>(&header), sizeof(header));
+	packet.WriteAtom<u8>(header_len);
+	_WRITE_DATA_LENGTH(packet, msg_id_header, msgId);
+	_WRITE_DATA_LENGTH(packet, data_header, size);
+	packet.WriteBinary(data, size);
+	wrapper->Write(packet.GetMemoryPtr(), packet.GetDataLength());
+}
+
 void Interface::ApplicationContext::SendMsg(u64 mgrId, u32 id, int msgId, const char * data, int size) {
 	ServerMapIter it = servers_->find(mgrId);
 	if (it != servers_->end()) {
 		Net::SocketWrapper * wrapper = it->second->GetSocketWrapper(id);
 		if (wrapper) {
-			struct tagMsgHeader header;
-			header.tag_begin = HEADER_BEGIN;
-			header.tag_end = HEADER_END;
-			if (msgId <= 0xff) {
-				header.header_len = 1;
-			} else if (msgId <= 0xffff) {
-				header.header_len = 2;
-			} else {
-				header.header_len = 4;
-			}
-			if (size <= 0xff) {
-				header.data_len_len = 1;
-			} else if (size <= 0xffff) {
-				header.data_len_len = 2;
-			} else {
-				header.data_len_len = 4;
-			}
-			Foundation::Packet packet;
-			packet.Reserve(sizeof(int) + size);
-			packet.WriteBinary(data, size);
-			wrapper->Write(packet.GetMemoryPtr(), packet.GetDataLength());
+			SendMsg(wrapper, msgId, data, size);
 		}
 	} else {
 		ClientMapIter it2 = clients_->find(mgrId);
 		if (it2 != clients_->end()) {
 			Net::SocketWrapper * wrapper = it2->second->GetSocketWrapper(id);
 			if (wrapper) {
-				
+				SendMsg(wrapper, msgId, data, size);
 			}
 		}
 	}
@@ -328,7 +356,7 @@ void Interface::ApplicationContext::OnNewDataReceived(Net::SocketWrapper * wrapp
 		}
 		wrapper->PopRecvData(wrapper->GetRecvDataSize());
 	} else {
-
+		
 	}
 }
 
@@ -336,7 +364,7 @@ void Interface::ApplicationContext::OnSomeDataSent(Net::SocketWrapper * wrapper)
 }
 
 void Interface::ApplicationContext::SignalCb(uv_signal_t * handle, int signum) {
-	char * msg;
+	std::string msg;
 	switch (signum) {
 		case SIGINT:
 			msg = "Received SIGINT scheduling shutdown...";
@@ -351,7 +379,7 @@ void Interface::ApplicationContext::SignalCb(uv_signal_t * handle, int signum) {
 			break;
 	}
 
-	Foundation::LogWarn(msg);
+	Foundation::LogWarn(msg.c_str());
 	GetInstance()->SetSignal(signum);
 }
 
