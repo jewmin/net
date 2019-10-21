@@ -27,30 +27,52 @@
 
 #include "CommonDef.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifdef _WIN32
+	/* Windows - set up dll import/export decorators. */
+#	if defined(BUILDING_NET_SHARED)
+		/* Building shared library. */
+#		define NET_EXTERN __declspec(dllexport)
+#	elif defined(USING_NET_SHARED)
+		/* Using shared library. */
+#		define NET_EXTERN __declspec(dllimport)
+#	else
+		/* Building static library. */
+#		define NET_EXTERN /* nothing */
+#	endif
+#elif __GNUC__ >= 4
+#	define NET_EXTERN __attribute__((visibility("default")))
+#else
+#	define NET_EXTERN /* nothing */
+#endif
+
 // Interface Function
 typedef void(*OnSignalFunc)(int signum);
 typedef void (*OnLogFunc)(int level, const char * msg);
 
-void Init(OnSignalFunc onSignal, OnLogFunc onLog);
-void Unit();
-void Loop();
+NET_EXTERN void Init(OnSignalFunc onSignal, OnLogFunc onLog);
+NET_EXTERN void Unit();
+NET_EXTERN void Loop();
 
-u64 CreateServer(const char * name, int maxOutBufferSize, int maxInBufferSize);
-bool ServerListen(u64 serverId, const char * address, int port);
-bool EndServer(u64 serverId);
-void DeleteServer(u64 serverId);
+NET_EXTERN u64 CreateServer(const char * name, int maxOutBufferSize, int maxInBufferSize);
+NET_EXTERN bool ServerListen(u64 serverId, const char * address, int port);
+NET_EXTERN bool EndServer(u64 serverId);
+NET_EXTERN void DeleteServer(u64 serverId);
 
-u64 CreateClient(const char * name, int maxOutBufferSize, int maxInBufferSize);
-u32 ClientConnect(u64 clientId, const char * address, int port);
-void DeleteClient(u64 clientId);
+NET_EXTERN u64 CreateClient(const char * name, int maxOutBufferSize, int maxInBufferSize);
+NET_EXTERN u32 ClientConnect(u64 clientId, const char * address, int port);
+NET_EXTERN void DeleteClient(u64 clientId);
 
-void ShutdownAllConnection(u64 mgrId);
-void ShutdownConnection(u64 mgrId, u32 id);
-void ShutdownConnectionNow(u64 mgrId, u32 id);
+NET_EXTERN void ShutdownAllConnection(u64 mgrId);
+NET_EXTERN void ShutdownConnection(u64 mgrId, u32 id);
+NET_EXTERN void ShutdownConnectionNow(u64 mgrId, u32 id);
 
-int SendMsg(u64 mgrId, u32 id, int msgId, const char * data, int size);
-int SendRawMsg(u64 mgrId, u32 id, const char * data, int size);
-void SetRawRecv(u64 mgrId, u32 id, bool isRaw);
+NET_EXTERN int SendMsg(u64 mgrId, u32 id, int msgId, const char * data, int size);
+NET_EXTERN int SendRawMsg(u64 mgrId, u32 id, const char * data, int size);
+NET_EXTERN void SetRawRecv(u64 mgrId, u32 id, bool isRaw);
 
 // Callback Function
 typedef void(*OnConnectedFunc)(u64 mgrId, u32 id);
@@ -58,6 +80,10 @@ typedef void(*OnConnectFailedFunc)(u64 mgrId, u32 id, int reason);
 typedef void(*OnDisconnectedFunc)(u64 mgrId, u32 id, bool isRemote);
 typedef void(*OnRecvMsgFunc)(u64 mgrId, u32 id, int msgId, const char * data, int size);
 typedef void(*OnRecvRawMsgFunc)(u64 mgrId, u32 id, const char * data, int size);
-void SetCallback(OnConnectedFunc onConnected, OnConnectFailedFunc onConnectFailed, OnDisconnectedFunc onDisconnected, OnRecvMsgFunc onRecvMsg, OnRecvRawMsgFunc onRecvRawMsg);
+NET_EXTERN void SetCallback(OnConnectedFunc onConnected, OnConnectFailedFunc onConnectFailed, OnDisconnectedFunc onDisconnected, OnRecvMsgFunc onRecvMsg, OnRecvRawMsgFunc onRecvRawMsg);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
