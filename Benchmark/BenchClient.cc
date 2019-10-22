@@ -16,7 +16,7 @@ BenchClient::BenchClient(int clientCount, int packetCount, int packetSize)
 	PackHeader ph = {0};
 	ph.pack_begin_flag = PACK_BEGIN_FLAG;
 	ph.pack_end_flag = PACK_END_FLAG;
-	ph.data_len = packet_size_ - PACK_HEADER_LEN;
+	ph.data_len = static_cast<u16>(packet_size_ - PACK_HEADER_LEN);
 	ph.crc_data = MAKE_CRC_DATA(PACK_BEGIN_FLAG, PACK_END_FLAG, ph.data_len);
 	memset(buffer_, '.', packet_size_);
 	memcpy(buffer_, &ph, PACK_HEADER_LEN);

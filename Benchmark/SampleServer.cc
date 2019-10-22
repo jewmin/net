@@ -57,7 +57,7 @@ void SampleServer::ShowStatus() {
 		unit = ' ';
 	}
 	double qps = (double)packet_counter_ * 1000000 / (double)use_time_;
-	Foundation::LogInfo("网卡流量：%.0lf%c, QPS：%.lf", bits, unit, qps);
+	Foundation::LogInfo("网卡流量：%.2lf%c, QPS：%.lf", bits, unit, qps);
 }
 
 void SampleServer::OnConnected(Net::SocketWrapper * wrapper) {

@@ -77,11 +77,11 @@ void ShutdownConnectionNow(u64 mgrId, u32 id) {
 	Interface::ApplicationContext::GetInstance()->ShutdownConnectionNow(mgrId, id);
 }
 
-int SendMsg(u64 mgrId, u32 id, int msgId, const char * data, int size) {
+void SendMsg(u64 mgrId, u32 id, int msgId, const char * data, int size) {
 	Interface::ApplicationContext::GetInstance()->SendMsg(mgrId, id, msgId, data, size);
 }
 
-int SendRawMsg(u64 mgrId, u32 id, const char * data, int size) {
+void SendRawMsg(u64 mgrId, u32 id, const char * data, int size) {
 	Interface::ApplicationContext::GetInstance()->SendRawMsg(mgrId, id, data, size);
 }
 

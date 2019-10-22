@@ -49,7 +49,7 @@ namespace Foundation {
 
 		// 获取当前缓冲长度下的可用字节数
 		inline int GetWritableLength() {
-			return end_ptr_ - offset_;
+			return static_cast<int>(end_ptr_ - offset_);
 		}
 
 		// 设置数据包当前读写位置字节偏移量，如果新的偏移量比当前内存块长度要大，则函数会与SetLength一样进行内存块的扩展操作
@@ -73,13 +73,13 @@ namespace Foundation {
 			if (offset_ < mem_ptr_) {
 				offset_ = mem_ptr_;
 			} else if (offset_ > end_ptr_) {
-				Realloc(offset_ - mem_ptr_);
+				Realloc(static_cast<int>(offset_ - mem_ptr_));
 			}
 			// 如果读写指针超过长度指针的位置，则调整长度指针为读写指针的位置
 			if (offset_ > data_end_) {
 				data_end_ = offset_;
 			}
-			return offset_ - mem_ptr_;
+			return static_cast<int>(offset_ - mem_ptr_);
 		}
 
 		// 设置数据长度
@@ -155,12 +155,12 @@ namespace Foundation {
 		}
 
 		inline Packet & operator << (const char * value) {
-			WriteString(value, strlen(value));
+			WriteString(value, static_cast<int>(strlen(value)));
 			return *this;
 		}
 
 		inline Packet & operator << (char * value) {
-			WriteString(value, strlen(value));
+			WriteString(value, static_cast<int>(strlen(value)));
 			return *this;
 		}
 
@@ -197,7 +197,7 @@ namespace Foundation {
 			if ((int)-1 == len) {
 				len = str ? (LENGTH)strlen(str) : 0;
 			} else {
-				len = std::min<int>(len, strlen(str));
+				len = std::min<int>(len, static_cast<int>(strlen(str)));
 			}
 			WriteAtom<LENGTH>((LENGTH)len);
 			WriteBinary(reinterpret_cast<const char *>(str), len);

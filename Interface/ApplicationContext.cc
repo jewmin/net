@@ -39,7 +39,7 @@ struct tagMsgHeader {
 #define PRIVATE_MAKE_CRC_DATA(x, y, z) (((x) << 8 | (y)) | (z))
 #define MAKE_CRC_DATA(x, y, z) PRIVATE_MAKE_CRC_DATA(x, y, z)
 
-static Interface::ApplicationContext * instance_ = nullptr;
+Interface::ApplicationContext * Interface::ApplicationContext::instance_ = nullptr;
 
 Interface::ApplicationContext::ApplicationContext(OnSignalFunc onSignal, OnLogFunc onLog)
 	: reactor_(new Net::EventReactor()), connector_(new Net::SocketConnector(reactor_))

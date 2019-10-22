@@ -38,22 +38,22 @@ namespace Foundation {
 
 		// 获取内存空间的大小
 		inline int GetLength() {
-			return end_ptr_ - mem_ptr_;
+			return static_cast<int>(end_ptr_ - mem_ptr_);
 		}
 
 		// 获取数据包的当前有效数据长度
 		inline int GetDataLength() {
-			return data_end_ - mem_ptr_;
+			return static_cast<int>(data_end_ - mem_ptr_);
 		}
 
 		// 获取自当前读写指针开始可以读取的剩余字节数
 		inline int GetReadableLength() {
-			return data_end_ - offset_;
+			return static_cast<int>(data_end_ - offset_);
 		}
 
 		// 获取数据包当前读写位置字节偏移量
 		inline int GetPosition() {
-			return offset_ - mem_ptr_;
+			return static_cast<int>(offset_ - mem_ptr_);
 		}
 
 		// 获取数据包数据内存指针
@@ -89,7 +89,7 @@ namespace Foundation {
 			} else if (offset_ > end_ptr_) {
 				offset_ = end_ptr_;
 			}
-			return offset_ - mem_ptr_;
+			return static_cast<int>(offset_ - mem_ptr_);
 		}
 
 		// 读取原子数据
@@ -187,13 +187,14 @@ namespace Foundation {
 		// 读取字符串数据
 		template<typename LENGTH>
 		const char * RawReadStringPtr() {
+			int len = sizeof(LENGTH);
 			int avaliable = GetReadableLength();
-			if (avaliable >= sizeof(LENGTH) + 1) {
+			if (avaliable >= len + 1) {
 				int str_len = *(reinterpret_cast<LENGTH *>(offset_));
 				// 如果数据包中有足够的字符串数据空间
-				if (avaliable >= str_len + sizeof(LENGTH) + 1) {
-					const char * str = reinterpret_cast<char *>(offset_ + sizeof(LENGTH));
-					offset_ += str_len + sizeof(LENGTH) + 1;
+				if (avaliable >= str_len + len + 1) {
+					const char * str = reinterpret_cast<char *>(offset_ + len);
+					offset_ += str_len + len + 1;
 					return str;
 				}
 			}

@@ -70,8 +70,8 @@ NET_EXTERN void ShutdownAllConnection(u64 mgrId);
 NET_EXTERN void ShutdownConnection(u64 mgrId, u32 id);
 NET_EXTERN void ShutdownConnectionNow(u64 mgrId, u32 id);
 
-NET_EXTERN int SendMsg(u64 mgrId, u32 id, int msgId, const char * data, int size);
-NET_EXTERN int SendRawMsg(u64 mgrId, u32 id, const char * data, int size);
+NET_EXTERN void SendMsg(u64 mgrId, u32 id, int msgId, const char * data, int size);
+NET_EXTERN void SendRawMsg(u64 mgrId, u32 id, const char * data, int size);
 NET_EXTERN void SetRawRecv(u64 mgrId, u32 id, bool isRaw);
 
 // Callback Function
