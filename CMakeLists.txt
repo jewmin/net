@@ -121,14 +121,15 @@ SET(LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 
 # 生成静态库、动态库
 IF (MSVC)
-	ADD_LIBRARY(libnet SHARED ${all_srcs})
 	ADD_LIBRARY(libnet-static STATIC ${all_srcs})
+	ADD_LIBRARY(libnet SHARED ${all_srcs})
 	TARGET_COMPILE_DEFINITIONS(libnet PRIVATE BUILDING_NET_SHARED)
 	TARGET_LINK_LIBRARIES(libnet libuv ws2_32 iphlpapi psapi userenv)
 ELSE()
-	ADD_LIBRARY(net SHARED ${all_srcs})
 	ADD_LIBRARY(net-static STATIC ${all_srcs})
 	SET_TARGET_PROPERTIES(net-static PROPERTIES OUTPUT_NAME "net")
+	ADD_LIBRARY(net SHARED ${all_srcs})
+	TARGET_COMPILE_OPTIONS(net PRIVATE -fPIC -fvisibility=hidden)
 ENDIF()
 
 # # 添加单元测试项目、压测项目
