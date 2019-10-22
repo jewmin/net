@@ -84,6 +84,7 @@ SET(all_srcs
 	${Core}
 	${Interface}
 )
+# MESSAGE(${all_srcs})
 
 # 生成目录结构
 SOURCE_GROUP("" FILES ${Common})
@@ -132,6 +133,6 @@ ELSE()
 	TARGET_COMPILE_OPTIONS(net PRIVATE -fPIC -fvisibility=hidden)
 ENDIF()
 
-# # 添加单元测试项目、压测项目
-# ADD_SUBDIRECTORY(TestSuite)
+# 添加单元测试项目、压测项目
+ADD_SUBDIRECTORY(TestSuite)
 # ADD_SUBDIRECTORY(Benchmark)
