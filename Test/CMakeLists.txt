@@ -2,7 +2,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.7.2)
 
 # 项目名
-PROJECT(benchmark VERSION 1.0.1)
+PROJECT(test VERSION 2.0.1)
 # MESSAGE(${PROJECT_NAME} ${PROJECT_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR})
 
 # 设置
@@ -34,7 +34,7 @@ IF (MSVC)
 ENDIF()
 
 # 生成可执行文件
-ADD_EXECUTABLE(bench_server ProtocolDef.h SampleServer.h SampleServer.cc ServerMain.cc)
+ADD_EXECUTABLE(bench_server ProtocolDef.h BenchServer.h BenchServer.cc ServerMain.cc)
 IF (MSVC)
 	TARGET_LINK_LIBRARIES(bench_server libnet-static libuv vld ws2_32 iphlpapi psapi userenv)
 ELSE()
@@ -46,4 +46,11 @@ IF (MSVC)
 	TARGET_LINK_LIBRARIES(bench_client libnet-static libuv vld ws2_32 iphlpapi psapi userenv)
 ELSE()
 	TARGET_LINK_LIBRARIES(bench_client net.a uv)
+ENDIF()
+
+ADD_EXECUTABLE(test_dll DllMain.cc)
+IF (MSVC)
+	TARGET_LINK_LIBRARIES(test_dll libnet libuv vld ws2_32 iphlpapi psapi userenv)
+ELSE()
+	TARGET_LINK_LIBRARIES(test_dll net uv)
 ENDIF()

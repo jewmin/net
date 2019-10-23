@@ -1,15 +1,15 @@
-#ifndef Benchmark_SampleServer_INCLUDED
-#define Benchmark_SampleServer_INCLUDED
+#ifndef Benchmark_BenchServer_INCLUDED
+#define Benchmark_BenchServer_INCLUDED
 
 #include "CommonDef.h"
 #include "Core/IEvent.h"
 #include "Core/SocketWrapper.h"
 #include "Core/SocketServer.h"
 
-class SampleServer : public Net::IEvent {
+class BenchServer : public Net::IEvent {
 public:
-	SampleServer();
-	~SampleServer();
+	BenchServer();
+	~BenchServer();
 	void Run(const std::string & address, int port);
 	void ShowStatus();
 

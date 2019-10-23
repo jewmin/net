@@ -1,22 +1,22 @@
-#include "SampleServer.h"
+#include "BenchServer.h"
 #include <chrono>
 #include "ProtocolDef.h"
 #include "Logger.h"
 
-SampleServer::SampleServer()
+BenchServer::BenchServer()
 	: reactor_(new Net::EventReactor())
-	, server_(new Net::SocketServer("SampleServer", reactor_, 65536, 65536))
+	, server_(new Net::SocketServer("BenchServer", reactor_, 65536, 65536))
 	, use_time_(0), recv_packet_size_(0), quit_(false)
 	, connected_counter_(0), connect_failed_counter_(0), disconnected_counter_(0), packet_counter_(0) {
 	server_->SetEvent(this);
 }
 
-SampleServer::~SampleServer() {
+BenchServer::~BenchServer() {
 	delete server_;
 	delete reactor_;
 }
 
-void SampleServer::Run(const std::string & address, int port) {
+void BenchServer::Run(const std::string & address, int port) {
 	uv_signal_t * sig_handler = new uv_signal_t();
 	uv_signal_init(reactor_->GetEventLoop(), sig_handler);
 	uv_signal_start_oneshot(sig_handler, SignalCb, SIGINT);
@@ -32,7 +32,7 @@ void SampleServer::Run(const std::string & address, int port) {
 	uv_close(reinterpret_cast<uv_handle_t *>(sig_handler), CloseCb);
 }
 
-void SampleServer::ShowStatus() {
+void BenchServer::ShowStatus() {
 	Foundation::LogInfo("成功连接数：%d", connected_counter_);
 	Foundation::LogInfo("失败连接数：%d", connect_failed_counter_);
 	Foundation::LogInfo("关闭连接数：%d", disconnected_counter_);
@@ -60,17 +60,17 @@ void SampleServer::ShowStatus() {
 	Foundation::LogInfo("网卡流量：%.2lf%c, QPS：%.lf", bits, unit, qps);
 }
 
-int SampleServer::OnConnected(Net::SocketWrapper * wrapper) {
+int BenchServer::OnConnected(Net::SocketWrapper * wrapper) {
 	++connected_counter_;
 	return 0;
 }
 
-int SampleServer::OnConnectFailed(Net::SocketWrapper * wrapper, int reason) {
+int BenchServer::OnConnectFailed(Net::SocketWrapper * wrapper, int reason) {
 	++connect_failed_counter_;
 	return 0;
 }
 
-int SampleServer::OnDisconnected(Net::SocketWrapper * wrapper, bool isRemote) {
+int BenchServer::OnDisconnected(Net::SocketWrapper * wrapper, bool isRemote) {
 	++disconnected_counter_;
 	if (disconnected_counter_ == connected_counter_) {
 		quit_ = true;
@@ -78,7 +78,7 @@ int SampleServer::OnDisconnected(Net::SocketWrapper * wrapper, bool isRemote) {
 	return 0;
 }
 
-int SampleServer::OnNewDataReceived(Net::SocketWrapper * wrapper) {
+int BenchServer::OnNewDataReceived(Net::SocketWrapper * wrapper) {
 	const int data_size = wrapper->GetRecvDataSize();
 	if (data_size >= PACK_HEADER_LEN) {
 		const int message_size = GetMessageSize(wrapper);
@@ -95,11 +95,11 @@ int SampleServer::OnNewDataReceived(Net::SocketWrapper * wrapper) {
 	return 0;
 }
 
-int SampleServer::OnSomeDataSent(Net::SocketWrapper * wrapper) {
+int BenchServer::OnSomeDataSent(Net::SocketWrapper * wrapper) {
 	return 0;
 }
 
-int SampleServer::GetMessageSize(Net::SocketWrapper * wrapper) const {
+int BenchServer::GetMessageSize(Net::SocketWrapper * wrapper) const {
 	PackHeader ph = {0};
 	memcpy(&ph, wrapper->GetRecvData(), PACK_HEADER_LEN);
 	if (PACK_BEGIN_FLAG == ph.pack_begin_flag && PACK_END_FLAG == ph.pack_end_flag) {
@@ -111,7 +111,7 @@ int SampleServer::GetMessageSize(Net::SocketWrapper * wrapper) const {
 	return 0;
 }
 
-void SampleServer::ProcessCommand(Net::SocketWrapper * wrapper) const {
+void BenchServer::ProcessCommand(Net::SocketWrapper * wrapper) const {
 	PackHeader ph = {0};
 	memcpy(&ph, wrapper->GetRecvData(), PACK_HEADER_LEN);
 	const char * data = wrapper->GetRecvData() + PACK_HEADER_LEN;
@@ -119,13 +119,13 @@ void SampleServer::ProcessCommand(Net::SocketWrapper * wrapper) const {
 	/*Foundation::LogInfo("Socket [%u] Package [length:%d]", wrapper->GetId(), data_len);*/
 }
 
-void SampleServer::SignalCb(uv_signal_t * handle, int signum) {
-	SampleServer * ss = static_cast<SampleServer *>(handle->data);
+void BenchServer::SignalCb(uv_signal_t * handle, int signum) {
+	BenchServer * ss = static_cast<BenchServer *>(handle->data);
 	if (ss) {
 		ss->quit_ = true;
 	}
 }
 
-void SampleServer::CloseCb(uv_handle_t * handle) {
+void BenchServer::CloseCb(uv_handle_t * handle) {
 	delete handle;
 }
