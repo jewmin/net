@@ -84,8 +84,8 @@ TEST(InterfaceTestSuite, use) {
 
 TEST(InterfaceTestSuite, error) {
 	Init(nullptr, nullptr);
-	EXPECT_EQ(false, ServerListen(0, "0.0.0.0", 6789));
-	EXPECT_EQ(false, EndServer(0));
+	EXPECT_EQ(ServerListen(0, "0.0.0.0", 6789), false);
+	EXPECT_EQ(EndServer(0), false);
 	Unit();
 }
 
