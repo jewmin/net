@@ -60,28 +60,31 @@ void SampleServer::ShowStatus() {
 	Foundation::LogInfo("网卡流量：%.2lf%c, QPS：%.lf", bits, unit, qps);
 }
 
-void SampleServer::OnConnected(Net::SocketWrapper * wrapper) {
+int SampleServer::OnConnected(Net::SocketWrapper * wrapper) {
 	++connected_counter_;
+	return 0;
 }
 
-void SampleServer::OnConnectFailed(Net::SocketWrapper * wrapper, int reason) {
+int SampleServer::OnConnectFailed(Net::SocketWrapper * wrapper, int reason) {
 	++connect_failed_counter_;
+	return 0;
 }
 
-void SampleServer::OnDisconnected(Net::SocketWrapper * wrapper, bool isRemote) {
+int SampleServer::OnDisconnected(Net::SocketWrapper * wrapper, bool isRemote) {
 	++disconnected_counter_;
 	if (disconnected_counter_ == connected_counter_) {
 		quit_ = true;
 	}
+	return 0;
 }
 
-void SampleServer::OnNewDataReceived(Net::SocketWrapper * wrapper) {
+int SampleServer::OnNewDataReceived(Net::SocketWrapper * wrapper) {
 	const int data_size = wrapper->GetRecvDataSize();
 	if (data_size >= PACK_HEADER_LEN) {
 		const int message_size = GetMessageSize(wrapper);
 		if (0 == message_size) {
 			Foundation::LogErr("Socket [%u] Get Message Error And Shutdown Now", wrapper->GetId());
-			wrapper->ShutdownNow();
+			return 1;
 		} else if (data_size >= message_size) {
 			ProcessCommand(wrapper);
 			wrapper->PopRecvData(message_size);
@@ -89,9 +92,11 @@ void SampleServer::OnNewDataReceived(Net::SocketWrapper * wrapper) {
 			++packet_counter_;
 		}
 	}
+	return 0;
 }
 
-void SampleServer::OnSomeDataSent(Net::SocketWrapper * wrapper) {
+int SampleServer::OnSomeDataSent(Net::SocketWrapper * wrapper) {
+	return 0;
 }
 
 int SampleServer::GetMessageSize(Net::SocketWrapper * wrapper) const {

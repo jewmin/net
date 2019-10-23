@@ -60,41 +60,45 @@ void BenchClient::ShowStatus() {
 	}*/
 }
 
-void BenchClient::OnConnected(Net::SocketWrapper * wrapper) {
+int BenchClient::OnConnected(Net::SocketWrapper * wrapper) {
 	/*++connected_counter_;
 	if (connected_counter_ + connect_failed_counter_ == client_count_) {
 		quit_ = true;
 	}*/
 	client_packet_map_.insert(std::pair<u64, int>(reinterpret_cast<u64>(wrapper), 0));
 	wrapper->Write(buffer_, packet_size_);
+	return 0;
 }
 
-void BenchClient::OnConnectFailed(Net::SocketWrapper * wrapper, int reason) {
+int BenchClient::OnConnectFailed(Net::SocketWrapper * wrapper, int reason) {
 	++connect_failed_counter_;
 	if (connected_counter_ + connect_failed_counter_ == client_count_) {
 		quit_ = true;
 	}
+	return 0;
 }
 
-void BenchClient::OnDisconnected(Net::SocketWrapper * wrapper, bool isRemote) {
+int BenchClient::OnDisconnected(Net::SocketWrapper * wrapper, bool isRemote) {
 	++disconnected_counter_;
+	return 0;
 }
 
-void BenchClient::OnNewDataReceived(Net::SocketWrapper * wrapper) {
+int BenchClient::OnNewDataReceived(Net::SocketWrapper * wrapper) {
 	const int data_size = wrapper->GetRecvDataSize();
 	if (data_size >= PACK_HEADER_LEN) {
 		const int message_size = GetMessageSize(wrapper);
 		if (0 == message_size) {
 			Foundation::LogErr("Socket [%u] Get Message Error And Shutdown Now", wrapper->GetId());
-			wrapper->ShutdownNow();
+			return 1;
 		} else if (data_size >= message_size) {
 			ProcessCommand(wrapper);
 			wrapper->PopRecvData(message_size);
 		}
 	}
+	return 0;
 }
 
-void BenchClient::OnSomeDataSent(Net::SocketWrapper * wrapper) {
+int BenchClient::OnSomeDataSent(Net::SocketWrapper * wrapper) {
 	auto it = client_packet_map_.find(reinterpret_cast<u64>(wrapper));
 	if (it != client_packet_map_.end()) {
 		if (++it->second < packet_count_) {
@@ -106,6 +110,7 @@ void BenchClient::OnSomeDataSent(Net::SocketWrapper * wrapper) {
 			}
 		}
 	}
+	return 0;
 }
 
 int BenchClient::GetMessageSize(Net::SocketWrapper * wrapper) const {

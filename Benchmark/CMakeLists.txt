@@ -2,7 +2,8 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.7.2)
 
 # 项目名
-PROJECT(benchmark VERSION 1.0.0)
+PROJECT(benchmark VERSION 1.0.1)
+# MESSAGE(${PROJECT_NAME} ${PROJECT_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR})
 
 # 设置
 SET(CMAKE_BUILD_TYPE Debug)
@@ -19,32 +20,30 @@ ELSE()
 ENDIF()
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
+	ADD_DEFINITIONS(-m64)
 	ADD_DEFINITIONS(-std=c++11)
 ENDIF()
 
 # 第三方类库
-INCLUDE_DIRECTORIES(${libnet_SOURCE_DIR})
-INCLUDE_DIRECTORIES(${libnet_SOURCE_DIR}/libuv/include)
 IF (MSVC)
 	INCLUDE_DIRECTORIES(${test_suite_SOURCE_DIR}/vld/include)
 ENDIF()
 
-LINK_DIRECTORIES(${libnet_SOURCE_DIR}/libuv/lib)
 IF (MSVC)
 	LINK_DIRECTORIES(${test_suite_SOURCE_DIR}/vld/lib)
 ENDIF()
 
 # 生成可执行文件
-ADD_EXECUTABLE(BenchServer ProtocolDef.h SampleServer.h SampleServer.cc ServerMain.cc)
+ADD_EXECUTABLE(bench_server ProtocolDef.h SampleServer.h SampleServer.cc ServerMain.cc)
 IF (MSVC)
-	TARGET_LINK_LIBRARIES(BenchServer libnet libuv advapi32 iphlpapi psapi ws2_32 userenv vld)
+	TARGET_LINK_LIBRARIES(bench_server libnet-static libuv vld ws2_32 iphlpapi psapi userenv)
 ELSE()
-	TARGET_LINK_LIBRARIES(BenchServer net uv)
+	TARGET_LINK_LIBRARIES(bench_server net uv)
 ENDIF()
 
-ADD_EXECUTABLE(BenchClient ProtocolDef.h BenchClient.h BenchClient.cc ClientMain.cc)
+ADD_EXECUTABLE(bench_client ProtocolDef.h BenchClient.h BenchClient.cc ClientMain.cc)
 IF (MSVC)
-	TARGET_LINK_LIBRARIES(BenchClient libnet libuv advapi32 iphlpapi psapi ws2_32 userenv vld)
+	TARGET_LINK_LIBRARIES(bench_client libnet-static libuv vld ws2_32 iphlpapi psapi userenv)
 ELSE()
-	TARGET_LINK_LIBRARIES(BenchClient net uv)
+	TARGET_LINK_LIBRARIES(bench_client net uv)
 ENDIF()

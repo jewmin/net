@@ -14,11 +14,11 @@ public:
 	void ShowStatus();
 
 protected:
-	virtual void OnConnected(Net::SocketWrapper * wrapper);
-	virtual void OnConnectFailed(Net::SocketWrapper * wrapper, int reason);
-	virtual void OnDisconnected(Net::SocketWrapper * wrapper, bool isRemote);
-	virtual void OnNewDataReceived(Net::SocketWrapper * wrapper);
-	virtual void OnSomeDataSent(Net::SocketWrapper * wrapper);
+	virtual int OnConnected(Net::SocketWrapper * wrapper);
+	virtual int OnConnectFailed(Net::SocketWrapper * wrapper, int reason);
+	virtual int OnDisconnected(Net::SocketWrapper * wrapper, bool isRemote);
+	virtual int OnNewDataReceived(Net::SocketWrapper * wrapper);
+	virtual int OnSomeDataSent(Net::SocketWrapper * wrapper);
 
 private:
 	int GetMessageSize(Net::SocketWrapper * wrapper) const;
