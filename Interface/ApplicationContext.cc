@@ -30,6 +30,7 @@
 struct tagMsgHeader {
 	u8 tag_begin;
 	u16 crc_data;
+	u8 data;
 	u8 tag_end;
 };
 #pragma pack()
@@ -196,7 +197,7 @@ void Interface::ApplicationContext::SendMsg(Net::SocketWrapper * wrapper, int ms
 			packet.WriteAtom<u16>(length);					\
 			break;											\
 		case 4:												\
-			packet.WriteAtom<u32>(length);					\
+			packet.WriteAtom<int>(length);					\
 			break;											\
 	}														\
 } while (/*CONSTCOND*/ 0)
@@ -204,19 +205,17 @@ void Interface::ApplicationContext::SendMsg(Net::SocketWrapper * wrapper, int ms
 	static struct tagMsgHeader header;
 	u8 msg_id_header = 0;
 	u8 data_header = 0;
-	u8 header_len = 0;
 	_MAKE_HEADER_BYTES(msg_id_header, msgId);
 	_MAKE_HEADER_BYTES(data_header, size);
-	header_len = msg_id_header << 4 & data_header;
 	// 头赋值，简单计算crc，以后替换
+	header.data = msg_id_header << 4 | data_header;
 	header.tag_begin = HEADER_BEGIN;
 	header.tag_end = HEADER_END;
 	header.crc_data = MAKE_CRC_DATA(header.tag_begin, header.tag_end, size);
 	// 使用Packet序列化输入
 	Foundation::Packet packet;
-	packet.Reserve(size + 13);
+	packet.Reserve(size + sizeof(header) + 8);
 	packet.WriteBinary(reinterpret_cast<const char *>(&header), sizeof(header));
-	packet.WriteAtom<u8>(header_len);
 	_WRITE_DATA_LENGTH(packet, msg_id_header, msgId);
 	_WRITE_DATA_LENGTH(packet, data_header, size);
 	packet.WriteBinary(data, size);
@@ -329,38 +328,84 @@ void Interface::ApplicationContext::OnSignal(int signum) {
 	signal_func_(signum);
 }
 
-void Interface::ApplicationContext::OnConnected(Net::SocketWrapper * wrapper) {
+int Interface::ApplicationContext::OnConnected(Net::SocketWrapper * wrapper) {
 	Foundation::LogDebug("---一个Connection %u连上了---", wrapper->GetId());
 	if (on_connected_func_) {
 		on_connected_func_(reinterpret_cast<u64>(wrapper->GetMgr()), wrapper->GetId());
 	}
+	return 0;
 }
 
-void Interface::ApplicationContext::OnConnectFailed(Net::SocketWrapper * wrapper, int reason) {
+int Interface::ApplicationContext::OnConnectFailed(Net::SocketWrapper * wrapper, int reason) {
 	if (on_connect_failed_func_) {
 		on_connect_failed_func_(reinterpret_cast<u64>(wrapper->GetMgr()), wrapper->GetId(), reason);
 	}
+	return 0;
 }
 
-void Interface::ApplicationContext::OnDisconnected(Net::SocketWrapper * wrapper, bool isRemote) {
+int Interface::ApplicationContext::OnDisconnected(Net::SocketWrapper * wrapper, bool isRemote) {
 	Foundation::LogDebug("---一个Connection %u断开了---", wrapper->GetId());
 	if (on_disconnected_func_) {
 		on_disconnected_func_(reinterpret_cast<u64>(wrapper->GetMgr()), wrapper->GetId(), isRemote);
 	}
+	return 0;
 }
 
-void Interface::ApplicationContext::OnNewDataReceived(Net::SocketWrapper * wrapper) {
+int Interface::ApplicationContext::OnNewDataReceived(Net::SocketWrapper * wrapper) {
+#define _READ_DATA_LENGTH(packet, header, length) do {		\
+	switch (header) {										\
+		case 1:												\
+			length = packet.ReadAtom<u8>();					\
+			break;											\
+		case 2:												\
+			length = packet.ReadAtom<u16>();				\
+			break;											\
+		case 4:												\
+			length = packet.ReadAtom<int>();				\
+			break;											\
+		default:											\
+			return 1;										\
+	}														\
+} while (/*CONSTCOND*/ 0)
+
 	if (wrapper->IsRawRecv()) {
 		if (on_recv_raw_msg_func_) {
 			on_recv_raw_msg_func_(reinterpret_cast<u64>(wrapper->GetMgr()), wrapper->GetId(), wrapper->GetRecvData(), wrapper->GetRecvDataSize());
 		}
 		wrapper->PopRecvData(wrapper->GetRecvDataSize());
 	} else {
-		
+		static struct tagMsgHeader header;
+		while (wrapper->GetRecvDataSize() >= sizeof(header)) {
+			Foundation::PacketReader reader(wrapper->GetRecvData(), wrapper->GetRecvDataSize());
+			reader.ReadBinary(reinterpret_cast<char *>(&header), sizeof(header));
+			if (HEADER_BEGIN != header.tag_begin || HEADER_END != header.tag_end) {
+				return 1;
+			}
+			u8 msg_id_header = header.data >> 4;
+			u8 data_header = header.data & 0xf;
+			if (reader.GetReadableLength() < msg_id_header + data_header) {
+				break;
+			}
+			int msgId, size;
+			_READ_DATA_LENGTH(reader, msg_id_header, msgId);
+			_READ_DATA_LENGTH(reader, data_header, size);
+			if (MAKE_CRC_DATA(header.tag_begin, header.tag_end, size) != header.crc_data) {
+				return 1;
+			}
+			if (reader.GetReadableLength() < size) {
+				break;
+			}
+			if (on_recv_msg_func_) {
+				on_recv_msg_func_(reinterpret_cast<u64>(wrapper->GetMgr()), wrapper->GetId(), msgId, reader.GetOffsetPtr(), size);
+			}
+			wrapper->PopRecvData(reader.GetPosition() + size);
+		}
 	}
+	return 0;
 }
 
-void Interface::ApplicationContext::OnSomeDataSent(Net::SocketWrapper * wrapper) {
+int Interface::ApplicationContext::OnSomeDataSent(Net::SocketWrapper * wrapper) {
+	return 0;
 }
 
 void Interface::ApplicationContext::SignalCb(uv_signal_t * handle, int signum) {

@@ -104,7 +104,9 @@ void Net::SocketWrapper::OnConnected() {
 	mgr_->Register(this);
 	IEvent * event = mgr_->GetEvent();
 	if (event) {
-		event->OnConnected(this);
+		if (event->OnConnected(this) == 1) {
+			ShutdownNow();
+		}
 	}
 }
 
@@ -127,14 +129,18 @@ void Net::SocketWrapper::OnDisconnected(bool isRemote) {
 void Net::SocketWrapper::OnNewDataReceived() {
 	IEvent * event = mgr_->GetEvent();
 	if (event) {
-		event->OnNewDataReceived(this);
+		if (event->OnNewDataReceived(this) == 1) {
+			ShutdownNow();
+		}
 	}
 }
 
 void Net::SocketWrapper::OnSomeDataSent() {
 	IEvent * event = mgr_->GetEvent();
 	if (event) {
-		event->OnSomeDataSent(this);
+		if (event->OnSomeDataSent(this) == 1) {
+			ShutdownNow();
+		}
 	}
 }
 

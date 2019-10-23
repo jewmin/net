@@ -35,7 +35,13 @@ void MyOnConnectedFunc(u64 mgrId, u32 id) {
 
 void MyOnConnectedFunc2(u64 mgrId, u32 id) {
 	SetRawRecv(mgrId, id, true);
-	SendRawMsg(mgrId, id, "hello world\0", sizeof("hello world\0"));
+	SendRawMsg(mgrId, id, "hello world", sizeof("hello world"));
+}
+
+void MyOnConnectedFunc3(u64 mgrId, u32 id) {
+	SendMsg(mgrId, id, 200, "hello world", sizeof("hello world"));
+	SendMsg(mgrId, id, 50000, "hello world", sizeof("hello world"));
+	SendMsg(mgrId, id, 70000, "hello world", sizeof("hello world"));
 }
 
 void MyOnConnectFailedFunc(u64 mgrId, u32 id, int reason) {
@@ -124,9 +130,27 @@ TEST(InterfaceTestSuite, shutdown) {
 	Unit();
 }
 
-TEST(InterfaceTestSuite, send) {
+TEST(InterfaceTestSuite, sendRaw) {
 	Init(MyOnSignalFunc, MyOnLogFunc);
 	SetCallback(MyOnConnectedFunc2, MyOnConnectFailedFunc, MyOnDisconnectedFunc, MyOnRecvMsgFunc, MyOnRecvRawMsgFunc);
+	server_id = CreateServer("TestServer", 102400, 102400);
+	ServerListen(server_id, "0.0.0.0", 6789);
+	u64 client_ids[10];
+	u32 client_conn_ids[10];
+	for (int i = 0; i < 10; ++i) {
+		client_ids[i] = CreateClient("TestClient", 102400, 102400);
+		client_conn_ids[i] = ClientConnect(client_ids[i], "127.0.0.1", 6789);
+	}
+	int loop_num = 10;
+	while (--loop_num > 0) {
+		Loop();
+	}
+	Unit();
+}
+
+TEST(InterfaceTestSuite, send) {
+	Init(MyOnSignalFunc, MyOnLogFunc);
+	SetCallback(MyOnConnectedFunc3, MyOnConnectFailedFunc, MyOnDisconnectedFunc, MyOnRecvMsgFunc, MyOnRecvRawMsgFunc);
 	server_id = CreateServer("TestServer", 102400, 102400);
 	ServerListen(server_id, "0.0.0.0", 6789);
 	u64 client_ids[10];

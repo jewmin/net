@@ -155,12 +155,12 @@ namespace Foundation {
 		}
 
 		inline Packet & operator << (const char * value) {
-			WriteString(value, static_cast<int>(strlen(value)));
+			WriteString(value, static_cast<int>(std::strlen(value)));
 			return *this;
 		}
 
 		inline Packet & operator << (char * value) {
-			WriteString(value, static_cast<int>(strlen(value)));
+			WriteString(value, static_cast<int>(std::strlen(value)));
 			return *this;
 		}
 
@@ -195,9 +195,9 @@ namespace Foundation {
 				str = "";
 			}
 			if ((int)-1 == len) {
-				len = str ? (LENGTH)strlen(str) : 0;
+				len = str ? (LENGTH)std::strlen(str) : 0;
 			} else {
-				len = std::min<int>(len, static_cast<int>(strlen(str)));
+				len = std::min<int>(len, static_cast<int>(std::strlen(str)));
 			}
 			WriteAtom<LENGTH>((LENGTH)len);
 			WriteBinary(reinterpret_cast<const char *>(str), len);

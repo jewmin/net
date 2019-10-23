@@ -128,7 +128,7 @@ void connect_cb(uv_connect_t* req, int status) {
 		client.SetSendBufferSize(1024);
 		client.SetReceiveBufferSize(1024);
 		uv_write_t * req = new uv_write_t();
-		client.Send("this is a test message\0", sizeof("this is a test message\0"), req, write_cb);
+		client.Send("this is a test message", sizeof("this is a test message"), req, write_cb);
 	}
 }
 

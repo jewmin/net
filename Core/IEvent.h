@@ -30,12 +30,12 @@
 namespace Net {
 	class IEvent {
 	public:
-		virtual void OnConnected(SocketWrapper * wrapper) = 0;
-		virtual void OnConnectFailed(SocketWrapper * wrapper, int reason) = 0;
-		virtual void OnDisconnected(SocketWrapper * wrapper, bool isRemote) = 0;
-		virtual void OnNewDataReceived(SocketWrapper * wrapper) = 0;
-		virtual void OnSomeDataSent(SocketWrapper * wrapper) = 0;
-		// virtual void OnTick(SocketWrapper * wrapper) = 0;
+		virtual int OnConnected(SocketWrapper * wrapper) = 0;
+		virtual int OnConnectFailed(SocketWrapper * wrapper, int reason) = 0;
+		virtual int OnDisconnected(SocketWrapper * wrapper, bool isRemote) = 0;
+		virtual int OnNewDataReceived(SocketWrapper * wrapper) = 0;
+		virtual int OnSomeDataSent(SocketWrapper * wrapper) = 0;
+		// virtual int OnTick(SocketWrapper * wrapper) = 0;
 	};
 }
 

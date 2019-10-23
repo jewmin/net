@@ -11,7 +11,7 @@ public:
 	virtual ~ConnectionImpl() {}
 	virtual void OnConnected() {
 		printf("OnConnected MaxOutBufferSize=%d, MaxInBufferSize=%d\n", GetMaxOutBufferSize(), GetMaxInBufferSize());
-		if (Write("this is a test connection impl message\0", sizeof("this is a test connection impl message\0")) < 0) {
+		if (Write("this is a test connection impl message", sizeof("this is a test connection impl message")) < 0) {
 			printf("Write error\n");
 			Shutdown(true);
 		}
@@ -71,7 +71,7 @@ public:
 		printf("OnConnected\n");
 		SetMaxOutBufferSize(256);
 		SetMaxInBufferSize(2048);
-		Write("this is a test connection impl message\0", sizeof("this is a test connection impl message\0"));
+		Write("this is a test connection impl message", sizeof("this is a test connection impl message"));
 		Shutdown(false);
 	}
 	virtual void OnDisconnect(bool isRemote) {
@@ -91,7 +91,7 @@ public:
 	virtual ~ConnectionImpl3() {}
 	virtual void OnConnected() {
 		printf("OnConnected\n");
-		Write("this is a test connection impl message\0", sizeof("this is a test connection impl message\0"));
+		Write("this is a test connection impl message", sizeof("this is a test connection impl message"));
 	}
 	virtual void OnDisconnect(bool isRemote) {
 		printf("OnDisconnect %d\n", isRemote);
@@ -114,10 +114,10 @@ public:
 	virtual ~ConnectionImpl4() {}
 	virtual void OnConnected() {
 		printf("OnConnected\n");
-		Write("this is a test connection impl message\0", sizeof("this is a test connection impl message\0"));
-		Write("this is a test connection impl message\0", sizeof("this is a test connection impl message\0"));
-		Write("this is a test connection impl message\0", sizeof("this is a test connection impl message\0"));
-		Write("this is a test connection impl message\0", sizeof("this is a test connection impl message\0"));
+		Write("this is a test connection impl message", sizeof("this is a test connection impl message"));
+		Write("this is a test connection impl message", sizeof("this is a test connection impl message"));
+		Write("this is a test connection impl message", sizeof("this is a test connection impl message"));
+		Write("this is a test connection impl message", sizeof("this is a test connection impl message"));
 	}
 	virtual void OnDisconnect(bool isRemote) {
 		printf("OnDisconnect %d\n", isRemote);

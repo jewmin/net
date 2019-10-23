@@ -40,12 +40,12 @@ TEST(PacketTestSuite, use) {
 	writer.WriteString(str);
 	writer.WriteString(null_str);
 
-	size_t size = sizeof(u8) + sizeof(char);
+	int size = sizeof(u8) + sizeof(char);
 	size += sizeof(short) + sizeof(u16);
 	size += sizeof(int) + sizeof(u32);
 	size += sizeof(i64) + sizeof(u64);
 	size += sizeof(ts);
-	size += strlen(str) + sizeof(u16) + 1;
+	size += static_cast<int>(std::strlen(str)) + sizeof(u16) + 1;
 	size += sizeof(u16) + 1;
 
 	writer2 << a << b << c << d << e << f << g;
@@ -125,12 +125,12 @@ TEST(PacketTestSuite, use) {
 	reader2 >> null_str1;
 	ASSERT_TRUE(null_str1 == nullptr);
 
-	size_t size1 = sizeof(u8) + sizeof(char);
+	int size1 = sizeof(u8) + sizeof(char);
 	size1 += sizeof(short) + sizeof(u16);
 	size1 += sizeof(int) + sizeof(u32);
 	size1 += sizeof(i64) + sizeof(test_struct);
 	reader2.SetPosition(size1);
-	size_t str_len = strlen("I'm a superman, nice to meet you.");
+	int str_len = static_cast<int>(std::strlen("I'm a superman, nice to meet you."));
 	char str2[128];
 	reader2.ReadString(str2, str_len - 5);
 	EXPECT_STREQ(str2, "I'm a superman, nice to mee");

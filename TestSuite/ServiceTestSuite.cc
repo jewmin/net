@@ -7,20 +7,25 @@ using namespace Net;
 
 class TestEvent : public IEvent {
 public:
-	virtual void OnConnected(SocketWrapper * wrapper) {
+	virtual int OnConnected(SocketWrapper * wrapper) {
 		printf("OnConnected %s:%d\n", wrapper->GetMgr()->GetName().c_str(), wrapper->GetId());
+		return 0;
 	}
-	virtual void OnConnectFailed(SocketWrapper * wrapper, int reason) {
+	virtual int OnConnectFailed(SocketWrapper * wrapper, int reason) {
 		printf("OnConnectFailed %s:%d:%s:%s\n", wrapper->GetMgr()->GetName().c_str(), wrapper->GetId(), uv_err_name(reason), uv_strerror(reason));
+		return 0;
 	}
-	virtual void OnDisconnected(SocketWrapper * wrapper, bool isRemote) {
+	virtual int OnDisconnected(SocketWrapper * wrapper, bool isRemote) {
 		printf("OnDisconnected %s:%d:%d\n", wrapper->GetMgr()->GetName().c_str(), wrapper->GetId(), isRemote);
+		return 0;
 	}
-	virtual void OnNewDataReceived(SocketWrapper * wrapper) {
+	virtual int OnNewDataReceived(SocketWrapper * wrapper) {
 		printf("OnNewDataReceived %s:%d\n", wrapper->GetMgr()->GetName().c_str(), wrapper->GetId());
+		return 0;
 	}
-	virtual void OnSomeDataSent(SocketWrapper * wrapper) {
+	virtual int OnSomeDataSent(SocketWrapper * wrapper) {
 		printf("OnSomeDataSent %s:%d\n", wrapper->GetMgr()->GetName().c_str(), wrapper->GetId());
+		return 0;
 	}
 };
 
@@ -32,16 +37,19 @@ public:
 		connected_count_ = 0;
 		write_count_ = 0;
 	}
-	virtual void OnConnected(SocketWrapper * wrapper) {
+	virtual int OnConnected(SocketWrapper * wrapper) {
 		printf("OnConnected %d %d %d %d\n", wrapper->GetMaxInBufferSize(), wrapper->GetMaxOutBufferSize(), wrapper->GetOutBufferUsedSize(), ++connected_count_);
 		wrapper->Write(data_.c_str(), len_);
+		return 0;
 	}
-	virtual void OnConnectFailed(SocketWrapper * wrapper, int reason) {
+	virtual int OnConnectFailed(SocketWrapper * wrapper, int reason) {
 		wrapper->ShutdownNow();
+		return 0;
 	}
-	virtual void OnDisconnected(SocketWrapper * wrapper, bool isRemote) {
+	virtual int OnDisconnected(SocketWrapper * wrapper, bool isRemote) {
+		return 0;
 	}
-	virtual void OnNewDataReceived(SocketWrapper * wrapper) {
+	virtual int OnNewDataReceived(SocketWrapper * wrapper) {
 		printf("OnNewDataReceived %d\n", ++count_);
 		if (wrapper->GetRecvDataSize() >= len_) {
 			char buf[1024];
@@ -51,12 +59,14 @@ public:
 			EXPECT_STREQ(buf, data_.c_str());
 			wrapper->Shutdown();
 		}
+		return 0;
 	}
-	virtual void OnSomeDataSent(SocketWrapper * wrapper) {
+	virtual int OnSomeDataSent(SocketWrapper * wrapper) {
 		printf("OnConnected %d %p\n", ++write_count_, wrapper);
 		if (write_count_ < 100) {
 			wrapper->Write(data_.c_str(), len_);
 		}
+		return 0;
 	}
 
 private:
@@ -69,15 +79,18 @@ private:
 
 class MockEvent2 : public IEvent {
 public:
-	virtual void OnConnected(SocketWrapper * wrapper) {
+	virtual int OnConnected(SocketWrapper * wrapper) {
 		wrapper->Write("this is a test message", sizeof("this is a test message"));
+		return 0;
 	}
-	virtual void OnConnectFailed(SocketWrapper * wrapper, int reason) {
+	virtual int OnConnectFailed(SocketWrapper * wrapper, int reason) {
+		return 0;
 	}
-	virtual void OnDisconnected(SocketWrapper * wrapper, bool isRemote) {
+	virtual int OnDisconnected(SocketWrapper * wrapper, bool isRemote) {
 		wrapper->SetMaxInBufferSize(256);
+		return 0;
 	}
-	virtual void OnNewDataReceived(SocketWrapper * wrapper) {
+	virtual int OnNewDataReceived(SocketWrapper * wrapper) {
 		char buf[1024];
 		int readed = wrapper->Read(buf, sizeof(buf) - 1);
 		buf[readed] = 0;
@@ -87,9 +100,11 @@ public:
 		} else {
 			wrapper->ShutdownNow();
 		}
+		return 0;
 	}
-	virtual void OnSomeDataSent(SocketWrapper * wrapper) {
+	virtual int OnSomeDataSent(SocketWrapper * wrapper) {
 		wrapper->SetMaxOutBufferSize(256);
+		return 0;
 	}
 };
 
@@ -98,32 +113,72 @@ public:
 	MockEvent3() {
 		count_ = 0;
 	}
-	virtual void OnConnected(SocketWrapper * wrapper) {
+	virtual int OnConnected(SocketWrapper * wrapper) {
 		char buf[2048] = {1};
 		wrapper->Write(buf, sizeof(buf));
+		return 0;
 	}
-	virtual void OnConnectFailed(SocketWrapper * wrapper, int reason) {
+	virtual int OnConnectFailed(SocketWrapper * wrapper, int reason) {
+		return 0;
 	}
-	virtual void OnDisconnected(SocketWrapper * wrapper, bool isRemote) {
+	virtual int OnDisconnected(SocketWrapper * wrapper, bool isRemote) {
 		if (wrapper->GetMgr()->GetName() == "WR3Server") {
 			dynamic_cast<SocketServer *>(wrapper->GetMgr())->Terminate();
 		} else {
 			wrapper->ShutdownNow();
 		}
+		return 0;
 	}
-	virtual void OnNewDataReceived(SocketWrapper * wrapper) {
+	virtual int OnNewDataReceived(SocketWrapper * wrapper) {
 		if (++count_ > 10) {
 			wrapper->Shutdown();
 		}
+		return 0;
 	}
-	virtual void OnSomeDataSent(SocketWrapper * wrapper) {
+	virtual int OnSomeDataSent(SocketWrapper * wrapper) {
 		if (++count_ < 2) {
 			char buf[2048] = {1};
 			wrapper->Write(buf, sizeof(buf));
 		}
+		return 0;
 	}
 private:
 	int count_;
+};
+
+class ErrorEvent : public IEvent {
+public:
+	virtual int OnConnected(SocketWrapper * wrapper) {
+		wrapper->Write("hello", sizeof("hello"));
+		return 1;
+	}
+	virtual int OnConnectFailed(SocketWrapper * wrapper, int reason) {
+		return 1;
+	}
+	virtual int OnDisconnected(SocketWrapper * wrapper, bool isRemote) {
+		return 1;
+	}
+	virtual int OnNewDataReceived(SocketWrapper * wrapper) {
+		return 1;
+	}
+	virtual int OnSomeDataSent(SocketWrapper * wrapper) {
+		return 1;
+	}
+};
+
+class ErrorEvent2 : public ErrorEvent {
+public:
+	virtual int OnConnected(SocketWrapper * wrapper) {
+		wrapper->Write("hello", sizeof("hello"));
+		return 0;
+	}
+};
+
+class ErrorEvent3 : public ErrorEvent2 {
+public:
+	virtual int OnSomeDataSent(SocketWrapper * wrapper) {
+		return 0;
+	}
 };
 
 class MockClient : public SocketClient {
@@ -329,4 +384,52 @@ TEST(ServiceTestSuite, WR3) {
 	u32 id;
 	client.Connect("127.0.0.1", 6789, id);
 	reactor.Dispatch(UV_RUN_DEFAULT);
+}
+
+TEST(ServiceTestSuite, CB) {
+	ErrorEvent event;
+	EventReactor reactor;
+	SocketServer server("CBServer", &reactor, 128, 128);
+	server.SetEvent(&event);
+	server.Listen("0.0.0.0", 6789);
+	SocketClient client("CBClient", &reactor, nullptr, 128, 128);
+	client.SetEvent(&event);
+	u32 id;
+	client.Connect("127.0.0.1", 6789, id);
+	int loop_num = 10;
+	while (--loop_num > 0) {
+		reactor.Dispatch();
+	}
+}
+
+TEST(ServiceTestSuite, CB2) {
+	ErrorEvent2 event;
+	EventReactor reactor;
+	SocketServer server("CB2Server", &reactor, 128, 128);
+	server.SetEvent(&event);
+	server.Listen("0.0.0.0", 6789);
+	SocketClient client("CB2Client", &reactor, nullptr, 128, 128);
+	client.SetEvent(&event);
+	u32 id;
+	client.Connect("127.0.0.1", 6789, id);
+	int loop_num = 10;
+	while (--loop_num > 0) {
+		reactor.Dispatch();
+	}
+}
+
+TEST(ServiceTestSuite, CB3) {
+	ErrorEvent3 event;
+	EventReactor reactor;
+	SocketServer server("CB3Server", &reactor, 128, 128);
+	server.SetEvent(&event);
+	server.Listen("0.0.0.0", 6789);
+	SocketClient client("CB3Client", &reactor, nullptr, 128, 128);
+	client.SetEvent(&event);
+	u32 id;
+	client.Connect("127.0.0.1", 6789, id);
+	int loop_num = 10;
+	while (--loop_num > 0) {
+		reactor.Dispatch();
+	}
 }
