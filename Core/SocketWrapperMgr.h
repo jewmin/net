@@ -58,6 +58,7 @@ namespace Net {
 		IEvent * event_;
 		Foundation::ObjectMgr<SocketWrapper> * socket_list_;
 		std::list<u32> * need_to_shutdown_list_;
+		std::list<u32> * need_to_delete_list_;
 		std::string name_;
 	};
 }

@@ -28,6 +28,7 @@
 Net::SocketWrapperMgr::SocketWrapperMgr(const std::string & name) : event_(nullptr), name_(name) {
 	socket_list_ = new Foundation::ObjectMgr<SocketWrapper>(64, 1024);
 	need_to_shutdown_list_ = new std::list<u32>();
+	need_to_delete_list_ = new std::list<u32>();
 }
 
 Net::SocketWrapperMgr::~SocketWrapperMgr() {
@@ -39,6 +40,10 @@ Net::SocketWrapperMgr::~SocketWrapperMgr() {
 	if (need_to_shutdown_list_) {
 		delete need_to_shutdown_list_;
 		need_to_shutdown_list_ = nullptr;
+	}
+	if (need_to_delete_list_) {
+		delete need_to_delete_list_;
+		need_to_delete_list_ = nullptr;
 	}
 }
 
@@ -59,7 +64,9 @@ u32 Net::SocketWrapperMgr::Register(SocketWrapper * wrapper) {
 void Net::SocketWrapperMgr::UnRegister(SocketWrapper * wrapper) {
 	if (wrapper->GetIsRegister2Mgr()) {
 		wrapper->SetIsRegister2Mgr(false);
-		socket_list_->DeleteObj(wrapper->GetId());
+		// 这里不能直接删除，因为回调处理中可能是用到对象
+		// socket_list_->DeleteObj(wrapper->GetId());
+		need_to_delete_list_->push_back(wrapper->GetId());
 	}
 }
 
@@ -94,6 +101,10 @@ void Net::SocketWrapperMgr::CleanDeathConnection() {
 	while (!need_to_shutdown_list_->empty()) {
 		ShutDownOneSocketWrapper(need_to_shutdown_list_->front());
 		need_to_shutdown_list_->pop_front();
+	}
+	while (!need_to_delete_list_->empty()) {
+		socket_list_->DeleteObj(need_to_delete_list_->front());
+		need_to_delete_list_->pop_front();
 	}
 }
 
