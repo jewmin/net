@@ -80,7 +80,7 @@ int BenchServer::OnDisconnected(Net::SocketWrapper * wrapper, bool isRemote) {
 
 int BenchServer::OnNewDataReceived(Net::SocketWrapper * wrapper) {
 	const int data_size = wrapper->GetRecvDataSize();
-	if (data_size >= PACK_HEADER_LEN) {
+	if (data_size >= static_cast<int>(PACK_HEADER_LEN)) {
 		const int message_size = GetMessageSize(wrapper);
 		if (0 == message_size) {
 			Foundation::LogErr("Socket [%u] Get Message Error And Shutdown Now", wrapper->GetId());
@@ -112,11 +112,11 @@ int BenchServer::GetMessageSize(Net::SocketWrapper * wrapper) const {
 }
 
 void BenchServer::ProcessCommand(Net::SocketWrapper * wrapper) const {
-	PackHeader ph = {0};
+	/*PackHeader ph = {0};
 	std::memcpy(&ph, wrapper->GetRecvData(), PACK_HEADER_LEN);
 	const char * data = wrapper->GetRecvData() + PACK_HEADER_LEN;
 	const int data_len = ph.data_len;
-	/*Foundation::LogInfo("Socket [%u] Package [length:%d]", wrapper->GetId(), data_len);*/
+	Foundation::LogInfo("Socket [%u] Package [length:%d]", wrapper->GetId(), data_len);*/
 }
 
 void BenchServer::SignalCb(uv_signal_t * handle, int signum) {
