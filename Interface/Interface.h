@@ -60,6 +60,7 @@ typedef struct {
 // Interface Function
 typedef void(*OnUpdateFunc)();
 typedef void(*OnSignalFunc)(int signum);
+// level: debug=0 info=1 warn=2 error=3
 typedef void(*OnLogFunc)(int level, const char * msg);
 
 NET_EXTERN void Init(OnUpdateFunc onUpdate, OnSignalFunc onSignal, OnLogFunc onLog);

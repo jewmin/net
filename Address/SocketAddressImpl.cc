@@ -47,7 +47,7 @@ Net::IPv4SocketAddressImpl::IPv4SocketAddressImpl(const void * addr, u16 port) {
 	std::memset(&addr_, 0, sizeof(addr_));
 	addr_.sin_family = AF_INET;
 	std::memcpy(&addr_.sin_addr, addr, sizeof(addr_.sin_addr));
-	addr_.sin_port = ::htons(port);
+	addr_.sin_port = htons(port);
 }
 
 std::string Net::IPv4SocketAddressImpl::ToString() const {
@@ -73,7 +73,7 @@ Net::IPv6SocketAddressImpl::IPv6SocketAddressImpl(const void * addr, u16 port, u
 	std::memset(&addr_, 0, sizeof(addr_));
 	addr_.sin6_family = AF_INET6;
 	std::memcpy(&addr_.sin6_addr, addr, sizeof(addr_.sin6_addr));
-	addr_.sin6_port = ::htons(port);
+	addr_.sin6_port = htons(port);
 	addr_.sin6_scope_id = scope;
 }
 

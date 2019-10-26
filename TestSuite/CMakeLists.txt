@@ -30,6 +30,8 @@ IF (MSVC)
 		${CMAKE_CURRENT_LIST_DIR}/vld/lib/Microsoft.DTfW.DHL.manifest
 		${CMAKE_CURRENT_LIST_DIR}/vld/lib/vld.ini
 	)
+ELSE()
+    LINK_DIRECTORIES(${OUTPUT_DIRECTORY})
 ENDIF()
 
 # 生成可执行文件
@@ -38,5 +40,5 @@ IF (MSVC)
 	TARGET_LINK_LIBRARIES(${PROJECT_NAME} libnet-static vld ws2_32 iphlpapi psapi userenv debug libuvd debug gtestd debug gmockd optimized libuv optimized gtest optimized gmock)
 	ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${vldFile} ${OUTPUT_DIRECTORY})
 ELSE()
-	TARGET_LINK_LIBRARIES(${PROJECT_NAME} net.a uv gtest gmock)
+	TARGET_LINK_LIBRARIES(${PROJECT_NAME} debug netd.a optimized net.a uv gtest gmock)
 ENDIF()

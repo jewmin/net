@@ -18,6 +18,8 @@ ENDIF()
 
 IF (MSVC)
 	LINK_DIRECTORIES(${test_suite_SOURCE_DIR}/vld/lib)
+ELSE()
+    LINK_DIRECTORIES(${OUTPUT_DIRECTORY})
 ENDIF()
 
 # 生成可执行文件
@@ -25,14 +27,14 @@ ADD_EXECUTABLE(bench_server ProtocolDef.h BenchServer.h BenchServer.cc ServerMai
 IF (MSVC)
 	TARGET_LINK_LIBRARIES(bench_server libnet-static vld ws2_32 iphlpapi psapi userenv debug libuvd optimized libuv)
 ELSE()
-	TARGET_LINK_LIBRARIES(bench_server net.a uv)
+	TARGET_LINK_LIBRARIES(bench_server debug netd.a optimized net.a uv)
 ENDIF()
 
 ADD_EXECUTABLE(bench_client ProtocolDef.h BenchClient.h BenchClient.cc ClientMain.cc)
 IF (MSVC)
 	TARGET_LINK_LIBRARIES(bench_client libnet-static vld ws2_32 iphlpapi psapi userenv debug libuvd optimized libuv)
 ELSE()
-	TARGET_LINK_LIBRARIES(bench_client net.a uv)
+	TARGET_LINK_LIBRARIES(bench_client debug netd.a optimized net.a uv)
 ENDIF()
 
 ADD_EXECUTABLE(test_dll DllMain.cc)

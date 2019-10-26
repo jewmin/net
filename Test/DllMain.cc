@@ -8,7 +8,7 @@ static u32 connId = 0;
 static bool quit = false;
 
 void MyOnUpdateFunc() {
-	printf("一次Tick\n");
+	// printf("一次Tick\n");
 }
 
 void MyOnSignalFunc(int signum) {
