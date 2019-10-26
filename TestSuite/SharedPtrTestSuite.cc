@@ -138,7 +138,7 @@ TEST(SharedPtrTestSuite, Catch) {
 	TestObject * obj = nullptr;
 	TestObjectPtr ptr(obj);
 	try {
-		int value = ptr->GetValue();
+		ptr->GetValue();
 	} catch (std::exception & e) {
 		printf("SharedPtrTestSuite - Catch: %s\n", e.what());
 	}

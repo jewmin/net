@@ -34,7 +34,7 @@ namespace Interface {
 	class ApplicationContext : public Net::IEvent {
 	public:
 		ApplicationContext(OnUpdateFunc onUpdate, OnSignalFunc onSignal, OnLogFunc onLog);
-		~ApplicationContext();
+		virtual ~ApplicationContext();
 
 		void RunOnce();
 

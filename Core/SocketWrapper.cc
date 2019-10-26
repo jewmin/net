@@ -27,7 +27,7 @@
 #include "SocketWrapperMgr.h"
 #include "SocketConnectionImpl.h"
 
-Net::SocketWrapper::SocketWrapper(SocketWrapperMgr * mgr, int maxOutBufferSize, int maxInBufferSize) : mgr_(mgr), id_(0), is_raw_recv_(false), register_mgr_(false) {
+Net::SocketWrapper::SocketWrapper(SocketWrapperMgr * mgr, int maxOutBufferSize, int maxInBufferSize) : id_(0), is_raw_recv_(false), register_mgr_(false), mgr_(mgr) {
 	if (!mgr_) {
 		throw std::invalid_argument("mgr is nullptr");
 	}

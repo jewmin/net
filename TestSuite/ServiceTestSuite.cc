@@ -366,7 +366,7 @@ TEST(ServiceTestSuite, Error) {
 	}
 	
 	try {
-		SocketConnectionImpl * impl = new SocketConnectionImpl(nullptr, 1024, 1024);
+		new SocketConnectionImpl(nullptr, 1024, 1024);
 	} catch (std::exception & e) {
 		printf("ServiceTestSuite - Error: %s\n", e.what());
 	}

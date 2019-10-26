@@ -103,38 +103,38 @@ protected:
 	virtual void OnConnectedFunc(u64 mgrId, u32 id) {
 		if (mgrId == client_id) {
 			EXPECT_EQ(id, client_conn_id);
-			printf("成功连接服务端 %llu, %u\n", mgrId, id);
+			printf("成功连接服务端 %lu, %u\n", mgrId, id);
 		} else if (mgrId == server_id) {
 			if (server_conn_id > 0) {
 				server_conn_id2 = id;
 			} else {
 				server_conn_id = id;
 			}
-			printf("收到对端的连接 %llu, %u\n", mgrId, id);
+			printf("收到对端的连接 %lu, %u\n", mgrId, id);
 		}
 	}
 
 	virtual void OnConnectFailedFunc(u64 mgrId, u32 id, int reason) {
 		EXPECT_EQ(mgrId, client_id);
 		EXPECT_EQ(id, client_conn_id);
-		printf("连接服务端失败 %llu, %u, %d\n", mgrId, id, reason);
+		printf("连接服务端失败 %lu, %u, %d\n", mgrId, id, reason);
 	}
 
 	virtual void OnDisconnectedFunc(u64 mgrId, u32 id, bool isRemote) {
 		if (mgrId == client_id) {
 			EXPECT_EQ(id, client_conn_id);
-			printf("与服务端 %llu, %u\n", mgrId, id);
+			printf("与服务端 %lu, %u\n", mgrId, id);
 		} else if (mgrId == server_id) {
-			printf("断开对端的连接 %llu, %u\n", mgrId, id);
+			printf("断开对端的连接 %lu, %u\n", mgrId, id);
 		}
 	}
 
 	virtual void OnRecvMsgFunc(u64 mgrId, u32 id, int msgId, const char * data, int size) {
-		printf("收到对端发来的协议数据 %llu, %u, %d, %s, %d\n", mgrId, id, msgId, data, size);
+		printf("收到对端发来的协议数据 %lu, %u, %d, %s, %d\n", mgrId, id, msgId, data, size);
 	}
 
 	virtual void OnRecvRawMsgFunc(u64 mgrId, u32 id, const char * data, int size) {
-		printf("收到对端发来的原始数据 %llu, %u, %s, %d\n", mgrId, id, data, size);
+		printf("收到对端发来的原始数据 %lu, %u, %s, %d\n", mgrId, id, data, size);
 	}
 
 	const char * data;
@@ -219,7 +219,7 @@ protected:
 	}
 
 	void OnDisconnectedFunc(u64 mgrId, u32 id, bool isRemote) {
-		printf("断开对端的连接 %llu, %u, %d\n", mgrId, id, isRemote);
+		printf("断开对端的连接 %lu, %u, %d\n", mgrId, id, isRemote);
 		if (!quit && mgrId == client_id && id == client_conn_id) {
 			client_conn_id = ClientConnect(mgrId, address.address, address.port);
 		}

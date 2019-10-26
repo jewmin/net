@@ -97,8 +97,8 @@ void connection_cb(uv_stream_t* server, int status) {
 			client.SetKeepAlive(60);
 			client.SetSendBufferSize(1024);
 			client.SetReceiveBufferSize(1024);
-			int out = client.GetSendBufferSize();
-			int in = client.GetReceiveBufferSize();
+			client.GetSendBufferSize();
+			client.GetReceiveBufferSize();
 			SocketAddress remote = client.RemoteAddress();
 			client.Established(alloc_cb, read_cb);
 			Context * client_context = new Context();
@@ -123,8 +123,8 @@ void connect_cb(uv_connect_t* req, int status) {
 		client.SetNoDelay();
 		client.SetKeepAlive(60);
 		SocketAddress local = client.LocalAddress();
-		int out = client.GetSendBufferSize();
-		int in = client.GetReceiveBufferSize();
+		client.GetSendBufferSize();
+		client.GetReceiveBufferSize();
 		client.SetSendBufferSize(1024);
 		client.SetReceiveBufferSize(1024);
 		uv_write_t * req = new uv_write_t();

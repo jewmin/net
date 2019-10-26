@@ -342,7 +342,6 @@ TEST(ReactorTestSuite, WriteError) {
 }
 
 TEST(ReactorTestSuite, ReadError) {
-	char buf[2048] = {1};
 	SocketConnection * connection = new SocketConnection(1024, 1024);
 	EXPECT_EQ(connection->Read(nullptr, 0), UV_ENOBUFS);
 	connection->PopRecvData(1);

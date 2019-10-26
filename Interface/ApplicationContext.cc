@@ -413,7 +413,7 @@ int Interface::ApplicationContext::OnNewDataReceived(Net::SocketWrapper * wrappe
 		wrapper->PopRecvData(wrapper->GetRecvDataSize());
 	} else {
 		static struct tagMsgHeader header;
-		while (wrapper->GetRecvDataSize() >= sizeof(header)) {
+		while (wrapper->GetRecvDataSize() >= static_cast<int>(sizeof(header))) {
 			Foundation::PacketReader reader(wrapper->GetRecvData(), wrapper->GetRecvDataSize());
 			reader.ReadBinary(reinterpret_cast<char *>(&header), sizeof(header));
 			if (HEADER_BEGIN != header.tag_begin || HEADER_END != header.tag_end) {
