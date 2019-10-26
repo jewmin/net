@@ -42,10 +42,10 @@ struct tagMsgHeader {
 
 Interface::ApplicationContext * Interface::ApplicationContext::instance_ = nullptr;
 
-Interface::ApplicationContext::ApplicationContext(OnSignalFunc onSignal, OnLogFunc onLog)
+Interface::ApplicationContext::ApplicationContext(OnUpdateFunc onUpdate, OnSignalFunc onSignal, OnLogFunc onLog)
 	: reactor_(new Net::EventReactor()), connector_(new Net::SocketConnector(reactor_))
 	, sig_handle_int_(new uv_signal_t()), sig_handle_term_(new uv_signal_t())
-	, is_set_signal_(false), signal_num_(0), signal_func_(onSignal)
+	, is_set_signal_(false), signal_num_(0), signal_func_(onSignal), update_func_(onUpdate)
 	, servers_(new ServerMap()), clients_(new ClientMap())
 	, on_connected_func_(nullptr), on_connect_failed_func_(nullptr), on_disconnected_func_(nullptr)
 	, on_recv_msg_func_(nullptr), on_recv_raw_msg_func_(nullptr) {
@@ -75,6 +75,7 @@ void Interface::ApplicationContext::RunOnce() {
 		DispatchSignal(signal_num_);
 	}
 	reactor_->Dispatch();
+	OnUpdate();
 }
 
 u64 Interface::ApplicationContext::CreateServer(const char * name, int maxOutBufferSize, int maxInBufferSize) {
@@ -313,9 +314,9 @@ Interface::ApplicationContext * Interface::ApplicationContext::GetInstance() {
 	return instance_;
 }
 
-Interface::ApplicationContext * Interface::ApplicationContext::CreateInstance(OnSignalFunc onSignal, OnLogFunc onLog) {
+Interface::ApplicationContext * Interface::ApplicationContext::CreateInstance(OnUpdateFunc onUpdate, OnSignalFunc onSignal, OnLogFunc onLog) {
 	if (!instance_) {
-		instance_ = new ApplicationContext(onSignal, onLog);
+		instance_ = new ApplicationContext(onUpdate, onSignal, onLog);
 	}
 	return instance_;
 }
@@ -351,6 +352,18 @@ void Interface::ApplicationContext::DispatchSignal(int signum) {
 
 void Interface::ApplicationContext::OnSignal(int signum) {
 	signal_func_(signum);
+}
+
+void Interface::ApplicationContext::OnUpdate() {
+	for (auto & it: *servers_) {
+		it.second->Update();
+	}
+	for (auto & it: *clients_) {
+		it.second->Update();
+	}
+	if (update_func_) {
+		update_func_();
+	}
 }
 
 int Interface::ApplicationContext::OnConnected(Net::SocketWrapper * wrapper) {

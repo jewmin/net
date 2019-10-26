@@ -25,8 +25,8 @@
 #include "Interface.h"
 #include "ApplicationContext.h"
 
-void Init(OnSignalFunc onSignal, OnLogFunc onLog) {
-	Interface::ApplicationContext::CreateInstance(onSignal, onLog);
+void Init(OnUpdateFunc onUpdate, OnSignalFunc onSignal, OnLogFunc onLog) {
+	Interface::ApplicationContext::CreateInstance(onUpdate, onSignal, onLog);
 }
 
 void Unit() {

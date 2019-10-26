@@ -23,9 +23,11 @@
  */
 
 #include "SocketWrapperMgr.h"
+#include "Logger.h"
 
 Net::SocketWrapperMgr::SocketWrapperMgr(const std::string & name) : event_(nullptr), name_(name) {
 	socket_list_ = new Foundation::ObjectMgr<SocketWrapper>(64, 1024);
+	need_to_shutdown_list_ = new std::list<u32>();
 }
 
 Net::SocketWrapperMgr::~SocketWrapperMgr() {
@@ -33,6 +35,10 @@ Net::SocketWrapperMgr::~SocketWrapperMgr() {
 	if (socket_list_) {
 		delete socket_list_;
 		socket_list_ = nullptr;
+	}
+	if (need_to_shutdown_list_) {
+		delete need_to_shutdown_list_;
+		need_to_shutdown_list_ = nullptr;
 	}
 }
 
@@ -72,8 +78,23 @@ void Net::SocketWrapperMgr::ShutDownOneSocketWrapper(u32 id) {
 	}
 }
 
+void Net::SocketWrapperMgr::InsertToNeedToShutdownList(u32 id) {
+	need_to_shutdown_list_->push_back(id);
+}
+
 u32 Net::SocketWrapperMgr::GetSocketWrapperCount() const {
 	return socket_list_->GetObjCount();
+}
+
+void Net::SocketWrapperMgr::Update() {
+	CleanDeathConnection();
+}
+
+void Net::SocketWrapperMgr::CleanDeathConnection() {
+	while (!need_to_shutdown_list_->empty()) {
+		ShutDownOneSocketWrapper(need_to_shutdown_list_->front());
+		need_to_shutdown_list_->pop_front();
+	}
 }
 
 void Net::SocketWrapperMgr::ShutDownOneSocketWrapper(void * wrapper, void * ud) {

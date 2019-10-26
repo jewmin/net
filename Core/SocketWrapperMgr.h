@@ -36,7 +36,9 @@ namespace Net {
 		virtual SocketWrapper * GetSocketWrapper(u32 id);
 		virtual void ShutDownAllSocketWrappers();
 		virtual void ShutDownOneSocketWrapper(u32 id);
+		virtual void InsertToNeedToShutdownList(u32 id);
 		virtual u32 GetSocketWrapperCount() const;
+		virtual void Update();
 		void SetEvent(IEvent * event);
 		IEvent * GetEvent() const;
 		std::string GetName() const;
@@ -47,6 +49,7 @@ namespace Net {
 
 		virtual u32 Register(SocketWrapper * wrapper);
 		virtual void UnRegister(SocketWrapper * wrapper);
+		void CleanDeathConnection();
 
 	private:
 		static void ShutDownOneSocketWrapper(void * wrapper, void * ud);
@@ -54,6 +57,7 @@ namespace Net {
 	private:
 		IEvent * event_;
 		Foundation::ObjectMgr<SocketWrapper> * socket_list_;
+		std::list<u32> * need_to_shutdown_list_;
 		std::string name_;
 	};
 }

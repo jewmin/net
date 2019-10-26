@@ -58,10 +58,11 @@ typedef struct {
 #pragma pack()
 
 // Interface Function
+typedef void(*OnUpdateFunc)();
 typedef void(*OnSignalFunc)(int signum);
-typedef void (*OnLogFunc)(int level, const char * msg);
+typedef void(*OnLogFunc)(int level, const char * msg);
 
-NET_EXTERN void Init(OnSignalFunc onSignal, OnLogFunc onLog);
+NET_EXTERN void Init(OnUpdateFunc onUpdate, OnSignalFunc onSignal, OnLogFunc onLog);
 NET_EXTERN void Unit();
 NET_EXTERN void Loop();
 

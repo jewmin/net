@@ -33,7 +33,7 @@
 namespace Interface {
 	class ApplicationContext : public Net::IEvent {
 	public:
-		ApplicationContext(OnSignalFunc onSignal, OnLogFunc onLog);
+		ApplicationContext(OnUpdateFunc onUpdate, OnSignalFunc onSignal, OnLogFunc onLog);
 		~ApplicationContext();
 
 		void RunOnce();
@@ -58,7 +58,7 @@ namespace Interface {
 		void SetCallback(OnConnectedFunc onConnected, OnConnectFailedFunc onConnectFailed, OnDisconnectedFunc onDisconnected, OnRecvMsgFunc onRecvMsg, OnRecvRawMsgFunc onRecvRawMsg);
 
 		static ApplicationContext * GetInstance();
-		static ApplicationContext * CreateInstance(OnSignalFunc onSignal, OnLogFunc onLog);
+		static ApplicationContext * CreateInstance(OnUpdateFunc onUpdate, OnSignalFunc onSignal, OnLogFunc onLog);
 		static void ReleaseInstance();
 
 	protected:
@@ -67,6 +67,7 @@ namespace Interface {
 		void SetSignal(int signum);
 		void DispatchSignal(int signum);
 		void OnSignal(int signum);
+		void OnUpdate();
 		void SendMsg(Net::SocketWrapper * wrapper, int msgId, const char * data, int size);
 
 		virtual int OnConnected(Net::SocketWrapper * wrapper);
@@ -98,6 +99,7 @@ namespace Interface {
 		bool is_set_signal_;
 		int signal_num_;
 		OnSignalFunc signal_func_;
+		OnUpdateFunc update_func_;
 		ServerMap * servers_;
 		ClientMap * clients_;
 		OnConnectedFunc on_connected_func_;

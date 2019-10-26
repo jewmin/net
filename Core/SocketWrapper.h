@@ -37,6 +37,7 @@ namespace Net {
 
 		void Shutdown();
 		void ShutdownNow();
+		void NeedToShutdown();
 		int Write(const char * data, int len);
 		int Read(char * data, int len);
 		char * GetRecvData() const;

@@ -49,6 +49,10 @@ void Net::SocketWrapper::ShutdownNow() {
 	connection_->Shutdown(true);
 }
 
+void Net::SocketWrapper::NeedToShutdown() {
+	mgr_->InsertToNeedToShutdownList(id_);
+}
+
 int Net::SocketWrapper::Write(const char * data, int len) {
 	int status = 0;
 	if (len > 0) {
@@ -105,7 +109,7 @@ void Net::SocketWrapper::OnConnected() {
 	IEvent * event = mgr_->GetEvent();
 	if (event) {
 		if (event->OnConnected(this) == 1) {
-			ShutdownNow();
+			NeedToShutdown();
 		}
 	}
 }
@@ -130,7 +134,7 @@ void Net::SocketWrapper::OnNewDataReceived() {
 	IEvent * event = mgr_->GetEvent();
 	if (event) {
 		if (event->OnNewDataReceived(this) == 1) {
-			ShutdownNow();
+			NeedToShutdown();
 		}
 	}
 }
@@ -139,7 +143,7 @@ void Net::SocketWrapper::OnSomeDataSent() {
 	IEvent * event = mgr_->GetEvent();
 	if (event) {
 		if (event->OnSomeDataSent(this) == 1) {
-			ShutdownNow();
+			NeedToShutdown();
 		}
 	}
 }
