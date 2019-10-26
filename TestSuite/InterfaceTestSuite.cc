@@ -284,11 +284,8 @@ TEST_F(InterfaceTestSuite, error) {
  TEST_F(InterfaceTestSuite2, sendRaw) {
  	server_id = CreateServer("TestServer", 102400, 102400);
  	ServerListen(server_id, "0.0.0.0", 6789);
- 	u64 client_ids[10];
- 	u32 client_conn_ids[10];
  	for (int i = 0; i < 10; ++i) {
- 		client_ids[i] = CreateClient("TestClient", 102400, 102400);
- 		client_conn_ids[i] = ClientConnect(client_ids[i], "127.0.0.1", 6789);
+ 		ClientConnect(CreateClient("TestClient", 102400, 102400), "127.0.0.1", 6789);
  	}
  	while (--loop_num > 0) {
  		Loop();
@@ -298,11 +295,8 @@ TEST_F(InterfaceTestSuite, error) {
  TEST_F(InterfaceTestSuite3, send) {
  	server_id = CreateServer("TestServer", 102400, 102400);
  	ServerListen(server_id, "0.0.0.0", 6789);
- 	u64 client_ids[10];
- 	u32 client_conn_ids[10];
  	for (int i = 0; i < 10; ++i) {
- 		client_ids[i] = CreateClient("TestClient", 102400, 102400);
- 		client_conn_ids[i] = ClientConnect(client_ids[i], "127.0.0.1", 6789);
+ 		ClientConnect(CreateClient("TestClient", 102400, 102400), "127.0.0.1", 6789);
  	}
  	while (--loop_num > 0) {
  		Loop();
