@@ -7,7 +7,7 @@ BenchClient::BenchClient(int clientCount, int packetCount, int packetSize)
 	: reactor_(new Net::EventReactor()), connector_(new Net::SocketConnector(reactor_)), quit_(false)
 	, client_count_(clientCount), packet_count_(packetCount), packet_size_(packetSize)
 	, connected_counter_(0), connect_failed_counter_(0), disconnected_counter_(0) {
-	if (packet_size_ <= PACK_HEADER_LEN) {
+	if (packet_size_ <= static_cast<int>(PACK_HEADER_LEN)) {
 		packet_size_ = PACK_HEADER_LEN + 10;
 	} else if (packet_size_ >= 65536) {
 		packet_size_ = 65535;
@@ -85,7 +85,7 @@ int BenchClient::OnDisconnected(Net::SocketWrapper * wrapper, bool isRemote) {
 
 int BenchClient::OnNewDataReceived(Net::SocketWrapper * wrapper) {
 	const int data_size = wrapper->GetRecvDataSize();
-	if (data_size >= PACK_HEADER_LEN) {
+	if (data_size >= static_cast<int>(PACK_HEADER_LEN)) {
 		const int message_size = GetMessageSize(wrapper);
 		if (0 == message_size) {
 			Foundation::LogErr("Socket [%u] Get Message Error And Shutdown Now", wrapper->GetId());
@@ -126,9 +126,9 @@ int BenchClient::GetMessageSize(Net::SocketWrapper * wrapper) const {
 }
 
 void BenchClient::ProcessCommand(Net::SocketWrapper * wrapper) const {
-	PackHeader ph = {0};
+	/*PackHeader ph = {0};
 	std::memcpy(&ph, wrapper->GetRecvData(), PACK_HEADER_LEN);
 	const char * data = wrapper->GetRecvData() + PACK_HEADER_LEN;
 	const int data_len = ph.data_len;
-	/*Foundation::LogInfo("Socket [%u] Package [length:%d]", wrapper->GetId(), data_len);*/
+	Foundation::LogInfo("Socket [%u] Package [length:%d]", wrapper->GetId(), data_len);*/
 }
