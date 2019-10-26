@@ -131,7 +131,7 @@ namespace Foundation {
 			if (mem_size < size) {
 				Realloc(GetLength() + size);
 			}
-			memcpy(offset_, buf, size);
+			std::memcpy(offset_, buf, size);
 			offset_ += size;
 			// 如果读写指针超过长度指针的位置，则调整长度指针为读写指针的位置
 			if (offset_ > data_end_) {
@@ -173,7 +173,7 @@ namespace Foundation {
 			int offset = GetPosition();
 			int length = GetDataLength();
 			if (length > 0) {
-				memcpy(new_mem, mem_ptr_, std::min<int>(new_size, length));
+				std::memcpy(new_mem, mem_ptr_, std::min<int>(new_size, length));
 			}
 			// 重设数据指针
 			mem_ptr_ = new_mem;

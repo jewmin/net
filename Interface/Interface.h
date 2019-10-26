@@ -49,6 +49,14 @@ extern "C" {
 #	define NET_EXTERN /* nothing */
 #endif
 
+// Interface Struct
+#pragma pack(1)
+typedef struct {
+	char address[48];
+	u16 port;
+} address_t;
+#pragma pack()
+
 // Interface Function
 typedef void(*OnSignalFunc)(int signum);
 typedef void (*OnLogFunc)(int level, const char * msg);
@@ -73,6 +81,8 @@ NET_EXTERN void ShutdownConnectionNow(u64 mgrId, u32 id);
 NET_EXTERN void SendMsg(u64 mgrId, u32 id, int msgId, const char * data, int size);
 NET_EXTERN void SendRawMsg(u64 mgrId, u32 id, const char * data, int size);
 NET_EXTERN void SetRawRecv(u64 mgrId, u32 id, bool isRaw);
+
+NET_EXTERN address_t GetOneConnectionRemoteAddress(u64 mgrId, u32 id);
 
 // Callback Function
 typedef void(*OnConnectedFunc)(u64 mgrId, u32 id);

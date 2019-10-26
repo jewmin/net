@@ -101,7 +101,7 @@ namespace Foundation {
 				value = *(reinterpret_cast<T *>(offset_));
 				offset_ += sizeof(T);
 			} else {
-				memset(&value, 0, sizeof(value));
+				std::memset(&value, 0, sizeof(value));
 				offset_ += avaliable;
 			}
 			return value;
@@ -111,10 +111,10 @@ namespace Foundation {
 		inline int ReadBinary(char * buf, int size) {
 			int avaliable = GetReadableLength();
 			if (avaliable < size) {
-				memset(buf, 0, size);
+				std::memset(buf, 0, size);
 				size = avaliable;
 			}
-			memcpy(buf, offset_, size);
+			std::memcpy(buf, offset_, size);
 			offset_ += size;
 			return size;
 		}

@@ -53,7 +53,7 @@ public:
 		printf("OnNewDataReceived %d\n", ++count_);
 		if (wrapper->GetRecvDataSize() >= len_) {
 			char buf[1024];
-			memcpy(buf, wrapper->GetRecvData(), len_);
+			std::memcpy(buf, wrapper->GetRecvData(), len_);
 			wrapper->PopRecvData(len_);
 			buf[len_] = 0;
 			EXPECT_STREQ(buf, data_.c_str());
@@ -287,7 +287,7 @@ TEST(ServiceTestSuite, connect) {
 
 	uv_timer_t * t = new uv_timer_t();
 	uv_timer_init(reactor.GetEventLoop(), t);
-	uv_timer_start(t, ServiceTestSuite_timer_cb, 5000, 0);
+	uv_timer_start(t, ServiceTestSuite_timer_cb, 1000, 0);
 	reactor.Dispatch(UV_RUN_DEFAULT);
 }
 
@@ -336,7 +336,7 @@ TEST(ServiceTestSuite, WR) {
 	uv_timer_t * t = new uv_timer_t();
 	uv_timer_init(reactor.GetEventLoop(), t);
 	t->data = static_cast<void *>(&server);
-	uv_timer_start(t, ServiceTestSuite_timer_cb3, 5000, 0);
+	uv_timer_start(t, ServiceTestSuite_timer_cb3, 3000, 0);
 	reactor.Dispatch(UV_RUN_DEFAULT);
 	for (auto & it : client_list) {
 		delete it;

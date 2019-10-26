@@ -27,7 +27,7 @@
 #include "EventHandler.h"
 
 Net::EventReactor::EventReactor() {
-	Foundation::LogInfo("使用网络底层<libuv>");
+	Foundation::LogDebug("使用网络底层<libuv>");
 	loop_ = static_cast<uv_loop_t *>(malloc(sizeof(uv_loop_t)));
 	uv_loop_init(loop_);
 }

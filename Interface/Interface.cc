@@ -89,6 +89,10 @@ void SetRawRecv(u64 mgrId, u32 id, bool isRaw) {
 	Interface::ApplicationContext::GetInstance()->SetRawRecv(mgrId, id, isRaw);
 }
 
+address_t GetOneConnectionRemoteAddress(u64 mgrId, u32 id) {
+	return Interface::ApplicationContext::GetInstance()->GetOneConnectionRemoteAddress(mgrId, id);
+}
+
 void SetCallback(OnConnectedFunc onConnected, OnConnectFailedFunc onConnectFailed, OnDisconnectedFunc onDisconnected, OnRecvMsgFunc onRecvMsg, OnRecvRawMsgFunc onRecvRawMsg) {
 	Interface::ApplicationContext::GetInstance()->SetCallback(onConnected, onConnectFailed, onDisconnected, onRecvMsg, onRecvRawMsg);
 }

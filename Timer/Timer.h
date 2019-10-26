@@ -49,10 +49,7 @@ namespace Foundation {
 		bool operator<=(const Timer & rhs) const;
 		bool operator>(const Timer & rhs) const;
 		bool operator>=(const Timer & rhs) const;
-
-	protected:
-		explicit Timer(TimerImpl * impl);
-
+		
 	private:
 		TimerImpl * impl_;
 	};
@@ -62,7 +59,7 @@ inline void Foundation::Timer::Open(uv_loop_t * loop, void * data) {
 	impl_->Open(loop, data);
 }
 
-inline void Foundation::Timer::Close(uv_close_cb cb = reinterpret_cast<uv_close_cb>(free)) {
+inline void Foundation::Timer::Close(uv_close_cb cb) {
 	impl_->Close(cb);
 }
 

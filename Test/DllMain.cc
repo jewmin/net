@@ -1,4 +1,7 @@
 #include "Interface/Interface.h"
+#ifdef USE_VLD
+#include "vld.h"
+#endif
 
 static u64 clientId = 0;
 static u32 connId = 0;

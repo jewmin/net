@@ -2,7 +2,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.7.2)
 
 # 项目名
-PROJECT(libnet VERSION 2.0.1)
+PROJECT(libnet VERSION 2.1.1)
 # MESSAGE(${PROJECT_NAME} ${PROJECT_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR})
 
 # 添加源文件
@@ -75,6 +75,12 @@ SET(Interface
 	${CMAKE_CURRENT_LIST_DIR}/Interface/Interface.h
 	${CMAKE_CURRENT_LIST_DIR}/Interface/Interface.cc
 )
+SET(Timer
+	${CMAKE_CURRENT_LIST_DIR}/Timer/Timer.h
+	${CMAKE_CURRENT_LIST_DIR}/Timer/Timer.cc
+	${CMAKE_CURRENT_LIST_DIR}/Timer/TimerImpl.h
+	${CMAKE_CURRENT_LIST_DIR}/Timer/TimerImpl.cc
+)
 
 SET(all_srcs
 	${Common}
@@ -83,6 +89,7 @@ SET(all_srcs
 	${Reactor}
 	${Core}
 	${Interface}
+	${Timer}
 )
 # MESSAGE(${all_srcs})
 
@@ -93,6 +100,7 @@ SOURCE_GROUP(Sockets FILES ${Sockets})
 SOURCE_GROUP(Reactor FILES ${Reactor})
 SOURCE_GROUP(Core FILES ${Core})
 SOURCE_GROUP(Interface FILES ${Interface})
+SOURCE_GROUP(Timer FILES ${Timer})
 
 # 设置
 SET(CMAKE_BUILD_TYPE Debug)

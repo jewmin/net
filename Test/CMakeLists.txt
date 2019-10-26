@@ -50,6 +50,7 @@ ENDIF()
 
 ADD_EXECUTABLE(test_dll DllMain.cc)
 IF (MSVC)
+	TARGET_COMPILE_DEFINITIONS(test_dll PRIVATE USING_NET_SHARED)
 	TARGET_LINK_LIBRARIES(test_dll libnet libuv vld ws2_32 iphlpapi psapi userenv)
 ELSE()
 	TARGET_LINK_LIBRARIES(test_dll net uv)

@@ -71,7 +71,7 @@ Interface::ApplicationContext::~ApplicationContext() {
 
 void Interface::ApplicationContext::RunOnce() {
 	if (is_set_signal_) {
-		Foundation::LogInfo("---处理关服信号 %d---", signal_num_);
+		Foundation::LogInfo("处理关服信号[%d]", signal_num_);
 		DispatchSignal(signal_num_);
 	}
 	reactor_->Dispatch();
@@ -276,6 +276,31 @@ void Interface::ApplicationContext::SetRawRecv(u64 mgrId, u32 id, bool isRaw) {
 	}
 }
 
+address_t Interface::ApplicationContext::GetOneConnectionRemoteAddress(u64 mgrId, u32 id) {
+	address_t address;
+	std::memset(&address, 0, sizeof(address));
+	ServerMapIter it = servers_->find(mgrId);
+	if (it != servers_->end()) {
+		Net::SocketWrapper * wrapper = it->second->GetSocketWrapper(id);
+		if (wrapper) {
+			Net::SocketAddress addr = wrapper->GetConnection()->GetSocket()->RemoteAddress();
+			std::strncpy(address.address, addr.Host().ToString().c_str(), sizeof(address.address));
+			address.port = addr.Port();
+		}
+	} else {
+		ClientMapIter it2 = clients_->find(mgrId);
+		if (it2 != clients_->end()) {
+			Net::SocketWrapper * wrapper = it2->second->GetSocketWrapper(id);
+			if (wrapper) {
+				Net::SocketAddress addr = wrapper->GetConnection()->GetSocket()->RemoteAddress();
+				std::strncpy(address.address, addr.Host().ToString().c_str(), sizeof(address.address));
+				address.port = addr.Port();
+			}
+		}
+	}
+	return address;
+}
+
 void Interface::ApplicationContext::SetCallback(OnConnectedFunc onConnected, OnConnectFailedFunc onConnectFailed, OnDisconnectedFunc onDisconnected, OnRecvMsgFunc onRecvMsg, OnRecvRawMsgFunc onRecvRawMsg) {
 	on_connected_func_ = onConnected;
 	on_connect_failed_func_ = onConnectFailed;
@@ -329,7 +354,7 @@ void Interface::ApplicationContext::OnSignal(int signum) {
 }
 
 int Interface::ApplicationContext::OnConnected(Net::SocketWrapper * wrapper) {
-	Foundation::LogDebug("---一个Connection %u连上了---", wrapper->GetId());
+	Foundation::LogDebug("一个Connection[%u]连上了", wrapper->GetId());
 	if (on_connected_func_) {
 		on_connected_func_(reinterpret_cast<u64>(wrapper->GetMgr()), wrapper->GetId());
 	}
@@ -344,7 +369,7 @@ int Interface::ApplicationContext::OnConnectFailed(Net::SocketWrapper * wrapper,
 }
 
 int Interface::ApplicationContext::OnDisconnected(Net::SocketWrapper * wrapper, bool isRemote) {
-	Foundation::LogDebug("---一个Connection %u断开了---", wrapper->GetId());
+	Foundation::LogDebug("一个Connection[%u]断开了", wrapper->GetId());
 	if (on_disconnected_func_) {
 		on_disconnected_func_(reinterpret_cast<u64>(wrapper->GetMgr()), wrapper->GetId(), isRemote);
 	}

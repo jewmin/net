@@ -90,7 +90,7 @@ TEST(PacketTestSuite, use) {
 	i64 g1;
 	test_struct ts1;
 	char hello_str1[128] = { 0 };
-	memset(&ts1, 0, sizeof(ts1));
+	std::memset(&ts1, 0, sizeof(ts1));
 	const char * str1;
 	reader2 >> e1 >> f1 >> g1 >> ts1 >> str1;
 	reader2.ReadString(hello_str1, 128);

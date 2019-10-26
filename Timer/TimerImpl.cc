@@ -35,11 +35,12 @@ void Foundation::TimerImpl::Open(uv_loop_t * loop, void * data) {
 	if (!handle_) {
 		handle_ = static_cast<uv_timer_t *>(malloc(sizeof(uv_timer_t)));
 		uv_timer_init(loop, handle_);
+		uv_unref(reinterpret_cast<uv_handle_t *>(handle_));
 	}
 	handle_->data = data;
 }
 
-void Foundation::TimerImpl::Close(uv_close_cb cb = reinterpret_cast<uv_close_cb>(free)) {
+void Foundation::TimerImpl::Close(uv_close_cb cb) {
 	if (handle_) {
 		if (!uv_is_closing(reinterpret_cast<uv_handle_t *>(handle_))) {
 			uv_close(reinterpret_cast<uv_handle_t *>(handle_), cb);

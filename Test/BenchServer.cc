@@ -101,7 +101,7 @@ int BenchServer::OnSomeDataSent(Net::SocketWrapper * wrapper) {
 
 int BenchServer::GetMessageSize(Net::SocketWrapper * wrapper) const {
 	PackHeader ph = {0};
-	memcpy(&ph, wrapper->GetRecvData(), PACK_HEADER_LEN);
+	std::memcpy(&ph, wrapper->GetRecvData(), PACK_HEADER_LEN);
 	if (PACK_BEGIN_FLAG == ph.pack_begin_flag && PACK_END_FLAG == ph.pack_end_flag) {
 		u16 crc_data = MAKE_CRC_DATA(PACK_BEGIN_FLAG, PACK_END_FLAG, ph.data_len);
 		if (crc_data == ph.crc_data) {
@@ -113,7 +113,7 @@ int BenchServer::GetMessageSize(Net::SocketWrapper * wrapper) const {
 
 void BenchServer::ProcessCommand(Net::SocketWrapper * wrapper) const {
 	PackHeader ph = {0};
-	memcpy(&ph, wrapper->GetRecvData(), PACK_HEADER_LEN);
+	std::memcpy(&ph, wrapper->GetRecvData(), PACK_HEADER_LEN);
 	const char * data = wrapper->GetRecvData() + PACK_HEADER_LEN;
 	const int data_len = ph.data_len;
 	/*Foundation::LogInfo("Socket [%u] Package [length:%d]", wrapper->GetId(), data_len);*/

@@ -27,9 +27,6 @@
 Foundation::Timer::Timer() : impl_(new TimerImpl()) {
 }
 
-Foundation::Timer::Timer(TimerImpl * impl) : impl_(impl) {
-}
-
 Foundation::Timer::Timer(const Timer & rhs) : impl_(rhs.impl_) {
 	impl_->Duplicate();
 }

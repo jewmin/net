@@ -54,6 +54,7 @@ namespace Interface {
 		void SendMsg(u64 mgrId, u32 id, int msgId, const char * data, int size);
 		void SendRawMsg(u64 mgrId, u32 id, const char * data, int size);
 		void SetRawRecv(u64 mgrId, u32 id, bool isRaw);
+		address_t GetOneConnectionRemoteAddress(u64 mgrId, u32 id);
 		void SetCallback(OnConnectedFunc onConnected, OnConnectFailedFunc onConnectFailed, OnDisconnectedFunc onDisconnected, OnRecvMsgFunc onRecvMsg, OnRecvRawMsgFunc onRecvRawMsg);
 
 		static ApplicationContext * GetInstance();
