@@ -4,7 +4,7 @@
 using namespace Foundation;
 
 void TestLog(int level, const char * msg) {
-	printf("这是自定义打印日志函数: %d %s\n", level, msg);
+	printf("This is a custom print log function: %d %s\n", level, msg);
 }
 
 class LoggerTestSuite : public testing::Test {
@@ -49,7 +49,7 @@ TEST_F(LoggerTestSuite, use4) {
 		buf[i] = '0' + i - 1020;
 	}
 	buf[1279] = 0;
-	printf("原始字符串: %s\n", buf);
+	printf("Original string: %s\n", buf);
 	LogInfo(buf);
 	LogInfo("这是一条信息日志");
 }

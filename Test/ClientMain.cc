@@ -12,9 +12,9 @@ int main(int argc, const char * * argv) {
 		const std::string arg_string = argv[i];
 		if (arg_string == "-h" || arg_string == "--help" || arg_string == "/?") {
 			printf("Usage: BenchClient [-c client_count] [-p packet_count] [-s packet_size]\n");
-			printf("-c client_count: 同时运行多少个客户端, 默认为1\n");
-			printf("-p packet_count: 每个客户端发多少个包, 默认为1\n");
-			printf("-s packet_size : 每个包包含多少个字节, 默认为64\n");
+			printf("-c client_count: How many clients are running at the same time, default:1\n");
+			printf("-p packet_count: How many packages are sent per client, default:1\n");
+			printf("-s packet_size : How many bytes each package contains, default:64\n");
 			exit(0);
 		} else if (arg_string == "-c") {
 			client_count = std::atoi(argv[i + 1]);

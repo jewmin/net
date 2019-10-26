@@ -22,7 +22,7 @@ void MyOnLogFunc(int level, const char * msg) {
 
 void MyOnConnectedFunc(u64 mgrId, u32 id) {
 	address_t address = GetOneConnectionRemoteAddress(mgrId, id);
-	printf("连接成功 %lu %u %s:%d\n", mgrId, id, address.address, address.port);
+	printf("连接成功 %llu %u %s:%d\n", mgrId, id, address.address, address.port);
 	if (mgrId == clientId && id == connId) {
 		SendRawMsg(mgrId, id, "raw", sizeof("raw"));
 	} else {
@@ -31,23 +31,23 @@ void MyOnConnectedFunc(u64 mgrId, u32 id) {
 }
 
 void MyOnConnectFailedFunc(u64 mgrId, u32 id, int reason) {
-	printf("连接失败 %lu %u %d\n", mgrId, id, reason);
+	printf("连接失败 %llu %u %d\n", mgrId, id, reason);
 	clientId = mgrId;
 	connId = ClientConnect(clientId, "127.0.0.1", 6789);
 	SetRawRecv(clientId, connId, true);
 }
 
 void MyOnDisconnectedFunc(u64 mgrId, u32 id, bool isRemote) {
-	printf("断开连接 %lu %u %d\n", mgrId, id, isRemote);
+	printf("断开连接 %llu %u %d\n", mgrId, id, isRemote);
 }
 
 void MyOnRecvMsgFunc(u64 mgrId, u32 id, int msgId, const char * data, int size) {
-	printf("收到协议数据 %lu, %u, %d, %s, %d\n", mgrId, id, msgId, data, size);
+	printf("收到协议数据 %llu, %u, %d, %s, %d\n", mgrId, id, msgId, data, size);
 	ShutdownConnectionNow(mgrId, id);
 }
 
 void MyOnRecvRawMsgFunc(u64 mgrId, u32 id, const char * data, int size) {
-	printf("收到原始数据 %lu, %u, %s, %d\n", mgrId, id, data, size);
+	printf("收到原始数据 %llu, %u, %s, %d\n", mgrId, id, data, size);
 	ShutdownConnection(mgrId, id);
 }
 

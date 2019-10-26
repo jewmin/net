@@ -50,6 +50,9 @@ TEST(TimerTestSuite, eq) {
 	if (timer1 > timer3) {
 		timer_low = timer3;
 		timer_high = timer1;
+	} else {
+		timer_low = timer1;
+		timer_high = timer3;
 	}
 	EXPECT_GT(timer_high, timer_low);
 	EXPECT_LT(timer_low, timer_high);

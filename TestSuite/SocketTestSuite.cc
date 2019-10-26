@@ -54,8 +54,8 @@ void shutdown_cb(uv_shutdown_t* req, int status) {
 }
 
 void alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
-	buf->base = static_cast<char *>(malloc(suggested_size));
-	buf->len = suggested_size;
+	buf->base = static_cast<char *>(malloc(64 * 1024));
+	buf->len = 64 * 1024;
 }
 
 void read_cb(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
