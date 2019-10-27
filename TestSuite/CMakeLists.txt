@@ -2,7 +2,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.7.2)
 
 # 项目名
-PROJECT(test_suite VERSION 1.1.1)
+PROJECT(test_suite VERSION 1.1.2)
 
 # 添加源文件
 AUX_SOURCE_DIRECTORY(${CMAKE_CURRENT_LIST_DIR} test_srcs)
@@ -35,9 +35,6 @@ IF (MSVC)
 	TARGET_LINK_LIBRARIES(${PROJECT_NAME} libnet-static vld ws2_32 iphlpapi psapi userenv debug libuvd debug gtestd debug gmockd optimized libuv optimized gtest optimized gmock)
 	ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${vldFile} ${OUTPUT_DIRECTORY})
 ELSE()
-	IF (CMAKE_BUILD_TYPE STREQUAL "Release")
-		TARGET_LINK_LIBRARIES(${PROJECT_NAME} net-static uv gtest gmock)
-	ELSE()
-		TARGET_LINK_LIBRARIES(${PROJECT_NAME} net-static uvd gtestd gmockd)
-	ENDIF()
+	TARGET_LINK_LIBRARIES(${PROJECT_NAME} net-static debug uvd debug gtestd debug gmockd optimized uv optimized gtest optimized gmock)
 ENDIF()
+
