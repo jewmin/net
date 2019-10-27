@@ -18,8 +18,6 @@ ENDIF()
 
 IF (MSVC)
 	LINK_DIRECTORIES(${test_suite_SOURCE_DIR}/vld/lib)
-ELSE()
-    LINK_DIRECTORIES(${OUTPUT_DIRECTORY})
 ENDIF()
 
 # 生成可执行文件

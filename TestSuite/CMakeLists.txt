@@ -30,8 +30,6 @@ IF (MSVC)
 		${CMAKE_CURRENT_LIST_DIR}/vld/lib/Microsoft.DTfW.DHL.manifest
 		${CMAKE_CURRENT_LIST_DIR}/vld/lib/vld.ini
 	)
-ELSE()
-    LINK_DIRECTORIES(${OUTPUT_DIRECTORY})
 ENDIF()
 
 # 生成可执行文件

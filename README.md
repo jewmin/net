@@ -16,7 +16,7 @@ msbuild libnet.sln /t:Build /p:Configuration=Debug /p:Platform="x64" /nologo
 ```cmd
 mkdir build
 cd build
-cmake -G "Visual Studio 15 2017 Win64" ..
+cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Release ..
 msbuild libnet.sln /t:Build /p:Configuration=Release /p:Platform="x64" /nologo
 ```
 
