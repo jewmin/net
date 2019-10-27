@@ -9,7 +9,7 @@
 ```cmd
 mkdir build
 cd build
-cmake -G "Visual Studio 15 2017 Win64" ..
+cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Debug ..
 msbuild libnet.sln /t:Build /p:Configuration=Debug /p:Platform="x64" /nologo
 ```
 ### release
@@ -25,7 +25,7 @@ msbuild libnet.sln /t:Build /p:Configuration=Release /p:Platform="x64" /nologo
 ```bash
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Debug ..
 make
 ```
 ### release
