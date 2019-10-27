@@ -17,12 +17,9 @@ ENDIF()
 
 # 第三方类库
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/gtest/include)
-IF (MSVC)
-	INCLUDE_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/vld/include)
-ENDIF()
-
 LINK_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/gtest/lib)
 IF (MSVC)
+	INCLUDE_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/vld/include)
 	LINK_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/vld/lib)
 	SET(vldFile
 		${CMAKE_CURRENT_LIST_DIR}/vld/lib/vld_x64.dll
@@ -38,5 +35,9 @@ IF (MSVC)
 	TARGET_LINK_LIBRARIES(${PROJECT_NAME} libnet-static vld ws2_32 iphlpapi psapi userenv debug libuvd debug gtestd debug gmockd optimized libuv optimized gtest optimized gmock)
 	ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${vldFile} ${OUTPUT_DIRECTORY})
 ELSE()
-	TARGET_LINK_LIBRARIES(${PROJECT_NAME} debug netd.a optimized net.a uv gtest gmock)
+	IF (CMAKE_BUILD_TYPE STREQUAL "Release")
+		TARGET_LINK_LIBRARIES(${PROJECT_NAME} net-static uv gtest gmock)
+	ELSE()
+		TARGET_LINK_LIBRARIES(${PROJECT_NAME} net-static uvd gtestd gmockd)
+	ENDIF()
 ENDIF()

@@ -2,7 +2,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.7.2)
 
 # 项目名
-PROJECT(libnet VERSION 2.2.0)
+PROJECT(libnet VERSION 2.2.2)
 # MESSAGE(${PROJECT_NAME} ${PROJECT_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
 # 添加源文件
@@ -150,7 +150,7 @@ IF (MSVC)
 	TARGET_LINK_LIBRARIES(libnet ws2_32 iphlpapi psapi userenv debug libuvd optimized libuv)
 ELSE()
 	ADD_LIBRARY(net-static STATIC ${all_srcs})
-	SET_TARGET_PROPERTIES(net-static PROPERTIES OUTPUT_NAME "net")
+	# SET_TARGET_PROPERTIES(net-static PROPERTIES OUTPUT_NAME "net")
 	ADD_LIBRARY(net SHARED ${all_srcs})
 	TARGET_COMPILE_OPTIONS(net PRIVATE -fPIC -fvisibility=hidden)
 ENDIF()
