@@ -11,12 +11,6 @@ ELSE()
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 ENDIF()
 
-# 第三方类库
-IF (MSVC)
-	INCLUDE_DIRECTORIES(${test_suite_SOURCE_DIR}/vld/include)
-	LINK_DIRECTORIES(${test_suite_SOURCE_DIR}/vld/lib)
-ENDIF()
-
 # 生成可执行文件
 ADD_EXECUTABLE(bench_server ProtocolDef.h BenchServer.h BenchServer.cc ServerMain.cc)
 ADD_EXECUTABLE(bench_client ProtocolDef.h BenchClient.h BenchClient.cc ClientMain.cc)
@@ -31,4 +25,3 @@ ELSE()
 	TARGET_LINK_LIBRARIES(bench_client net-static debug uvd optimized uv)
 	TARGET_LINK_LIBRARIES(test_dll net debug uvd optimized uv)
 ENDIF()
-
