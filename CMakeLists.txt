@@ -2,19 +2,16 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.7.2)
 
 # 项目名
-PROJECT(libnet VERSION 2.2.2)
+PROJECT(libnet VERSION 2.3.2)
 # MESSAGE(${PROJECT_NAME} ${PROJECT_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
-IF (CMAKE_BUILD_TYPE STREQUAL "")
-	SET(CMAKE_BUILD_TYPE Debug)
-ENDIF()
-
-IF (CMAKE_BUILD_TYPE MATCHES "Debug")
-	MESSAGE(STATUS "CMAKE_BUILD_TYPE is Debug")
-ELSEIF (CMAKE_BUILD_TYPE MATCHES "Release")
-	MESSAGE(STATUS "CMAKE_BUILD_TYPE is Release")
-ELSE()
-	MESSAGE(STATUS "unknown CMAKE_BUILD_TYPE = " ${CMAKE_BUILD_TYPE})
+# 开关
+OPTION(TCMALLOC "use tcmalloc replace system malloc" OFF)
+OPTION(VLD "use Visual Leak Detector to check memory on windows" ON)
+OPTION(RELEASE "compile the release version" OFF)
+# 使用 tcmalloc 替换系统内存分配就不能用 vld 检测内存泄露，不然会报错
+IF (TCMALLOC)
+	SET(VLD OFF)
 ENDIF()
 
 # 添加源文件
@@ -139,9 +136,18 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
 	ADD_DEFINITIONS(-std=c++11)
 ENDIF()
 
-IF (CMAKE_BUILD_TYPE STREQUAL "Release")
+# 显式输出编译选项
+IF (TCMALLOC)
+	MESSAGE(STATUS "use tcmalloc replace system malloc ")
+ENDIF()
+IF (MSVC AND VLD)
+	MESSAGE(STATUS "use Visual Leak Detector to check memory on windows")
+ENDIF()
+IF (RELEASE)
+	SET(CMAKE_BUILD_TYPE Release)
 	MESSAGE(STATUS "Release " ${CMAKE_CXX_FLAGS_RELEASE})
 ELSE()
+	SET(CMAKE_BUILD_TYPE Debug)
 	MESSAGE(STATUS "Debug " ${CMAKE_CXX_FLAGS_DEBUG})
 ENDIF()
 
@@ -157,14 +163,20 @@ ENDIF()
 LINK_DIRECTORIES(${OUTPUT_DIRECTORY})
 LINK_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/3rd/libuv/lib)
 LINK_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/3rd/gtest/lib)
+LINK_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/3rd/tcmalloc/lib)
 IF (MSVC)
 	LINK_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/3rd/vld/lib)
-	SET(vldFile
+	SET(dllFile
 		${CMAKE_CURRENT_LIST_DIR}/3rd/vld/lib/vld_x64.dll
 		${CMAKE_CURRENT_LIST_DIR}/3rd/vld/lib/dbghelp.dll
 		${CMAKE_CURRENT_LIST_DIR}/3rd/vld/lib/Microsoft.DTfW.DHL.manifest
 		${CMAKE_CURRENT_LIST_DIR}/3rd/vld/lib/vld.ini
 	)
+	IF (Release)
+		LIST(APPEND dllFile ${CMAKE_CURRENT_LIST_DIR}/3rd/tcmalloc/lib/libtcmalloc_minimal.dll)
+	ELSE()
+		LIST(APPEND dllFile ${CMAKE_CURRENT_LIST_DIR}/3rd/tcmalloc/lib/libtcmalloc_minimal-debug.dll)
+	ENDIF()
 ENDIF()
 
 # 生成静态库、动态库

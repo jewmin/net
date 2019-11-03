@@ -2,7 +2,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.7.2)
 
 # 项目名
-PROJECT(test_suite VERSION 1.1.2)
+PROJECT(test_suite VERSION 1.2.2)
 
 # 添加源文件
 AUX_SOURCE_DIRECTORY(${CMAKE_CURRENT_LIST_DIR} test_srcs)
@@ -10,7 +10,15 @@ AUX_SOURCE_DIRECTORY(${CMAKE_CURRENT_LIST_DIR} test_srcs)
 
 # 设置
 IF (MSVC)
-	ADD_DEFINITIONS(-DUSE_VLD)
+	IF(TCMALLOC)
+		SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /INCLUDE:__tcmalloc")
+		SET(tcLib debug libtcmalloc_minimal-debug optimized libtcmalloc_minimal)
+	ELSE()
+		SET(tcLib)
+	ENDIF()
+	IF(VLD)
+		ADD_DEFINITIONS(-DUSE_VLD)
+	ENDIF()
 ELSE()
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 ENDIF()
@@ -18,8 +26,8 @@ ENDIF()
 # 生成可执行文件
 ADD_EXECUTABLE(${PROJECT_NAME} ${test_srcs})
 IF (MSVC)
-	TARGET_LINK_LIBRARIES(${PROJECT_NAME} libnet-static vld ws2_32 iphlpapi psapi userenv debug libuvd debug gtestd debug gmockd optimized libuv optimized gtest optimized gmock)
-	ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${vldFile} ${OUTPUT_DIRECTORY})
+	TARGET_LINK_LIBRARIES(${PROJECT_NAME} libnet-static vld ws2_32 iphlpapi psapi userenv debug libuvd debug gtestd debug gmockd optimized libuv optimized gtest optimized gmock ${tcLib})
+	ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${dllFile} ${OUTPUT_DIRECTORY})
 ELSE()
 	TARGET_LINK_LIBRARIES(${PROJECT_NAME} net-static debug uvd debug gtestd debug gmockd optimized uv optimized gtest optimized gmock)
 ENDIF()
