@@ -63,7 +63,6 @@ private:
 class IPv4AddressImpl : public IPAddressImpl {
 public:
 	IPv4AddressImpl();
-	explicit IPv4AddressImpl(const in_addr * addr);
 	IPv4AddressImpl(const IPv4AddressImpl & rhs);
 	IPv4AddressImpl & operator=(const IPv4AddressImpl & rhs);
 	
@@ -78,6 +77,9 @@ public:
 
 	static IPv4AddressImpl Parse(const std::string & ip);
 
+protected:
+	explicit IPv4AddressImpl(const struct in_addr * addr);
+
 private:
 	struct in_addr addr_;
 };
@@ -85,7 +87,6 @@ private:
 class IPv6AddressImpl : public IPAddressImpl {
 public:
 	IPv6AddressImpl();
-	explicit IPv6AddressImpl(const in6_addr * addr, u32 scope = 0);
 	IPv6AddressImpl(const IPv6AddressImpl & rhs);
 	IPv6AddressImpl & operator=(const IPv6AddressImpl & rhs);
 
@@ -99,6 +100,9 @@ public:
 	bool operator!=(const IPv6AddressImpl & rhs) const;
 
 	static IPv6AddressImpl Parse(const std::string & ip);
+
+protected:
+	explicit IPv6AddressImpl(const struct in6_addr * addr, u32 scope = 0);
 
 private:
 	struct in6_addr addr_;

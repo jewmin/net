@@ -28,47 +28,49 @@
 #include "IPAddressImpl.h"
 
 namespace Net {
-	class IPAddress {
-	public:
-		IPAddress();
-		explicit IPAddress(const std::string & addr);
-		explicit IPAddress(const struct sockaddr & sockaddr);
-		IPAddress(const void * addr, socklen_t length, u32 scope = 0);
-		IPAddress(const IPAddress & rhs);
-		IPAddress & operator=(const IPAddress & rhs);
-		~IPAddress();
-		
-		std::string ToString() const;
-		socklen_t Length() const;
-		const void * Addr() const;
-		AddressFamily::Family Family() const;
-		int AF() const;
-		u32 Scope() const;
-		bool operator==(const IPAddress & addr) const;
-		bool operator!=(const IPAddress & addr) const;
 
-		static IPAddress Parse(const std::string & addr);
-		static bool TryParse(const std::string & addr, IPAddress & result);
+class IPAddress {
+public:
+	IPAddress();
+	explicit IPAddress(const std::string & ip);
+	IPAddress(const IPAddress & rhs);
+	IPAddress & operator=(const IPAddress & rhs);
+	~IPAddress();
+	
+	std::string ToString() const;
+	socklen_t Length() const;
+	const void * Addr() const;
+	AddressFamily::Family Family() const;
+	int AF() const;
+	u32 Scope() const;
+	bool operator==(const IPAddress & rhs) const;
+	bool operator!=(const IPAddress & rhs) const;
 
-		static const AddressFamily::Family IPv4 = AddressFamily::IPv4;
-		static const AddressFamily::Family IPv6 = AddressFamily::IPv6;
+	static IPAddress Parse(const std::string & ip);
+	static bool TryParse(const std::string & ip, IPAddress & result);
 
+	static const AddressFamily::Family IPv4 = AddressFamily::IPv4;
+	static const AddressFamily::Family IPv6 = AddressFamily::IPv6;
+
+protected:
+	explicit IPAddress(const struct sockaddr & sockaddr);
+	IPAddress(const void * addr, socklen_t length, u32 scope = 0);
+
+private:
+	IPAddressImpl * Impl() const;
+	void NewIPv4();
+	void NewIPv4(const void * host);
+	void NewIPv6();
+	void NewIPv6(const void * host, u32 scope);
+	void Destroy();
+	i8 * Storage();
+
+	union {
+		i8 buffer[sizeof(IPv6AddressImpl)];
 	private:
-		IPAddressImpl * Impl() const;
-		void NewIPv4();
-		void NewIPv4(const void * host);
-		void NewIPv6();
-		void NewIPv6(const void * host, u32 scope);
-		void Destroy();
-		char * Storage();
-
-		union {
-			char buffer[sizeof(IPv6AddressImpl)];
-		private:
-			std::aligned_storage<sizeof(IPv6AddressImpl)>::type aligner;
-		} memory_;
-	};
-}
+		std::aligned_storage<sizeof(IPv6AddressImpl)>::type aligner;
+	} memory_;
+};
 
 inline std::string Net::IPAddress::ToString() const {
 	return Impl()->ToString();
@@ -100,6 +102,8 @@ inline Net::IPAddressImpl * Net::IPAddress::Impl() const {
 
 inline char * Net::IPAddress::Storage() {
 	return memory_.buffer;
+}
+
 }
 
 #endif
