@@ -25,7 +25,7 @@
 #ifndef Foundation_ObjectMgr_INCLUDED
 #define Foundation_ObjectMgr_INCLUDED
 
-#include "CommonDef.h"
+#include "Net.h"
 
 namespace Foundation {
 	template<class OBJECT>

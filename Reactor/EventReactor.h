@@ -26,7 +26,7 @@
 #define Net_EventReactor_INCLUDED
 
 #include "uv.h"
-#include "CommonDef.h"
+#include "Net.h"
 
 namespace Net {
 	class EventHandler;

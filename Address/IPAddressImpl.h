@@ -25,100 +25,107 @@
 #ifndef Net_IPAddressImpl_INCLUDED
 #define Net_IPAddressImpl_INCLUDED
 
-#include "uv.h"
-#include "CommonDef.h"
+#include "Net.h"
 #include "AddressFamily.h"
 
 namespace Net {
-	class IPAddressImpl {
-	public:
-		virtual ~IPAddressImpl();
-		
-		virtual IPAddressImpl * Clone() const = 0;
-		virtual std::string ToString() const = 0;
-		virtual socklen_t Length() const = 0;
-		virtual const void * Addr() const = 0;
-		virtual AddressFamily::Family Family() const = 0;
-		virtual int AF() const = 0;
-		virtual u32 Scope() const = 0;
 
-	protected:
-		IPAddressImpl();
+template<class S>
+S Trim(const S & str) {
+	i32 first = 0;
+	i32 last = str.size() - 1;
 
-	private:
-		IPAddressImpl(const IPAddressImpl &) = delete;
-		IPAddressImpl & operator=(const IPAddressImpl &) = delete;
-	};
+	while (first <= last && 0x20 == str[first]) ++first;
+	while (last >= first && 0x20 == str[last]) --last;
 
-	class IPv4AddressImpl : public IPAddressImpl {
-	public:
-		IPv4AddressImpl();
-		explicit IPv4AddressImpl(const void * addr);
-		IPv4AddressImpl(const IPv4AddressImpl & rhs);
-		IPv4AddressImpl & operator=(const IPv4AddressImpl & rhs);
-		
-		virtual IPAddressImpl * Clone() const;
-		virtual std::string ToString() const;
-		virtual socklen_t Length() const;
-		virtual const void * Addr() const;
-		virtual AddressFamily::Family Family() const;
-		virtual int AF() const;
-		virtual u32 Scope() const;
-		bool operator==(const IPv4AddressImpl & addr) const;
-		bool operator!=(const IPv4AddressImpl & addr) const;
-
-		static IPv4AddressImpl Parse(const std::string & addr);
-
-	private:
-		struct in_addr addr_;
-	};
-
-	class IPv6AddressImpl : public IPAddressImpl {
-	public:
-		IPv6AddressImpl();
-		explicit IPv6AddressImpl(const void * addr, u32 scope = 0);
-		IPv6AddressImpl(const IPv6AddressImpl & rhs);
-		IPv6AddressImpl & operator=(const IPv6AddressImpl & rhs);
-		
-		virtual IPAddressImpl * Clone() const;
-		virtual std::string ToString() const;
-		virtual socklen_t Length() const;
-		virtual const void * Addr() const;
-		virtual AddressFamily::Family Family() const;
-		virtual int AF() const;
-		virtual u32 Scope() const;
-		bool operator==(const IPv6AddressImpl & addr) const;
-		bool operator!=(const IPv6AddressImpl & addr) const;
-		
-		static IPv6AddressImpl Parse(const std::string & addr);
-
-	private:
-		struct in6_addr addr_;
-		u32 scope_;
-	};
+	return S(str, first, last - first + 1);
 }
+
+class IPAddressImpl {
+public:
+	virtual ~IPAddressImpl();
+
+	virtual std::string ToString() const = 0;
+	virtual socklen_t Length() const = 0;
+	virtual const void * Addr() const = 0;
+	virtual AddressFamily::Family Family() const = 0;
+	virtual i32 AF() const = 0;
+	virtual u32 Scope() const = 0;
+
+protected:
+	IPAddressImpl();
+
+private:
+	IPAddressImpl(const IPAddressImpl &) = delete;
+	IPAddressImpl & operator=(const IPAddressImpl &) = delete;
+};
+
+class IPv4AddressImpl : public IPAddressImpl {
+public:
+	IPv4AddressImpl();
+	explicit IPv4AddressImpl(const in_addr * addr);
+	IPv4AddressImpl(const IPv4AddressImpl & rhs);
+	IPv4AddressImpl & operator=(const IPv4AddressImpl & rhs);
+	
+	virtual std::string ToString() const;
+	virtual socklen_t Length() const;
+	virtual const void * Addr() const;
+	virtual AddressFamily::Family Family() const;
+	virtual i32 AF() const;
+	virtual u32 Scope() const;
+	bool operator==(const IPv4AddressImpl & rhs) const;
+	bool operator!=(const IPv4AddressImpl & rhs) const;
+
+	static IPv4AddressImpl Parse(const std::string & ip);
+
+private:
+	struct in_addr addr_;
+};
+
+class IPv6AddressImpl : public IPAddressImpl {
+public:
+	IPv6AddressImpl();
+	explicit IPv6AddressImpl(const in6_addr * addr, u32 scope = 0);
+	IPv6AddressImpl(const IPv6AddressImpl & rhs);
+	IPv6AddressImpl & operator=(const IPv6AddressImpl & rhs);
+
+	virtual std::string ToString() const;
+	virtual socklen_t Length() const;
+	virtual const void * Addr() const;
+	virtual AddressFamily::Family Family() const;
+	virtual i32 AF() const;
+	virtual u32 Scope() const;
+	bool operator==(const IPv6AddressImpl & rhs) const;
+	bool operator!=(const IPv6AddressImpl & rhs) const;
+
+	static IPv6AddressImpl Parse(const std::string & ip);
+
+private:
+	struct in6_addr addr_;
+	u32 scope_;
+};
 
 //*********************************************************************
 //IPv4AddressImpl
 //*********************************************************************
 
-inline socklen_t Net::IPv4AddressImpl::Length() const {
+inline socklen_t IPv4AddressImpl::Length() const {
 	return sizeof(addr_);
 }
 
-inline const void * Net::IPv4AddressImpl::Addr() const {
+inline const void * IPv4AddressImpl::Addr() const {
 	return &addr_;
 }
 
-inline Net::AddressFamily::Family Net::IPv4AddressImpl::Family() const {
+inline AddressFamily::Family IPv4AddressImpl::Family() const {
 	return AddressFamily::IPv4;
 }
 
-inline int Net::IPv4AddressImpl::AF() const {
+inline i32 IPv4AddressImpl::AF() const {
 	return AF_INET;
 }
 
-inline u32 Net::IPv4AddressImpl::Scope() const {
+inline u32 IPv4AddressImpl::Scope() const {
 	return 0;
 }
 
@@ -126,24 +133,26 @@ inline u32 Net::IPv4AddressImpl::Scope() const {
 //IPv6AddressImpl
 //*********************************************************************
 
-inline socklen_t Net::IPv6AddressImpl::Length() const {
+inline socklen_t IPv6AddressImpl::Length() const {
 	return sizeof(addr_);
 }
 
-inline const void * Net::IPv6AddressImpl::Addr() const {
+inline const void * IPv6AddressImpl::Addr() const {
 	return &addr_;
 }
 
-inline Net::AddressFamily::Family Net::IPv6AddressImpl::Family() const {
+inline AddressFamily::Family IPv6AddressImpl::Family() const {
 	return AddressFamily::IPv6;
 }
 
-inline int Net::IPv6AddressImpl::AF() const {
+inline i32 IPv6AddressImpl::AF() const {
 	return AF_INET6;
 }
 
-inline u32 Net::IPv6AddressImpl::Scope() const {
+inline u32 IPv6AddressImpl::Scope() const {
 	return scope_;
+}
+
 }
 
 #endif

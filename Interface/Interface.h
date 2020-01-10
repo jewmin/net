@@ -25,7 +25,7 @@
 #ifndef Interface_Interface_INCLUDED
 #define Interface_Interface_INCLUDED
 
-#include "CommonDef.h"
+#include "Net.h"
 
 #ifdef __cplusplus
 extern "C" {

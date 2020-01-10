@@ -25,7 +25,7 @@
 #ifndef Foundation_Logger_INCLUDED
 #define Foundation_Logger_INCLUDED
 
-#include "CommonDef.h"
+#include "Net.h"
 
 namespace Foundation {
 	enum LogLevel { kDebug = 0, kInfo = 1, kWarning = 2, kError = 3 };

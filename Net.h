@@ -22,9 +22,13 @@
  * SOFTWARE.
  */
 
-#ifndef CommonDef_INCLUDED
-#define CommonDef_INCLUDED
+#ifndef Net_INCLUDED
+#define Net_INCLUDED
 
+// libuv库头文件
+#include "uv.h"
+
+// stl标准库头文件
 #include <set>
 #include <map>
 #include <list>
@@ -42,6 +46,7 @@
 #include <unordered_map>
 #include <assert.h>
 
+// 定义标准类型，内部统一使用
 typedef char				i8;
 typedef short				i16;
 typedef int					i32;
@@ -51,16 +56,5 @@ typedef unsigned char		u8;
 typedef unsigned short		u16;
 typedef unsigned int		u32;
 typedef unsigned long long	u64;
-
-template<class S>
-S Trim(const S & str) {
-	int first = 0;
-	int last = int(str.size()) - 1;
-
-	while (first <= last && 0x20 == str[first]) ++first;
-	while (last >= first && 0x20 == str[last]) --last;
-
-	return S(str, first, last - first + 1);
-}
 
 #endif

@@ -25,7 +25,7 @@
 #ifndef Foundation_SharedPtr_INCLUDED
 #define Foundation_SharedPtr_INCLUDED
 
-#include "CommonDef.h"
+#include "Net.h"
 
 namespace Foundation {
 	template<class C>

@@ -2,7 +2,7 @@
 #ifdef USE_VLD
 #include "vld.h"
 #endif
-#include "CommonDef.h"
+#include "Net.h"
 
 int main(int argc, char * * argv) {
 	printf("sizeof(i8)=%zu sizeof(i16)=%zu sizeof(i32)=%zu sizeof(i64)=%zu sizeof(ptr)=%zu\n", sizeof(i8), sizeof(i16), sizeof(i32), sizeof(i64), sizeof(void *));

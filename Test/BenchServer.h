@@ -1,7 +1,7 @@
 #ifndef Benchmark_BenchServer_INCLUDED
 #define Benchmark_BenchServer_INCLUDED
 
-#include "CommonDef.h"
+#include "Net.h"
 #include "Core/IEvent.h"
 #include "Core/SocketWrapper.h"
 #include "Core/SocketServer.h"

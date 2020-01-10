@@ -1,7 +1,7 @@
 #ifndef Benchmark_ProtocolDef_INCLUDED
 #define Benchmark_ProtocolDef_INCLUDED
 
-#include "CommonDef.h"
+#include "Net.h"
 
 #pragma pack(1)
 

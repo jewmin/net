@@ -2,17 +2,12 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.7.2)
 
 # 项目名
-PROJECT(libnet VERSION 2.4.0)
+PROJECT(libnet VERSION 3.0)
 # MESSAGE(${PROJECT_NAME} ${PROJECT_SOURCE_DIR} ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
 # 开关
-OPTION(TCMALLOC "use tcmalloc replace system malloc" OFF)
 OPTION(VLD "use Visual Leak Detector to check memory on windows" ON)
 OPTION(RELEASE "compile the release version" OFF)
-# 使用 tcmalloc 替换系统内存分配就不能用 vld 检测内存泄露，不然会报错
-IF(TCMALLOC)
-	SET(VLD OFF)
-ENDIF()
 
 # 平台
 IF(MSVC)
@@ -22,7 +17,6 @@ ELSEIF(CMAKE_COMPILER_IS_GNUCXX)
 ENDIF()
 
 # 显示参数
-MESSAGE(STATUS "TCMALLOC:" ${TCMALLOC})
 MESSAGE(STATUS "VLD:" ${VLD})
 MESSAGE(STATUS "RELEASE:" ${RELEASE})
 MESSAGE(STATUS "WINDOWS:" ${WINDOWS})
@@ -30,14 +24,14 @@ MESSAGE(STATUS "LINUX:" ${LINUX})
 
 # 添加源文件
 SET(Common
-	${CMAKE_CURRENT_LIST_DIR}/CommonDef.h
-	${CMAKE_CURRENT_LIST_DIR}/Logger.h
-	${CMAKE_CURRENT_LIST_DIR}/Logger.cc
-	${CMAKE_CURRENT_LIST_DIR}/ObjectMgr.h
-	${CMAKE_CURRENT_LIST_DIR}/Packet.hpp
-	${CMAKE_CURRENT_LIST_DIR}/PacketReader.hpp
-	${CMAKE_CURRENT_LIST_DIR}/RefCountedObject.h
-	${CMAKE_CURRENT_LIST_DIR}/SharedPtr.h
+	${CMAKE_CURRENT_LIST_DIR}/Net.h
+	# ${CMAKE_CURRENT_LIST_DIR}/Logger.h
+	# ${CMAKE_CURRENT_LIST_DIR}/Logger.cc
+	# ${CMAKE_CURRENT_LIST_DIR}/ObjectMgr.h
+	# ${CMAKE_CURRENT_LIST_DIR}/Packet.hpp
+	# ${CMAKE_CURRENT_LIST_DIR}/PacketReader.hpp
+	# ${CMAKE_CURRENT_LIST_DIR}/RefCountedObject.h
+	# ${CMAKE_CURRENT_LIST_DIR}/SharedPtr.h
 )
 SET(Address
 	${CMAKE_CURRENT_LIST_DIR}/Address/AddressFamily.h
@@ -108,22 +102,22 @@ SET(Timer
 SET(all_srcs
 	${Common}
 	${Address}
-	${Sockets}
-	${Reactor}
-	${Core}
-	${Interface}
-	${Timer}
+	# ${Sockets}
+	# ${Reactor}
+	# ${Core}
+	# ${Interface}
+	# ${Timer}
 )
 # MESSAGE(${all_srcs})
 
 # 生成目录结构
 SOURCE_GROUP("" FILES ${Common})
 SOURCE_GROUP(Address FILES ${Address})
-SOURCE_GROUP(Sockets FILES ${Sockets})
-SOURCE_GROUP(Reactor FILES ${Reactor})
-SOURCE_GROUP(Core FILES ${Core})
-SOURCE_GROUP(Interface FILES ${Interface})
-SOURCE_GROUP(Timer FILES ${Timer})
+# SOURCE_GROUP(Sockets FILES ${Sockets})
+# SOURCE_GROUP(Reactor FILES ${Reactor})
+# SOURCE_GROUP(Core FILES ${Core})
+# SOURCE_GROUP(Interface FILES ${Interface})
+# SOURCE_GROUP(Timer FILES ${Timer})
 
 # 设置
 SET(CMAKE_DEBUG_POSTFIX "d")
@@ -139,9 +133,6 @@ SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${OUTPUT_DIRECTORY})
 IF(WINDOWS)
 	SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
 	SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
-	IF(TCMALLOC)
-		SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /INCLUDE:__tcmalloc")
-	ENDIF()
 	ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
 	IF(VLD)
 		ADD_DEFINITIONS(-DUSE_VLD)
@@ -151,9 +142,6 @@ ELSEIF(LINUX)
 	SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -Wall")
 	SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -Wall -ggdb")
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-	IF(TCMALLOC)
-		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
-	ENDIF()
 	ADD_DEFINITIONS(-m64)
 	ADD_DEFINITIONS(-std=c++11)
 ENDIF()
@@ -171,7 +159,6 @@ ENDIF()
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/3rd/libuv/include)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/3rd/gtest/include)
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/3rd/tcmalloc/include)
 IF(WINDOWS)
 	INCLUDE_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/3rd/vld/include)
 ENDIF()
@@ -180,7 +167,6 @@ ENDIF()
 LINK_DIRECTORIES(${OUTPUT_DIRECTORY})
 LINK_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/3rd/libuv/lib)
 LINK_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/3rd/gtest/lib)
-LINK_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/3rd/tcmalloc/lib)
 IF(WINDOWS)
 	LINK_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/3rd/vld/lib)
 ENDIF()
@@ -193,11 +179,6 @@ IF(WINDOWS)
 		${CMAKE_CURRENT_LIST_DIR}/3rd/vld/lib/Microsoft.DTfW.DHL.manifest
 		${CMAKE_CURRENT_LIST_DIR}/3rd/vld/lib/vld.ini
 	)
-	IF(RELEASE)
-		LIST(APPEND dllFile ${CMAKE_CURRENT_LIST_DIR}/3rd/tcmalloc/lib/libtcmalloc_minimal.dll)
-	ELSE()
-		LIST(APPEND dllFile ${CMAKE_CURRENT_LIST_DIR}/3rd/tcmalloc/lib/libtcmalloc_minimal-debug.dll)
-	ENDIF()
 ENDIF()
 
 # 生成静态库、动态库
@@ -209,13 +190,9 @@ IF(WINDOWS)
 ELSEIF(LINUX)
 	ADD_LIBRARY(net-static STATIC ${all_srcs})
 	ADD_LIBRARY(net SHARED ${all_srcs})
-	IF(TCMALLOC)
-		TARGET_LINK_LIBRARIES(net tcmalloc_minimal)
-		SET_TARGET_PROPERTIES(net PROPERTIES LINK_FLAGS "-static-libstdc++")
-	ENDIF()
 	TARGET_COMPILE_OPTIONS(net PRIVATE -fPIC -fvisibility=hidden)
 ENDIF()
 
 # 添加单元测试项目、压测项目
-ADD_SUBDIRECTORY(TestSuite)
-ADD_SUBDIRECTORY(Test)
+# ADD_SUBDIRECTORY(TestSuite)
+# ADD_SUBDIRECTORY(Test)

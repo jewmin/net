@@ -25,7 +25,7 @@
 #ifndef Foundation_RefCountedObject_INCLUDED
 #define Foundation_RefCountedObject_INCLUDED
 
-#include "CommonDef.h"
+#include "Net.h"
 
 namespace Foundation {
 	class RefCounter {

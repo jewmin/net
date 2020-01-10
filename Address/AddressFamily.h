@@ -26,9 +26,11 @@
 #define Net_AddressFamily_INCLUDED
 
 namespace Net {
-	struct AddressFamily {
-		enum Family { IPv4, IPv6 };
-	};
+
+struct AddressFamily {
+	enum Family { IPv4, IPv6 };
+};
+
 }
 
 #endif

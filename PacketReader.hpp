@@ -25,7 +25,7 @@
 #ifndef Foundation_PacketReader_INCLUDED
 #define Foundation_PacketReader_INCLUDED
 
-#include "CommonDef.h"
+#include "Net.h"
 
 namespace Foundation {
 	class PacketReader {
