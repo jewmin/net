@@ -29,19 +29,31 @@
 
 namespace Net {
 
+template<class S>
+S Trim(const S & str) {
+	i32 first = 0;
+	i32 last = str.size() - 1;
+
+	while (first <= last && 0x20 == str[first]) ++first;
+	while (last >= first && 0x20 == str[last]) --last;
+
+	return S(str, first, last - first + 1);
+}
+
 class IPAddress {
 public:
 	IPAddress();
 	explicit IPAddress(const std::string & ip);
+	IPAddress(const void * addr, socklen_t length, u32 scope = 0);
 	IPAddress(const IPAddress & rhs);
 	IPAddress & operator=(const IPAddress & rhs);
 	~IPAddress();
-	
+
 	std::string ToString() const;
 	socklen_t Length() const;
 	const void * Addr() const;
 	AddressFamily::Family Family() const;
-	int AF() const;
+	i32 AF() const;
 	u32 Scope() const;
 	bool operator==(const IPAddress & rhs) const;
 	bool operator!=(const IPAddress & rhs) const;
@@ -52,16 +64,12 @@ public:
 	static const AddressFamily::Family IPv4 = AddressFamily::IPv4;
 	static const AddressFamily::Family IPv6 = AddressFamily::IPv6;
 
-protected:
-	explicit IPAddress(const struct sockaddr & sockaddr);
-	IPAddress(const void * addr, socklen_t length, u32 scope = 0);
-
 private:
 	IPAddressImpl * Impl() const;
 	void NewIPv4();
-	void NewIPv4(const void * host);
+	void NewIPv4(const void * addr);
 	void NewIPv6();
-	void NewIPv6(const void * host, u32 scope);
+	void NewIPv6(const void * addr, u32 scope);
 	void Destroy();
 	i8 * Storage();
 
@@ -72,35 +80,35 @@ private:
 	} memory_;
 };
 
-inline std::string Net::IPAddress::ToString() const {
+inline std::string IPAddress::ToString() const {
 	return Impl()->ToString();
 }
 
-inline socklen_t Net::IPAddress::Length() const {
+inline socklen_t IPAddress::Length() const {
 	return Impl()->Length();
 }
 
-inline const void * Net::IPAddress::Addr() const {
+inline const void * IPAddress::Addr() const {
 	return Impl()->Addr();
 }
 
-inline Net::AddressFamily::Family Net::IPAddress::Family() const {
+inline AddressFamily::Family IPAddress::Family() const {
 	return Impl()->Family();
 }
 
-inline int Net::IPAddress::AF() const {
+inline i32 IPAddress::AF() const {
 	return Impl()->AF();
 }
 
-inline u32 Net::IPAddress::Scope() const {
+inline u32 IPAddress::Scope() const {
 	return Impl()->Scope();
 }
 
-inline Net::IPAddressImpl * Net::IPAddress::Impl() const {
-	return reinterpret_cast<IPAddressImpl *>(const_cast<char *>(memory_.buffer));
+inline IPAddressImpl * IPAddress::Impl() const {
+	return reinterpret_cast<IPAddressImpl *>(const_cast<i8 *>(memory_.buffer));
 }
 
-inline char * Net::IPAddress::Storage() {
+inline i8 * IPAddress::Storage() {
 	return memory_.buffer;
 }
 

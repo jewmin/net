@@ -24,51 +24,43 @@
 
 #include "IPAddress.h"
 
-const Net::AddressFamily::Family Net::IPAddress::IPv4;
-const Net::AddressFamily::Family Net::IPAddress::IPv6;
+namespace Net {
 
-Net::IPAddress::IPAddress() {
+const AddressFamily::Family IPAddress::IPv4;
+const AddressFamily::Family IPAddress::IPv6;
+
+IPAddress::IPAddress() {
 	NewIPv4();
 }
 
-Net::IPAddress::IPAddress(const std::string & addr) {
-	if (addr.empty() || Trim(addr) == "0.0.0.0") {
+IPAddress::IPAddress(const std::string & ip) {
+	std::string trim_ip = Trim(ip);
+	if (trim_ip.empty() || trim_ip == "0.0.0.0") {
 		NewIPv4();
 		return;
 	}
 
-	if (Trim(addr) == "::") {
+	if (trim_ip == "::") {
 		NewIPv6();
 		return;
 	}
 
-	IPv4AddressImpl addr4(IPv4AddressImpl::Parse(addr));
-	if (addr4 != IPv4AddressImpl()) {
-		NewIPv4(addr4.Addr());
+	IPv4AddressImpl ipv4(IPv4AddressImpl::Parse(trim_ip));
+	if (ipv4 != IPv4AddressImpl()) {
+		NewIPv4(ipv4.Addr());
 		return;
 	}
 
-	IPv6AddressImpl addr6(IPv6AddressImpl::Parse(addr));
-	if (addr6 != IPv6AddressImpl()) {
-		NewIPv6(addr6.Addr(), addr6.Scope());
+	IPv6AddressImpl ipv6(IPv6AddressImpl::Parse(trim_ip));
+	if (ipv6 != IPv6AddressImpl()) {
+		NewIPv6(ipv6.Addr(), ipv6.Scope());
 		return;
 	}
 
-	throw std::invalid_argument(std::string("IPAddress(): invalid or unsupported address - ") + addr);
+	throw std::invalid_argument(std::string("IPAddress(): invalid or unsupported address - ") + ip);
 }
 
-Net::IPAddress::IPAddress(const struct sockaddr & sockaddr) {
-	u16 family = sockaddr.sa_family;
-	if (AF_INET == family) {
-		NewIPv4(&reinterpret_cast<const struct sockaddr_in *>(&sockaddr)->sin_addr);
-	} else if (AF_INET6 == family) {
-		NewIPv6(&reinterpret_cast<const struct sockaddr_in6 *>(&sockaddr)->sin6_addr, reinterpret_cast<const struct sockaddr_in6 *>(&sockaddr)->sin6_scope_id);
-	} else {
-		throw std::invalid_argument("IPAddress(): invalid or unsupported address family");
-	}
-}
-
-Net::IPAddress::IPAddress(const void * addr, socklen_t length, u32 scope) {
+IPAddress::IPAddress(const void * addr, socklen_t length, u32 scope) {
 	if (sizeof(struct in_addr) == length) {
 		NewIPv4(addr);
 	} else if (sizeof(struct in6_addr) == length) {
@@ -78,7 +70,7 @@ Net::IPAddress::IPAddress(const void * addr, socklen_t length, u32 scope) {
 	}
 }
 
-Net::IPAddress::IPAddress(const IPAddress & rhs) {
+IPAddress::IPAddress(const IPAddress & rhs) {
 	if (IPv4 == rhs.Family()) {
 		NewIPv4(rhs.Addr());
 	} else if (IPv6 == rhs.Family()) {
@@ -86,7 +78,7 @@ Net::IPAddress::IPAddress(const IPAddress & rhs) {
 	}
 }
 
-Net::IPAddress & Net::IPAddress::operator=(const IPAddress & rhs) {
+IPAddress & IPAddress::operator=(const IPAddress & rhs) {
 	if (this != &rhs) {
 		Destroy();
 		if (IPv4 == rhs.Family()) {
@@ -99,43 +91,43 @@ Net::IPAddress & Net::IPAddress::operator=(const IPAddress & rhs) {
 	return *this;
 }
 
-Net::IPAddress::~IPAddress() {
+IPAddress::~IPAddress() {
 	Destroy();
 }
 
-bool Net::IPAddress::operator==(const IPAddress & addr) const {
+bool IPAddress::operator==(const IPAddress & addr) const {
 	return Length() == addr.Length() && Scope() == addr.Scope() && 0 == std::memcmp(Addr(), addr.Addr(), Length());
 }
 
-bool Net::IPAddress::operator!=(const IPAddress & addr) const {
+bool IPAddress::operator!=(const IPAddress & addr) const {
 	return !(*this == addr);
 }
 
-void Net::IPAddress::NewIPv4() {
+void IPAddress::NewIPv4() {
 	new(Storage())IPv4AddressImpl();
 }
 
-void Net::IPAddress::NewIPv4(const void * host) {
+void IPAddress::NewIPv4(const void * host) {
 	new(Storage())IPv4AddressImpl(host);
 }
 
-void Net::IPAddress::NewIPv6() {
+void IPAddress::NewIPv6() {
 	new(Storage())IPv6AddressImpl();
 }
 
-void Net::IPAddress::NewIPv6(const void * host, u32 scope) {
+void IPAddress::NewIPv6(const void * host, u32 scope) {
 	new(Storage())IPv6AddressImpl(host, scope);
 }
 
-void Net::IPAddress::Destroy() {
+void IPAddress::Destroy() {
 	Impl()->~IPAddressImpl();
 }
 
-Net::IPAddress Net::IPAddress::Parse(const std::string & addr) {
+IPAddress IPAddress::Parse(const std::string & addr) {
 	return IPAddress(addr);
 }
 
-bool Net::IPAddress::TryParse(const std::string & addr, IPAddress & result) {
+bool IPAddress::TryParse(const std::string & addr, IPAddress & result) {
 	if (addr.empty() || Trim(addr) == "0.0.0.0") {
 		result.NewIPv4();
 		return true;
@@ -159,4 +151,6 @@ bool Net::IPAddress::TryParse(const std::string & addr, IPAddress & result) {
 	}
 
 	return false;
+}
+
 }
