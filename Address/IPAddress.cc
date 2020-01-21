@@ -87,7 +87,6 @@ IPAddress & IPAddress::operator=(const IPAddress & rhs) {
 			NewIPv6(rhs.Addr(), rhs.Scope());
 		}
 	}
-
 	return *this;
 }
 
@@ -95,58 +94,59 @@ IPAddress::~IPAddress() {
 	Destroy();
 }
 
-bool IPAddress::operator==(const IPAddress & addr) const {
-	return Length() == addr.Length() && Scope() == addr.Scope() && 0 == std::memcmp(Addr(), addr.Addr(), Length());
+bool IPAddress::operator==(const IPAddress & rhs) const {
+	return Length() == rhs.Length() && Scope() == rhs.Scope() && 0 == std::memcmp(Addr(), rhs.Addr(), Length());
 }
 
-bool IPAddress::operator!=(const IPAddress & addr) const {
-	return !(*this == addr);
+bool IPAddress::operator!=(const IPAddress & rhs) const {
+	return !(*this == rhs);
 }
 
 void IPAddress::NewIPv4() {
 	new(Storage())IPv4AddressImpl();
 }
 
-void IPAddress::NewIPv4(const void * host) {
-	new(Storage())IPv4AddressImpl(host);
+void IPAddress::NewIPv4(const void * addr) {
+	new(Storage())IPv4AddressImpl(addr);
 }
 
 void IPAddress::NewIPv6() {
 	new(Storage())IPv6AddressImpl();
 }
 
-void IPAddress::NewIPv6(const void * host, u32 scope) {
-	new(Storage())IPv6AddressImpl(host, scope);
+void IPAddress::NewIPv6(const void * addr, u32 scope) {
+	new(Storage())IPv6AddressImpl(addr, scope);
 }
 
 void IPAddress::Destroy() {
 	Impl()->~IPAddressImpl();
 }
 
-IPAddress IPAddress::Parse(const std::string & addr) {
-	return IPAddress(addr);
+IPAddress IPAddress::Parse(const std::string & ip) {
+	return IPAddress(ip);
 }
 
-bool IPAddress::TryParse(const std::string & addr, IPAddress & result) {
-	if (addr.empty() || Trim(addr) == "0.0.0.0") {
+bool IPAddress::TryParse(const std::string & ip, IPAddress & result) {
+	std::string trim_ip = Trim(ip);
+	if (trim_ip.empty() || trim_ip == "0.0.0.0") {
 		result.NewIPv4();
 		return true;
 	}
 
-	if (Trim(addr) == "::") {
+	if (trim_ip == "::") {
 		result.NewIPv6();
 		return true;
 	}
 
-	IPv4AddressImpl addr4(IPv4AddressImpl::Parse(addr));
-	if (addr4 != IPv4AddressImpl()) {
-		result.NewIPv4(addr4.Addr());
+	IPv4AddressImpl ipv4(IPv4AddressImpl::Parse(trim_ip));
+	if (ipv4 != IPv4AddressImpl()) {
+		result.NewIPv4(ipv4.Addr());
 		return true;
 	}
 
-	IPv6AddressImpl addr6(IPv6AddressImpl::Parse(addr));
-	if (addr6 != IPv6AddressImpl()) {
-		result.NewIPv6(addr6.Addr(), addr6.Scope());
+	IPv6AddressImpl ipv6(IPv6AddressImpl::Parse(trim_ip));
+	if (ipv6 != IPv6AddressImpl()) {
+		result.NewIPv6(ipv6.Addr(), ipv6.Scope());
 		return true;
 	}
 

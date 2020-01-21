@@ -28,62 +28,62 @@
 #include "IPAddress.h"
 
 namespace Net {
-	class SocketAddressImpl {
-	public:
-		virtual ~SocketAddressImpl();
 
-		virtual IPAddress Host() const = 0;
-		virtual u16 Port() const = 0;
-		virtual socklen_t Length() const = 0;
-		virtual const struct sockaddr * Addr() const = 0;
-		virtual int AF() const = 0;
-		virtual AddressFamily::Family Family() const = 0;
-		virtual std::string ToString() const = 0;
+class SocketAddressImpl {
+public:
+	virtual ~SocketAddressImpl();
 
-	protected:
-		SocketAddressImpl();
+	virtual IPAddress Host() const = 0;
+	virtual u16 Port() const = 0;
+	virtual socklen_t Length() const = 0;
+	virtual const struct sockaddr * Addr() const = 0;
+	virtual int AF() const = 0;
+	virtual AddressFamily::Family Family() const = 0;
+	virtual std::string ToString() const = 0;
 
-	private:
-		SocketAddressImpl(const SocketAddressImpl &) = delete;
-		SocketAddressImpl & operator=(const SocketAddressImpl &) = delete;
-	};
+protected:
+	SocketAddressImpl();
 
-	class IPv4SocketAddressImpl : public SocketAddressImpl {
-	public:
-		IPv4SocketAddressImpl();
-		explicit IPv4SocketAddressImpl(const struct sockaddr_in * addr);
-		IPv4SocketAddressImpl(const void * addr, u16 port);
+private:
+	SocketAddressImpl(const SocketAddressImpl &) = delete;
+	SocketAddressImpl & operator=(const SocketAddressImpl &) = delete;
+};
 
-		virtual IPAddress Host() const;
-		virtual u16 Port() const;
-		virtual socklen_t Length() const;
-		virtual const struct sockaddr * Addr() const;
-		virtual int AF() const;
-		virtual AddressFamily::Family Family() const;
-		virtual std::string ToString() const;
-		
-	private:
-		struct sockaddr_in addr_;
-	};
+class IPv4SocketAddressImpl : public SocketAddressImpl {
+public:
+	IPv4SocketAddressImpl();
+	explicit IPv4SocketAddressImpl(const struct sockaddr_in * addr);
+	IPv4SocketAddressImpl(const void * addr, u16 port);
 
-	class IPv6SocketAddressImpl : public SocketAddressImpl {
-	public:
-		IPv6SocketAddressImpl();
-		explicit IPv6SocketAddressImpl(const struct sockaddr_in6 * addr);
-		IPv6SocketAddressImpl(const void * addr, u16 port, u32 scope = 0);
+	virtual IPAddress Host() const;
+	virtual u16 Port() const;
+	virtual socklen_t Length() const;
+	virtual const struct sockaddr * Addr() const;
+	virtual int AF() const;
+	virtual AddressFamily::Family Family() const;
+	virtual std::string ToString() const;
+	
+private:
+	struct sockaddr_in addr_;
+};
 
-		virtual IPAddress Host() const;
-		virtual u16 Port() const;
-		virtual socklen_t Length() const;
-		virtual const struct sockaddr * Addr() const;
-		virtual int AF() const;
-		virtual AddressFamily::Family Family() const;
-		virtual std::string ToString() const;
+class IPv6SocketAddressImpl : public SocketAddressImpl {
+public:
+	IPv6SocketAddressImpl();
+	explicit IPv6SocketAddressImpl(const struct sockaddr_in6 * addr);
+	IPv6SocketAddressImpl(const void * addr, u16 port, u32 scope = 0);
 
-	private:
-		struct sockaddr_in6 addr_;
-	};
-}
+	virtual IPAddress Host() const;
+	virtual u16 Port() const;
+	virtual socklen_t Length() const;
+	virtual const struct sockaddr * Addr() const;
+	virtual int AF() const;
+	virtual AddressFamily::Family Family() const;
+	virtual std::string ToString() const;
+
+private:
+	struct sockaddr_in6 addr_;
+};
 
 //*********************************************************************
 //IPv4SocketAddressImpl
@@ -139,6 +139,8 @@ inline int Net::IPv6SocketAddressImpl::AF() const {
 
 inline Net::AddressFamily::Family Net::IPv6SocketAddressImpl::Family() const {
 	return AddressFamily::IPv6;
+}
+
 }
 
 #endif

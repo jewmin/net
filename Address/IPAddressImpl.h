@@ -52,7 +52,7 @@ private:
 class IPv4AddressImpl : public IPAddressImpl {
 public:
 	IPv4AddressImpl();
-	explicit IPv4AddressImpl(const struct in_addr * addr);
+	explicit IPv4AddressImpl(const void * addr);
 	IPv4AddressImpl(const IPv4AddressImpl & rhs);
 	IPv4AddressImpl & operator=(const IPv4AddressImpl & rhs);
 	
@@ -74,7 +74,7 @@ private:
 class IPv6AddressImpl : public IPAddressImpl {
 public:
 	IPv6AddressImpl();
-	explicit IPv6AddressImpl(const struct in6_addr * addr, u32 scope = 0);
+	explicit IPv6AddressImpl(const void * addr, u32 scope = 0);
 	IPv6AddressImpl(const IPv6AddressImpl & rhs);
 	IPv6AddressImpl & operator=(const IPv6AddressImpl & rhs);
 

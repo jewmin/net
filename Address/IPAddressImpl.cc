@@ -40,7 +40,7 @@ IPv4AddressImpl::IPv4AddressImpl() {
 	std::memset(&addr_, 0, sizeof(addr_));
 }
 
-IPv4AddressImpl::IPv4AddressImpl(const struct in_addr * addr) {
+IPv4AddressImpl::IPv4AddressImpl(const void * addr) {
 	std::memcpy(&addr_, addr, sizeof(addr_));
 }
 
@@ -93,7 +93,7 @@ IPv6AddressImpl::IPv6AddressImpl() : scope_(0) {
 	std::memset(&addr_, 0, sizeof(addr_));
 }
 
-IPv6AddressImpl::IPv6AddressImpl(const struct in6_addr * addr, u32 scope) : scope_(scope) {
+IPv6AddressImpl::IPv6AddressImpl(const void * addr, u32 scope) : scope_(scope) {
 	std::memcpy(&addr_, addr, sizeof(addr_));
 }
 

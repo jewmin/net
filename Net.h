@@ -45,6 +45,7 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <assert.h>
+#include <new>
 
 // 定义标准类型，内部统一使用
 typedef char				i8;
