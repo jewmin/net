@@ -30,7 +30,27 @@
 namespace Net {
 
 class Allocator {
+	struct Obj { struct Obj * next; };
+
 public:
+	Allocator();
+	virtual ~Allocator();
+	Allocator(const Allocator &) = delete;
+	Allocator & operator=(const Allocator &) = delete;
+
+	void * Allocate(i32 size);
+	void DeAllocate(void * ptr, i32 size);
+
+protected:
+	void * Refill(i32 size);
+	void * AllocateChunk(i32 size, i32 & num);
+
+private:
+	i32 SmallSizeClass(i32 size);
+	i32 LargeSizeClass(i32 size);
+	i32 RoundUpSize(i32 size);
+	struct Obj * * GetFreeList(i32 size);
+
 protected:
 	static const i32 SmallAlign = 8;
 	static const i32 SmallMaxBytes = 256;
@@ -38,26 +58,33 @@ protected:
 	static const i32 LargeAlign = 64;
 	static const i32 LargeMaxBytes = 2048;
 	static const i32 LargeFreeListSize = LargeMaxBytes / LargeAlign;
+	static const i32 LargeOffset = LargeFreeListSize - SmallMaxBytes / LargeAlign;
+	static const i32 TotalFreeListSize = SmallFreeListSize + LargeFreeListSize;
 
-private:
-	i32 SmallSizeClass(i32 size);
-	i32 LargeSizeClass(i32 size);
-	i32 ClassIndex(i32 size);
+	struct Obj * free_list_[TotalFreeListSize];
 };
 
 inline i32 Allocator::SmallSizeClass(i32 size) {
-	return size >> 3;
+	return (size + SmallAlign - 1) / SmallAlign;
 }
 
 inline i32 Allocator::LargeSizeClass(i32 size) {
-	return (size + (28 << 7)) >> 7;
+	return (size + LargeAlign - 1) / LargeAlign + LargeOffset;
 }
 
-inline i32 Allocator::ClassIndex(i32 size) {
-	if (size < SmallMaxBytes) {
-		return SmallSizeClass(size);
+inline i32 Allocator::RoundUpSize(i32 size) {
+	if (size <= SmallMaxBytes) {
+		return (size + SmallAlign - 1) & ~(SmallAlign - 1);
 	} else {
-		return LargeSizeClass(size);
+		return (size + LargeAlign - 1) & ~(LargeAlign - 1);
+	}
+}
+
+inline struct Allocator::Obj * * Allocator::GetFreeList(i32 size) {
+	if (size <= SmallMaxBytes) {
+		return free_list_ + SmallSizeClass(size);
+	} else {
+		return free_list_ + LargeSizeClass(size);
 	}
 }
 

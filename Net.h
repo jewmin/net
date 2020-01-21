@@ -57,4 +57,10 @@ typedef unsigned short		u16;
 typedef unsigned int		u32;
 typedef unsigned long long	u64;
 
+// 定义内存分配原子函数
+typedef void * (*jc_malloc_func)(size_t size);
+typedef void * (*jc_realloc_func)(void * ptr, size_t size);
+typedef void * (*jc_calloc_func)(size_t count, size_t size);
+typedef void (*jc_free_func)(void * ptr);
+
 #endif
