@@ -63,4 +63,33 @@ typedef void * (*jc_realloc_func)(void * ptr, size_t size);
 typedef void * (*jc_calloc_func)(size_t count, size_t size);
 typedef void (*jc_free_func)(void * ptr);
 
+// 动态库开放函数
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifdef _WIN32
+	/* Windows - set up dll import/export decorators. */
+#	if defined(BUILDING_NET_SHARED)
+		/* Building shared library. */
+#		define NET_EXTERN __declspec(dllexport)
+#	elif defined(USING_NET_SHARED)
+		/* Using shared library. */
+#		define NET_EXTERN __declspec(dllimport)
+#	else
+		/* Building static library. */
+#		define NET_EXTERN /* nothing */
+#	endif
+#elif __GNUC__ >= 4
+#	define NET_EXTERN __attribute__((visibility("default")))
+#else
+#	define NET_EXTERN /* nothing */
+#endif
+
+NET_EXTERN int jc_replace_allocator(jc_malloc_func malloc_func, jc_realloc_func realloc_func, jc_calloc_func calloc_func, jc_free_func free_func);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

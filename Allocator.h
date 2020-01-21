@@ -31,6 +31,7 @@ namespace Net {
 
 class Allocator {
 	struct Obj { struct Obj * next; };
+	struct Chunk { struct Chunk * next; i32 size; };
 
 public:
 	Allocator();
@@ -40,6 +41,7 @@ public:
 
 	void * Allocate(i32 size);
 	void DeAllocate(void * ptr, i32 size);
+	void Stat(int & alloc, int & used);
 
 protected:
 	void * Refill(i32 size);
@@ -50,6 +52,7 @@ private:
 	i32 LargeSizeClass(i32 size);
 	i32 RoundUpSize(i32 size);
 	struct Obj * * GetFreeList(i32 size);
+	void AppendToFreeList(void * ptr, i32 size);
 
 protected:
 	static const i32 SmallAlign = 8;
@@ -62,6 +65,7 @@ protected:
 	static const i32 TotalFreeListSize = SmallFreeListSize + LargeFreeListSize;
 
 	struct Obj * free_list_[TotalFreeListSize];
+	struct Chunk * chunk_list_;
 };
 
 inline i32 Allocator::SmallSizeClass(i32 size) {

@@ -25,6 +25,10 @@ MESSAGE(STATUS "LINUX:" ${LINUX})
 # 添加源文件
 SET(Common
 	${CMAKE_CURRENT_LIST_DIR}/Net.h
+	${CMAKE_CURRENT_LIST_DIR}/Allocator.h
+	${CMAKE_CURRENT_LIST_DIR}/Allocator.cc
+	${CMAKE_CURRENT_LIST_DIR}/NetObject.h
+	${CMAKE_CURRENT_LIST_DIR}/NetObject.cc
 	# ${CMAKE_CURRENT_LIST_DIR}/Logger.h
 	# ${CMAKE_CURRENT_LIST_DIR}/Logger.cc
 	# ${CMAKE_CURRENT_LIST_DIR}/ObjectMgr.h
@@ -101,7 +105,7 @@ SET(Timer
 
 SET(all_srcs
 	${Common}
-	${Address}
+	# ${Address}
 	# ${Sockets}
 	# ${Reactor}
 	# ${Core}
@@ -112,7 +116,7 @@ SET(all_srcs
 
 # 生成目录结构
 SOURCE_GROUP("" FILES ${Common})
-SOURCE_GROUP(Address FILES ${Address})
+# SOURCE_GROUP(Address FILES ${Address})
 # SOURCE_GROUP(Sockets FILES ${Sockets})
 # SOURCE_GROUP(Reactor FILES ${Reactor})
 # SOURCE_GROUP(Core FILES ${Core})
@@ -194,5 +198,5 @@ ELSEIF(LINUX)
 ENDIF()
 
 # 添加单元测试项目、压测项目
-# ADD_SUBDIRECTORY(TestSuite)
+ADD_SUBDIRECTORY(TestSuite)
 # ADD_SUBDIRECTORY(Test)

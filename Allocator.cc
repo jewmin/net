@@ -24,8 +24,6 @@
 
 #include "Allocator.h"
 
-namespace Net {
-
 typedef struct {
 	jc_malloc_func local_malloc;
 	jc_realloc_func local_realloc;
@@ -40,14 +38,34 @@ static jc_allocator_t jc_allocator = {
 	std::free,
 };
 
+int jc_replace_allocator(jc_malloc_func malloc_func, jc_realloc_func realloc_func, jc_calloc_func calloc_func, jc_free_func free_func) {
+	if (nullptr == malloc_func || nullptr == realloc_func || nullptr == calloc_func || nullptr == free_func) {
+		return -1;
+	}
+
+	jc_allocator.local_malloc = malloc_func;
+	jc_allocator.local_realloc = realloc_func;
+	jc_allocator.local_calloc = calloc_func;
+	jc_allocator.local_free = free_func;
+	return 0;
+}
+
+namespace Net {
 
 Allocator::Allocator() {
 	for (int i = 0; i < TotalFreeListSize; ++i) {
 		free_list_[i] = nullptr;
 	}
+	chunk_list_ = nullptr;
 }
 
 Allocator::~Allocator() {
+	struct Chunk * next = nullptr;
+	while (chunk_list_) {
+		next = chunk_list_->next;
+		jc_allocator.local_free(chunk_list_);
+		chunk_list_ = next;
+	}
 }
 
 void * Allocator::Allocate(i32 size) {
@@ -56,34 +74,31 @@ void * Allocator::Allocate(i32 size) {
 	} else {
 		struct Obj * * free_list = GetFreeList(size);
 		struct Obj * result = *free_list;
-		if (nullptr == result) {
-			result = static_cast<Obj *>(Refill(RoundUpSize(size)));
-		} else {
+		if (result) {
 			*free_list = result->next;
+		} else {
+			result = static_cast<Obj *>(Refill(RoundUpSize(size)));
 		}
 		return result;
 	}
 }
 
 void Allocator::DeAllocate(void * ptr, i32 size) {
-	if (nullptr == ptr) {
+	if (!ptr || 0 == size) {
 		return;
 	}
 
 	if (size > LargeMaxBytes) {
 		jc_allocator.local_free(ptr);
 	} else {
-		struct Obj * * free_list = GetFreeList(size);
-		struct Obj * result = static_cast<struct Obj *>(ptr);
-		result->next = *free_list;
-		*free_list = result;
+		AppendToFreeList(ptr, size);
 	}
 }
 
 void * Allocator::Refill(i32 size) {
 	i32 num = 20;
 	void * chunk = AllocateChunk(size, num);
-	if (nullptr == chunk || 1 == num) {
+	if (!chunk || 1 == num) {
 		return chunk;
 	}
 
@@ -107,17 +122,24 @@ void * Allocator::Refill(i32 size) {
 
 void * Allocator::AllocateChunk(i32 size, i32 & num) {
 	i32 total_size = size * num;
-	void * result = jc_allocator.local_malloc(total_size);
-	if (nullptr != result) {
-		return result;
+	struct Chunk * result = static_cast<struct Chunk *>(jc_allocator.local_malloc(sizeof(struct Chunk) + total_size));
+	if (result) {
+		result->size = total_size;
+		result->next = chunk_list_;
+		chunk_list_ = result;
+		return result + 1;
 	}
 
 	for (int i = size; i <= SmallMaxBytes; i += SmallAlign) {
 		struct Obj * * free_list = GetFreeList(i);
 		struct Obj * ptr = *free_list;
-		if (nullptr != ptr) {
+		if (ptr) {
 			*free_list = ptr->next;
 			num = i / size;
+			int left = i - size * num;
+			if (left > 0) {
+				AppendToFreeList(reinterpret_cast<i8 *>(ptr) + size * num, left);
+			}
 			return ptr;
 		}
 	}
@@ -125,14 +147,54 @@ void * Allocator::AllocateChunk(i32 size, i32 & num) {
 	for (int i = SmallMaxBytes + LargeAlign; i <= LargeMaxBytes; i += LargeAlign) {
 		struct Obj * * free_list = GetFreeList(i);
 		struct Obj * ptr = *free_list;
-		if (nullptr != ptr) {
+		if (ptr) {
 			*free_list = ptr->next;
 			num = i / size;
+			int left = i - size * num;
+			if (left > 0) {
+				AppendToFreeList(reinterpret_cast<i8 *>(ptr) + size * num, left);
+			}
 			return ptr;
 		}
 	}
 
 	return nullptr;
+}
+
+void Allocator::AppendToFreeList(void * ptr, i32 size) {
+	struct Obj * * free_list = GetFreeList(size);
+	struct Obj * result = static_cast<struct Obj *>(ptr);
+	result->next = *free_list;
+	*free_list = result;
+}
+
+void Allocator::Stat(int & alloc, int & used) {
+	used = alloc = 0;
+
+	struct Chunk * next_chunk = chunk_list_;
+	while (next_chunk) {
+		alloc += next_chunk->size;
+		next_chunk = next_chunk->next;
+	}
+
+	int i, j, unused = 0;
+	struct Obj * next_obj = nullptr;
+	for (i = 1, j = SmallAlign; j <= SmallMaxBytes; ++i, j += SmallAlign) {
+		next_obj = free_list_[i];
+		while (next_obj) {
+			unused += j;
+			next_obj = next_obj->next;
+		}
+	}
+	for (j = SmallMaxBytes + LargeAlign; j <= LargeMaxBytes; ++i, j += LargeAlign) {
+		next_obj = free_list_[i];
+		while (next_obj) {
+			unused += j;
+			next_obj = next_obj->next;
+		}
+	}
+
+	used = alloc - unused;
 }
 
 }
