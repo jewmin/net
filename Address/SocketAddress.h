@@ -28,87 +28,82 @@
 #include "SocketAddressImpl.h"
 
 namespace Net {
-	class SocketAddress {
-	public:
-		SocketAddress();
-		explicit SocketAddress(u16 port);
-		SocketAddress(const IPAddress & hostAddress, u16 port);
-		SocketAddress(const std::string & hostAddress, u16 port);
-		SocketAddress(const struct sockaddr * addr, socklen_t length);
-		SocketAddress(const SocketAddress & rhs);
-		SocketAddress & operator=(const SocketAddress & rhs);
-		~SocketAddress();
 
-		IPAddress Host() const;
-		u16 Port() const;
-		socklen_t Length() const;
-		const struct sockaddr * Addr() const;
-		int AF() const;
-		AddressFamily::Family Family() const;
-		std::string ToString() const;
-		bool operator==(const SocketAddress & socketAddress) const;
-		bool operator!=(const SocketAddress & socketAddress) const;
+class SocketAddress : public NetObject {
+public:
+	SocketAddress();
+	explicit SocketAddress(u16 port);
+	SocketAddress(const IPAddress & host, u16 port);
+	SocketAddress(const struct sockaddr * addr, socklen_t length);
+	SocketAddress(const SocketAddress & rhs);
+	SocketAddress & operator=(const SocketAddress & rhs);
+	~SocketAddress();
 
-		static const AddressFamily::Family IPv4 = AddressFamily::IPv4;
-		static const AddressFamily::Family IPv6 = AddressFamily::IPv6;
+	IPAddress Host() const;
+	u16 Port() const;
+	socklen_t Length() const;
+	const struct sockaddr * Addr() const;
+	i32 AF() const;
+	AddressFamily::Family Family() const;
+	std::string ToString() const;
+	bool operator==(const SocketAddress & rhs) const;
+	bool operator!=(const SocketAddress & rhs) const;
 
-	protected:
-		void Init(const IPAddress & hostAddress, u16 port);
-		void Init(const std::string & hostAddress, u16 port);
+protected:
+	void Init(const IPAddress & host, u16 port);
 
+private:
+	SocketAddressImpl * Impl() const;
+
+	void NewIPv4();
+	void NewIPv4(const struct sockaddr_in * addr);
+	void NewIPv6(const struct sockaddr_in6 * addr);
+	void Destroy();
+	i8 * Storage();
+
+	union {
+		i8 buffer[sizeof(IPv6SocketAddressImpl)];
 	private:
-		SocketAddressImpl * Impl() const;
+		std::aligned_storage<sizeof(IPv6SocketAddressImpl)>::type aligner;
+	} memory_;
+};
 
-		void NewIPv4();
-		void NewIPv4(const struct sockaddr_in * addr);
-		void NewIPv4(const IPAddress & hostAddress, u16 port);
-		void NewIPv6(const struct sockaddr_in6 * addr);
-		void NewIPv6(const IPAddress & hostAddress, u16 port);
-		void Destroy();
-		char * Storage();
-
-		union {
-			char buffer[sizeof(IPv6SocketAddressImpl)];
-		private:
-			std::aligned_storage<sizeof(IPv6SocketAddressImpl)>::type aligner;
-		} memory_;
-	};
-}
-
-inline Net::IPAddress Net::SocketAddress::Host() const {
+inline IPAddress SocketAddress::Host() const {
 	return Impl()->Host();
 }
 
-inline u16 Net::SocketAddress::Port() const {
+inline u16 SocketAddress::Port() const {
 	return Impl()->Port();
 }
 
-inline socklen_t Net::SocketAddress::Length() const {
+inline socklen_t SocketAddress::Length() const {
 	return Impl()->Length();
 }
 
-inline const sockaddr * Net::SocketAddress::Addr() const {
+inline const sockaddr * SocketAddress::Addr() const {
 	return Impl()->Addr();
 }
 
-inline int Net::SocketAddress::AF() const {
+inline i32 SocketAddress::AF() const {
 	return Impl()->AF();
 }
 
-inline Net::AddressFamily::Family Net::SocketAddress::Family() const {
+inline AddressFamily::Family SocketAddress::Family() const {
 	return Impl()->Family();
 }
 
-inline std::string Net::SocketAddress::ToString() const {
+inline std::string SocketAddress::ToString() const {
 	return Impl()->ToString();
 }
 
-inline Net::SocketAddressImpl * Net::SocketAddress::Impl() const {
-	return reinterpret_cast<SocketAddressImpl *>(const_cast<char *>(memory_.buffer));
+inline SocketAddressImpl * SocketAddress::Impl() const {
+	return reinterpret_cast<SocketAddressImpl *>(const_cast<i8 *>(memory_.buffer));
 }
 
-inline char * Net::SocketAddress::Storage() {
+inline i8 * SocketAddress::Storage() {
 	return memory_.buffer;
+}
+
 }
 
 #endif

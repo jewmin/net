@@ -43,10 +43,10 @@ SET(Address
 	${CMAKE_CURRENT_LIST_DIR}/Address/IPAddress.cc
 	${CMAKE_CURRENT_LIST_DIR}/Address/IPAddressImpl.h
 	${CMAKE_CURRENT_LIST_DIR}/Address/IPAddressImpl.cc
-	# ${CMAKE_CURRENT_LIST_DIR}/Address/SocketAddress.h
-	# ${CMAKE_CURRENT_LIST_DIR}/Address/SocketAddress.cc
-	# ${CMAKE_CURRENT_LIST_DIR}/Address/SocketAddressImpl.h
-	# ${CMAKE_CURRENT_LIST_DIR}/Address/SocketAddressImpl.cc
+	${CMAKE_CURRENT_LIST_DIR}/Address/SocketAddress.h
+	${CMAKE_CURRENT_LIST_DIR}/Address/SocketAddress.cc
+	${CMAKE_CURRENT_LIST_DIR}/Address/SocketAddressImpl.h
+	${CMAKE_CURRENT_LIST_DIR}/Address/SocketAddressImpl.cc
 )
 SET(Sockets
 	${CMAKE_CURRENT_LIST_DIR}/Sockets/ServerSocket.h
