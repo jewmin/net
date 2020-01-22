@@ -44,8 +44,29 @@
 #include <typeinfo>
 #include <stdexcept>
 #include <unordered_map>
-#include <assert.h>
 #include <new>
+
+// C头文件
+#include <assert.h>
+#ifdef _WIN32
+#	include <io.h>
+#	include <process.h>
+#else
+#	include <unistd.h>
+#endif
+
+// 标准描述符
+#ifndef STDIN_FILENO
+#define STDIN_FILENO 0
+#endif
+
+#ifndef STDOUT_FILENO
+#define STDOUT_FILENO 1
+#endif
+
+#ifndef STDERR_FILENO
+#define STDERR_FILENO 2
+#endif
 
 // 定义标准类型，内部统一使用
 typedef char				i8;
@@ -63,6 +84,9 @@ typedef void * (*jc_malloc_func)(size_t size);
 typedef void * (*jc_realloc_func)(void * ptr, size_t size);
 typedef void * (*jc_calloc_func)(size_t count, size_t size);
 typedef void (*jc_free_func)(void * ptr);
+
+// 定义日志打印原子函数
+typedef void (*log_message_writer)(const i8 * msg, i32 length);
 
 // 动态库开放函数
 #ifdef __cplusplus
@@ -88,6 +112,7 @@ extern "C" {
 #endif
 
 NET_EXTERN int jc_replace_allocator(jc_malloc_func malloc_func, jc_realloc_func realloc_func, jc_calloc_func calloc_func, jc_free_func free_func);
+NET_EXTERN int jc_replace_logger(log_message_writer log_func);
 
 #ifdef __cplusplus
 }

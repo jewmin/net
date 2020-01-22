@@ -27,15 +27,37 @@
 
 #include "Net.h"
 
-namespace Foundation {
-	enum LogLevel { kDebug = 0, kInfo = 1, kWarning = 2, kError = 3 };
-	typedef void (*LogFunc)(int level, const char * msg);
-	void SetLogFunc(LogFunc func);
-	void Log(FILE * stream, LogLevel level, const char * fmt, va_list ap);
-	void LogDebug(const char * fmt, ...);
-	void LogInfo(const char * fmt, ...);
-	void LogWarn(const char * fmt, ...);
-	void LogErr(const char * fmt, ...);
+namespace Net {
+
+enum LogMode { kLog, kCrash };
+
+class Logger;
+
+class LogItem {
+	friend class Logger;
+	enum Tag { kStr, kPtr, kSigned, kUnsigned, kEnd };
+
+public:
+	LogItem() : tag_(kEnd) {}
+	LogItem(const i8 * value) : tag_(kStr) { data_.str = value; }
+	LogItem(i32 value) : tag_(kSigned) { data_.snum = value; }
+	LogItem(i64 value) : tag_(kSigned) { data_.snum = value; }
+	LogItem(u32 value) : tag_(kUnsigned) { data_.unum = value; }
+	LogItem(u64 value) : tag_(kUnsigned) { data_.unum = value; }
+	LogItem(const void * value) : tag_(kPtr) { data_.ptr = value; }
+
+private:
+	Tag tag_;
+	union {
+		const i8 * str;
+		const void * ptr;
+		i64 snum;
+		u64 unum;
+	} data_;
+};
+
+void Log(LogMode mode, const i8 * filename, i32 line, LogItem a, LogItem b = LogItem(), LogItem c = LogItem(), LogItem d = LogItem());
+
 }
 
 #endif

@@ -24,50 +24,112 @@
 
 #include "Logger.h"
 
-Foundation::LogFunc g_logger = nullptr;
-
-void Foundation::SetLogFunc(LogFunc func) {
-	g_logger = func;
+void WriteMessage(const i8 * msg, i32 length) {
+	write(STDERR_FILENO, msg, length);
 }
 
-void Foundation::Log(FILE * stream, LogLevel level, const char * fmt, va_list ap) {
-	static char msg[1024];
-	static char time_string[32];
-	std::vsnprintf(msg, sizeof(msg), fmt, ap);
-	if (g_logger) {
-		g_logger(level, msg);
-	} else {
-		static const char * labels[] = { "debug", "info", "warn", "error" };
-		std::time_t raw_time = std::time(nullptr);
-		std::strftime(time_string, sizeof(time_string), "%F %T", std::localtime(&raw_time));
-		std::fprintf(stream, "%s [%s] %s\n", time_string, labels[level], msg);
+static log_message_writer jc_logger = WriteMessage;
+
+int jc_replace_logger(log_message_writer log_func) {
+	if (nullptr == log_func) {
+		return -1;
+	}
+
+	jc_logger = log_func;
+	return 0;
+}
+
+namespace Net {
+
+class Logger {
+public:
+	bool Add(const LogItem & item);
+	bool AddStr(const i8 * str, i32 num);
+	bool AddNum(u64 num, i32 base);
+
+public:
+	static const i32 kBufSize = 200;
+
+	i8 * p_;
+	i8 * end_;
+	i8 buf_[kBufSize];
+};
+
+bool Logger::Add(const LogItem & item) {
+	if (p_ < end_) {
+		*p_ = ' ';
+		++p_;
+	}
+
+	switch (item.tag_) {
+		case LogItem::kStr:
+			return AddStr(item.data_.str, static_cast<i32>(std::strlen(item.data_.str)));
+
+		case LogItem::kSigned:
+			if (item.data_.snum < 0) {
+				return AddStr("-", 1) && AddNum(static_cast<u64>(-item.data_.snum), 10);
+			} else {
+				return AddNum(static_cast<u64>(item.data_.snum), 10);
+			}
+
+		case LogItem::kUnsigned:
+			return AddNum(item.data_.unum, 10);
+
+		case LogItem::kPtr:
+			return AddStr("0x", 2) && AddNum(reinterpret_cast<uintptr_t>(item.data_.ptr), 16);
+		
+		default:
+			return false;
 	}
 }
 
-void Foundation::LogDebug(const char * fmt, ...) {
-	va_list ap;
-	va_start(ap, fmt);
-	Log(stdout, kDebug, fmt, ap);
-	va_end(ap);
+bool Logger::AddStr(const i8 * str, i32 num) {
+	if (end_ - p_ < num) {
+		return false;
+	} else {
+		std::memcpy(p_, str, num);
+		p_ += num;
+		return true;
+	}
 }
 
-void Foundation::LogInfo(const char * fmt, ...) {
-	va_list ap;
-	va_start(ap, fmt);
-	Log(stdout, kInfo, fmt, ap);
-	va_end(ap);
+bool Logger::AddNum(u64 num, i32 base) {
+	static const i8 kDigits[] = "0123456789abcdef";
+	i8 space[22];
+	i8 * end = space + sizeof(space);
+	i8 * pos = end;
+	do {
+		--pos;
+		*pos = kDigits[num % base];
+		num /= base;
+	} while (num > 0 && pos > space);
+	return AddStr(pos, static_cast<i32>(end - pos));
 }
 
-void Foundation::LogWarn(const char * fmt, ...) {
-	va_list ap;
-	va_start(ap, fmt);
-	Log(stderr, kWarning, fmt, ap);
-	va_end(ap);
+void Log(LogMode mode, const i8 * filename, i32 line, LogItem a, LogItem b, LogItem c, LogItem d) {
+	Logger state;
+	state.p_ = state.buf_;
+	state.end_ = state.buf_ + sizeof(state.buf_);
+	state.AddStr("[", 1)
+		&& state.AddStr(filename, static_cast<i32>(std::strlen(filename)))
+		&& state.AddStr(":", 1)
+		&& state.AddNum(line, 10)
+		&& state.AddStr("]", 1)
+		&& state.Add(a)
+		&& state.Add(b)
+		&& state.Add(c)
+		&& state.Add(d);
+
+	if (state.p_ >= state.end_) {
+		state.p_ = state.end_ - 1;
+	}
+	*state.p_ = '\n';
+	++state.p_;
+
+	jc_logger(state.buf_, static_cast<i32>(state.p_ - state.buf_));
+	if (kCrash == mode) {
+		abort();
+	}
 }
 
-void Foundation::LogErr(const char * fmt, ...) {
-	va_list ap;
-	va_start(ap, fmt);
-	Log(stderr, kError, fmt, ap);
-	va_end(ap);
 }
