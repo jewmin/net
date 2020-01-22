@@ -27,7 +27,7 @@ TEST(IPAddressTestSuite, IPv4) {
 		IPAddress addr(addresses[i].c_str());
 		EXPECT_EQ(addr.AF(), AF_INET);
 		EXPECT_EQ(addr.Family(), IPAddress::IPv4);
-		EXPECT_EQ(addr.Scope(), 0);
+		EXPECT_EQ(addr.Scope(), static_cast<u32>(0));
 		EXPECT_EQ(addr.Length(), sizeof(struct in_addr));
 		EXPECT_STREQ(addr.ToString().c_str(), addresses[i].c_str());
 	}
