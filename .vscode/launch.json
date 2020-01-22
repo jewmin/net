@@ -24,10 +24,10 @@
             ]
         },
         {
-            "name": "(gdb) Launch",
+            "name": "wsl (gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/mnt/e/workspace/open_source/net_linux/build/linux/TestSuite/test_suite",
+            "program": "/mnt/h/net/build/linux_debug/output/test_suite",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
