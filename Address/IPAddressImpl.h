@@ -25,12 +25,12 @@
 #ifndef Net_IPAddressImpl_INCLUDED
 #define Net_IPAddressImpl_INCLUDED
 
-#include "Net.h"
+#include "NetObject.h"
 #include "AddressFamily.h"
 
 namespace Net {
 
-class IPAddressImpl {
+class IPAddressImpl : public NetObject {
 public:
 	virtual ~IPAddressImpl();
 
@@ -55,6 +55,7 @@ public:
 	explicit IPv4AddressImpl(const void * addr);
 	IPv4AddressImpl(const IPv4AddressImpl & rhs);
 	IPv4AddressImpl & operator=(const IPv4AddressImpl & rhs);
+	virtual ~IPv4AddressImpl();
 	
 	virtual std::string ToString() const;
 	virtual socklen_t Length() const;
@@ -74,9 +75,10 @@ private:
 class IPv6AddressImpl : public IPAddressImpl {
 public:
 	IPv6AddressImpl();
-	explicit IPv6AddressImpl(const void * addr, u32 scope = 0);
+	IPv6AddressImpl(const void * addr, u32 scope);
 	IPv6AddressImpl(const IPv6AddressImpl & rhs);
 	IPv6AddressImpl & operator=(const IPv6AddressImpl & rhs);
+	virtual ~IPv6AddressImpl();
 
 	virtual std::string ToString() const;
 	virtual socklen_t Length() const;

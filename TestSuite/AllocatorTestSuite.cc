@@ -54,9 +54,13 @@ TEST(AllocatorTestSuite, object) {
 		float e_;
 	};
 
+	char buf[64];
+
 	TestObject a(1);
 	TestObject * b = new TestObject(2);
+	TestObject * c = new(buf)TestObject(3);
 	delete b;
+	delete c;
 }
 
 TEST(AllocatorTestSuite, error) {

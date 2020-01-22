@@ -9,7 +9,6 @@ TEST(IPAddressTestSuite, IPv4Construct) {
 
 	IPAddress addr1;
 	IPAddress addr2("159.75.63.78");
-	IPAddress addr3(*reinterpret_cast<sockaddr *>(&si));
 	IPAddress addr4(&si.sin_addr, sizeof(si.sin_addr));
 	IPAddress addr5(addr1);
 	IPAddress addr6;
@@ -17,10 +16,11 @@ TEST(IPAddressTestSuite, IPv4Construct) {
 	addr6 = addr6;
 
 	EXPECT_EQ(addr5, addr1);
-	EXPECT_NE(addr2, addr3);
+	EXPECT_NE(addr2, addr4);
 }
 
 TEST(IPAddressTestSuite, IPv4) {
+	
 	std::string addresses[] = {"127.0.0.1", "192.168.1.1", "157.255.192.44", "255.255.255.255", "0.0.0.0", "0.0.0.1"};
 	int size = sizeof(addresses) / sizeof(addresses[0]);
 	for (int i = 0; i < size; i++) {
@@ -28,19 +28,8 @@ TEST(IPAddressTestSuite, IPv4) {
 		EXPECT_EQ(addr.AF(), AF_INET);
 		EXPECT_EQ(addr.Family(), IPAddress::IPv4);
 		EXPECT_EQ(addr.Scope(), 0);
+		EXPECT_EQ(addr.Length(), sizeof(struct in_addr));
 		EXPECT_STREQ(addr.ToString().c_str(), addresses[i].c_str());
-	}
-}
-
-TEST(IPAddressTestSuite, IPv4Error) {
-	std::string addresses[] = {"localhost", "www.google.com", "256.256.256.256", "1234567890", "1.2.3", "1.2.3.4.5", "127.0. 0.1", "-1.2.3.4", "172.16.01.06", " 127.0.0.1 "};
-	int size = sizeof(addresses) / sizeof(addresses[0]);
-	for (int i = 0; i < size; i++) {
-		try {
-			IPAddress addr(addresses[i].c_str());
-		} catch (std::exception & e) {
-			printf("IPAddressTestSuite - IPv4Error: %s\n", e.what());
-		}
 	}
 }
 
@@ -58,14 +47,6 @@ TEST(IPAddressTestSuite, IPv6) {
 	EXPECT_STREQ(addr1.ToString().c_str(), "fe80::a4f5:9de3:78bd:31d3");
 	EXPECT_NE(std::memcmp(addr1.Addr(), addr2.Addr(), addr1.Length()), 0);
 	EXPECT_TRUE(addr1 != addr2);
-}
-
-TEST(IPAddressTestSuite, IPv6Error) {
-	try {
-		IPAddress addr1(nullptr, 0);
-	} catch (std::exception & e) {
-		printf("IPAddressTestSuite - IPv6Error: %s\n", e.what());
-	}
 }
 
 TEST(IPAddressTestSuite, IP) {
@@ -107,42 +88,10 @@ TEST(IPAddressTestSuite, Impl) {
 	impl63 = IPv6AddressImpl::Parse("");
 }
 
-TEST(IPAddressTestSuite, Clone) {
-	IPv4AddressImpl impl;
-	IPv6AddressImpl impl6;
-	IPAddressImpl * ptr = impl.Clone();
-	IPAddressImpl * ptr6 = impl6.Clone();
-	EXPECT_EQ(ptr->AF(), AF_INET);
-	EXPECT_EQ(ptr6->Family(), IPAddress::IPv6);
+//TEST(IPAddressTestSuite, Error) {
+//	IPAddress ip("localhost");
+//}
 
-	delete ptr;
-	delete ptr6;
-}
-
-TEST(IPAddressTestSuite, SocketAddr) {
-	union {
-		struct sockaddr_in v4;
-		struct sockaddr addr;
-	} addr4;
-	uv_ip4_addr("127.0.0.1", 777, &addr4.v4);
-
-	union {
-		struct sockaddr_in6 v6;
-		struct sockaddr addr;
-	} addr6;
-	uv_ip6_addr("fe80::a4f5:9de3:78bd:31d3%9", 888, &addr6.v6);
-
-	IPAddress addr1(addr4.addr), addr2(addr6.addr);
-	EXPECT_STREQ(addr1.ToString().c_str(), "127.0.0.1");
-	EXPECT_STREQ(addr2.ToString().c_str(), "fe80::a4f5:9de3:78bd:31d3");
-}
-
-TEST(IPAddressTestSuite, ConstructError) {
-	try {
-		struct sockaddr addr;
-		addr.sa_family = AF_UNIX;
-		IPAddress address(addr);
-	} catch (std::exception & e) {
-		printf("IPAddressTestSuite - ConstructError: %s\n", e.what());
-	}
-}
+//TEST(IPAddressTestSuite, Error2) {
+//	IPAddress ip(nullptr, 0);
+//}

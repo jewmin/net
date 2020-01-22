@@ -32,7 +32,7 @@ namespace Net {
 template<class S>
 S Trim(const S & str) {
 	i32 first = 0;
-	i32 last = str.size() - 1;
+	i32 last = static_cast<i32>(str.size()) - 1;
 
 	while (first <= last && 0x20 == str[first]) ++first;
 	while (last >= first && 0x20 == str[last]) --last;
@@ -40,7 +40,7 @@ S Trim(const S & str) {
 	return S(str, first, last - first + 1);
 }
 
-class IPAddress {
+class IPAddress : public NetObject {
 public:
 	IPAddress();
 	explicit IPAddress(const std::string & ip);
@@ -73,6 +73,7 @@ private:
 	void Destroy();
 	i8 * Storage();
 
+private:
 	union {
 		i8 buffer[sizeof(IPv6AddressImpl)];
 	private:

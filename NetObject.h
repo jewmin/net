@@ -32,7 +32,9 @@ namespace Net {
 class NetObject {
 public:
 	static void * operator new(size_t object_size);
+	static void * operator new(size_t, void * object);
 	static void operator delete(void * object, size_t object_size);
+	static void operator delete(void *, void *);
 };
 
 }

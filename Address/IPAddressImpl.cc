@@ -55,10 +55,13 @@ IPv4AddressImpl & IPv4AddressImpl::operator=(const IPv4AddressImpl & rhs) {
 	return *this;
 }
 
+IPv4AddressImpl::~IPv4AddressImpl() {
+}
+
 std::string IPv4AddressImpl::ToString() const {
 	i8 buf[16];
 	std::string result;
-	if (0 == uv_inet_ntop(AF_INET, &addr_, buf, sizeof(buf))) {
+	if (0 == uv_inet_ntop(AF(), &addr_, buf, sizeof(buf))) {
 		result = buf;
 	}
 	return result;
@@ -109,10 +112,13 @@ IPv6AddressImpl & IPv6AddressImpl::operator=(const IPv6AddressImpl & rhs) {
 	return *this;
 }
 
+IPv6AddressImpl::~IPv6AddressImpl() {
+}
+
 std::string IPv6AddressImpl::ToString() const {
 	i8 buf[46];
 	std::string result;
-	if (0 == uv_inet_ntop(AF_INET6, &addr_, buf, sizeof(buf))) {
+	if (0 == uv_inet_ntop(AF(), &addr_, buf, sizeof(buf))) {
 		result = buf;
 	}
 	return result;

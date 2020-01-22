@@ -43,10 +43,10 @@ SET(Address
 	${CMAKE_CURRENT_LIST_DIR}/Address/IPAddress.cc
 	${CMAKE_CURRENT_LIST_DIR}/Address/IPAddressImpl.h
 	${CMAKE_CURRENT_LIST_DIR}/Address/IPAddressImpl.cc
-	${CMAKE_CURRENT_LIST_DIR}/Address/SocketAddress.h
-	${CMAKE_CURRENT_LIST_DIR}/Address/SocketAddress.cc
-	${CMAKE_CURRENT_LIST_DIR}/Address/SocketAddressImpl.h
-	${CMAKE_CURRENT_LIST_DIR}/Address/SocketAddressImpl.cc
+	# ${CMAKE_CURRENT_LIST_DIR}/Address/SocketAddress.h
+	# ${CMAKE_CURRENT_LIST_DIR}/Address/SocketAddress.cc
+	# ${CMAKE_CURRENT_LIST_DIR}/Address/SocketAddressImpl.h
+	# ${CMAKE_CURRENT_LIST_DIR}/Address/SocketAddressImpl.cc
 )
 SET(Sockets
 	${CMAKE_CURRENT_LIST_DIR}/Sockets/ServerSocket.h
@@ -105,7 +105,7 @@ SET(Timer
 
 SET(all_srcs
 	${Common}
-	# ${Address}
+	${Address}
 	# ${Sockets}
 	# ${Reactor}
 	# ${Core}
@@ -116,7 +116,7 @@ SET(all_srcs
 
 # 生成目录结构
 SOURCE_GROUP("" FILES ${Common})
-# SOURCE_GROUP(Address FILES ${Address})
+SOURCE_GROUP(Address FILES ${Address})
 # SOURCE_GROUP(Sockets FILES ${Sockets})
 # SOURCE_GROUP(Reactor FILES ${Reactor})
 # SOURCE_GROUP(Core FILES ${Core})
