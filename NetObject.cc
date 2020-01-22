@@ -32,8 +32,15 @@ void * NetObject::operator new(size_t object_size) {
 	return g_allocator_.Allocate(static_cast<i32>(object_size));
 }
 
+void * NetObject::operator new(size_t, void * object) {
+	return object;
+}
+
 void NetObject::operator delete(void * object, size_t object_size) {
 	g_allocator_.DeAllocate(object, static_cast<i32>(object_size));
+}
+
+void NetObject::operator delete(void *, void *) {
 }
 
 }

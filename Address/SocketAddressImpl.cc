@@ -24,33 +24,31 @@
 
 #include "SocketAddressImpl.h"
 
-Net::SocketAddressImpl::SocketAddressImpl() {
+namespace Net {
+
+SocketAddressImpl::SocketAddressImpl() {
 }
 
-Net::SocketAddressImpl::~SocketAddressImpl() {
+SocketAddressImpl::~SocketAddressImpl() {
 }
 
 //*********************************************************************
 //IPv4SocketAddressImpl
 //*********************************************************************
 
-Net::IPv4SocketAddressImpl::IPv4SocketAddressImpl() {
+IPv4SocketAddressImpl::IPv4SocketAddressImpl() {
 	std::memset(&addr_, 0, sizeof(addr_));
 	addr_.sin_family = AF_INET;
 }
 
-Net::IPv4SocketAddressImpl::IPv4SocketAddressImpl(const struct sockaddr_in * addr) {
+IPv4SocketAddressImpl::IPv4SocketAddressImpl(const struct sockaddr_in * addr) {
 	std::memcpy(&addr_, addr, sizeof(addr_));
 }
 
-Net::IPv4SocketAddressImpl::IPv4SocketAddressImpl(const void * addr, u16 port) {
-	std::memset(&addr_, 0, sizeof(addr_));
-	addr_.sin_family = AF_INET;
-	std::memcpy(&addr_.sin_addr, addr, sizeof(addr_.sin_addr));
-	addr_.sin_port = htons(port);
+IPv4SocketAddressImpl::~IPv4SocketAddressImpl() {
 }
 
-std::string Net::IPv4SocketAddressImpl::ToString() const {
+std::string IPv4SocketAddressImpl::ToString() const {
 	std::stringstream result;
 	result << Host().ToString() << ":" << Port();
 	return result.str();
@@ -60,25 +58,22 @@ std::string Net::IPv4SocketAddressImpl::ToString() const {
 //IPv6SocketAddressImpl
 //*********************************************************************
 
-Net::IPv6SocketAddressImpl::IPv6SocketAddressImpl() {
+IPv6SocketAddressImpl::IPv6SocketAddressImpl() {
 	std::memset(&addr_, 0, sizeof(addr_));
 	addr_.sin6_family = AF_INET6;
 }
 
-Net::IPv6SocketAddressImpl::IPv6SocketAddressImpl(const struct sockaddr_in6 * addr) {
+IPv6SocketAddressImpl::IPv6SocketAddressImpl(const struct sockaddr_in6 * addr) {
 	std::memcpy(&addr_, addr, sizeof(addr_));
 }
 
-Net::IPv6SocketAddressImpl::IPv6SocketAddressImpl(const void * addr, u16 port, u32 scope) {
-	std::memset(&addr_, 0, sizeof(addr_));
-	addr_.sin6_family = AF_INET6;
-	std::memcpy(&addr_.sin6_addr, addr, sizeof(addr_.sin6_addr));
-	addr_.sin6_port = htons(port);
-	addr_.sin6_scope_id = scope;
+IPv6SocketAddressImpl::~IPv6SocketAddressImpl() {
 }
 
-std::string Net::IPv6SocketAddressImpl::ToString() const {
+std::string IPv6SocketAddressImpl::ToString() const {
 	std::stringstream result;
-	result << "[" << Host().ToString() << "]:" << Port();
+	result << Host().ToString() << ":" << Port();
 	return result.str();
+}
+
 }

@@ -29,7 +29,7 @@
 
 namespace Net {
 
-class SocketAddressImpl {
+class SocketAddressImpl : public NetObject {
 public:
 	virtual ~SocketAddressImpl();
 
@@ -37,7 +37,7 @@ public:
 	virtual u16 Port() const = 0;
 	virtual socklen_t Length() const = 0;
 	virtual const struct sockaddr * Addr() const = 0;
-	virtual int AF() const = 0;
+	virtual i32 AF() const = 0;
 	virtual AddressFamily::Family Family() const = 0;
 	virtual std::string ToString() const = 0;
 
@@ -53,13 +53,13 @@ class IPv4SocketAddressImpl : public SocketAddressImpl {
 public:
 	IPv4SocketAddressImpl();
 	explicit IPv4SocketAddressImpl(const struct sockaddr_in * addr);
-	IPv4SocketAddressImpl(const void * addr, u16 port);
+	virtual ~IPv4SocketAddressImpl();
 
 	virtual IPAddress Host() const;
 	virtual u16 Port() const;
 	virtual socklen_t Length() const;
 	virtual const struct sockaddr * Addr() const;
-	virtual int AF() const;
+	virtual i32 AF() const;
 	virtual AddressFamily::Family Family() const;
 	virtual std::string ToString() const;
 	
@@ -71,13 +71,13 @@ class IPv6SocketAddressImpl : public SocketAddressImpl {
 public:
 	IPv6SocketAddressImpl();
 	explicit IPv6SocketAddressImpl(const struct sockaddr_in6 * addr);
-	IPv6SocketAddressImpl(const void * addr, u16 port, u32 scope = 0);
+	virtual ~IPv6SocketAddressImpl();
 
 	virtual IPAddress Host() const;
 	virtual u16 Port() const;
 	virtual socklen_t Length() const;
 	virtual const struct sockaddr * Addr() const;
-	virtual int AF() const;
+	virtual i32 AF() const;
 	virtual AddressFamily::Family Family() const;
 	virtual std::string ToString() const;
 
@@ -89,27 +89,27 @@ private:
 //IPv4SocketAddressImpl
 //*********************************************************************
 
-inline Net::IPAddress Net::IPv4SocketAddressImpl::Host() const {
+inline IPAddress IPv4SocketAddressImpl::Host() const {
 	return IPAddress(&addr_.sin_addr, sizeof(addr_.sin_addr));
 }
 
-inline u16 Net::IPv4SocketAddressImpl::Port() const {
+inline u16 IPv4SocketAddressImpl::Port() const {
 	return ntohs(addr_.sin_port);
 }
 
-inline socklen_t Net::IPv4SocketAddressImpl::Length() const {
+inline socklen_t IPv4SocketAddressImpl::Length() const {
 	return sizeof(addr_);
 }
 
-inline const struct sockaddr * Net::IPv4SocketAddressImpl::Addr() const {
+inline const struct sockaddr * IPv4SocketAddressImpl::Addr() const {
 	return reinterpret_cast<const struct sockaddr *>(&addr_);
 }
 
-inline int Net::IPv4SocketAddressImpl::AF() const {
+inline i32 IPv4SocketAddressImpl::AF() const {
 	return addr_.sin_family;
 }
 
-inline Net::AddressFamily::Family Net::IPv4SocketAddressImpl::Family() const {
+inline AddressFamily::Family IPv4SocketAddressImpl::Family() const {
 	return AddressFamily::IPv4;
 }
 
@@ -117,27 +117,27 @@ inline Net::AddressFamily::Family Net::IPv4SocketAddressImpl::Family() const {
 //IPv4SocketAddressImpl
 //*********************************************************************
 
-inline Net::IPAddress Net::IPv6SocketAddressImpl::Host() const {
+inline IPAddress IPv6SocketAddressImpl::Host() const {
 	return IPAddress(&addr_.sin6_addr, sizeof(addr_.sin6_addr), addr_.sin6_scope_id);
 }
 
-inline u16 Net::IPv6SocketAddressImpl::Port() const {
+inline u16 IPv6SocketAddressImpl::Port() const {
 	return ntohs(addr_.sin6_port);
 }
 
-inline socklen_t Net::IPv6SocketAddressImpl::Length() const {
+inline socklen_t IPv6SocketAddressImpl::Length() const {
 	return sizeof(addr_);
 }
 
-inline const struct sockaddr * Net::IPv6SocketAddressImpl::Addr() const {
+inline const struct sockaddr * IPv6SocketAddressImpl::Addr() const {
 	return reinterpret_cast<const struct sockaddr *>(&addr_);
 }
 
-inline int Net::IPv6SocketAddressImpl::AF() const {
+inline i32 IPv6SocketAddressImpl::AF() const {
 	return addr_.sin6_family;
 }
 
-inline Net::AddressFamily::Family Net::IPv6SocketAddressImpl::Family() const {
+inline AddressFamily::Family IPv6SocketAddressImpl::Family() const {
 	return AddressFamily::IPv6;
 }
 

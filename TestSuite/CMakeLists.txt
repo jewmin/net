@@ -8,6 +8,9 @@ PROJECT(test_suite VERSION 1.3.0)
 SET(test_srcs
 	${CMAKE_CURRENT_LIST_DIR}/Main.cc
 	${CMAKE_CURRENT_LIST_DIR}/AllocatorTestSuite.cc
+	${CMAKE_CURRENT_LIST_DIR}/LoggerTestSuite.cc
+	${CMAKE_CURRENT_LIST_DIR}/IPAddressTestSuite.cc
+	${CMAKE_CURRENT_LIST_DIR}/SocketAddressTestSuite.cc
 )
 # AUX_SOURCE_DIRECTORY(${CMAKE_CURRENT_LIST_DIR} test_srcs)
 # MESSAGE(${test_srcs})

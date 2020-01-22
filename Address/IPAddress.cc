@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 
+#include "Logger.h"
 #include "IPAddress.h"
 
 namespace Net {
@@ -57,7 +58,7 @@ IPAddress::IPAddress(const std::string & ip) {
 		return;
 	}
 
-	throw std::invalid_argument(std::string("IPAddress(): invalid or unsupported address - ") + ip);
+	Log(kCrash, __FILE__, __LINE__, "invalid or unsupported address", ip.c_str());
 }
 
 IPAddress::IPAddress(const void * addr, socklen_t length, u32 scope) {
@@ -66,7 +67,7 @@ IPAddress::IPAddress(const void * addr, socklen_t length, u32 scope) {
 	} else if (sizeof(struct in6_addr) == length) {
 		NewIPv6(addr, scope);
 	} else {
-		throw std::invalid_argument("IPAddress(): invalid address length");
+		Log(kCrash, __FILE__, __LINE__, "invalid address length");
 	}
 }
 

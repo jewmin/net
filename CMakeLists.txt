@@ -29,8 +29,8 @@ SET(Common
 	${CMAKE_CURRENT_LIST_DIR}/Allocator.cc
 	${CMAKE_CURRENT_LIST_DIR}/NetObject.h
 	${CMAKE_CURRENT_LIST_DIR}/NetObject.cc
-	# ${CMAKE_CURRENT_LIST_DIR}/Logger.h
-	# ${CMAKE_CURRENT_LIST_DIR}/Logger.cc
+	${CMAKE_CURRENT_LIST_DIR}/Logger.h
+	${CMAKE_CURRENT_LIST_DIR}/Logger.cc
 	# ${CMAKE_CURRENT_LIST_DIR}/ObjectMgr.h
 	# ${CMAKE_CURRENT_LIST_DIR}/Packet.hpp
 	# ${CMAKE_CURRENT_LIST_DIR}/PacketReader.hpp
@@ -105,7 +105,7 @@ SET(Timer
 
 SET(all_srcs
 	${Common}
-	# ${Address}
+	${Address}
 	# ${Sockets}
 	# ${Reactor}
 	# ${Core}
@@ -116,7 +116,7 @@ SET(all_srcs
 
 # 生成目录结构
 SOURCE_GROUP("" FILES ${Common})
-# SOURCE_GROUP(Address FILES ${Address})
+SOURCE_GROUP(Address FILES ${Address})
 # SOURCE_GROUP(Sockets FILES ${Sockets})
 # SOURCE_GROUP(Reactor FILES ${Reactor})
 # SOURCE_GROUP(Core FILES ${Core})
@@ -138,6 +138,7 @@ IF(WINDOWS)
 	SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
 	SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
 	ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
+	ADD_DEFINITIONS(-D_CRT_NONSTDC_NO_WARNINGS)
 	IF(VLD)
 		ADD_DEFINITIONS(-DUSE_VLD)
 	ENDIF()
