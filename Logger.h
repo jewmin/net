@@ -38,13 +38,15 @@ class LogItem {
 	enum Tag { kStr, kPtr, kSigned, kUnsigned, kEnd };
 
 public:
-	LogItem() : tag_(kEnd) {}
-	LogItem(const i8 * value) : tag_(kStr) { data_.str = value; }
-	LogItem(i32 value) : tag_(kSigned) { data_.snum = value; }
-	LogItem(i64 value) : tag_(kSigned) { data_.snum = value; }
-	LogItem(u32 value) : tag_(kUnsigned) { data_.unum = value; }
-	LogItem(u64 value) : tag_(kUnsigned) { data_.unum = value; }
-	LogItem(const void * value) : tag_(kPtr) { data_.ptr = value; }
+	LogItem()							: tag_(kEnd)		{}
+	LogItem(const i8 * value)			: tag_(kStr)		{ data_.str = value; }
+	LogItem(int value)					: tag_(kSigned)		{ data_.snum = value; }
+	LogItem(long value)					: tag_(kSigned)		{ data_.snum = value; }
+	LogItem(long long value)			: tag_(kSigned)		{ data_.snum = value; }
+	LogItem(unsigned int value)			: tag_(kUnsigned)	{ data_.unum = value; }
+	LogItem(unsigned long value)		: tag_(kUnsigned)	{ data_.unum = value; }
+	LogItem(unsigned long long value)	: tag_(kUnsigned)	{ data_.unum = value; }
+	LogItem(const void * value)			: tag_(kPtr)		{ data_.ptr = value; }
 
 private:
 	Tag tag_;
