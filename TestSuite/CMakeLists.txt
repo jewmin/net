@@ -11,6 +11,7 @@ SET(test_srcs
 	${CMAKE_CURRENT_LIST_DIR}/LoggerTestSuite.cc
 	${CMAKE_CURRENT_LIST_DIR}/IPAddressTestSuite.cc
 	${CMAKE_CURRENT_LIST_DIR}/SocketAddressTestSuite.cc
+	${CMAKE_CURRENT_LIST_DIR}/RefCountedObjectTestSuite.cc
 )
 # AUX_SOURCE_DIRECTORY(${CMAKE_CURRENT_LIST_DIR} test_srcs)
 # MESSAGE(${test_srcs})

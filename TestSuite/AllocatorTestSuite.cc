@@ -46,7 +46,7 @@ TEST(AllocatorTestSuite, object) {
 	class TestObject : public Net::NetObject {
 	public:
 		TestObject(int a) : a_(a) { printf("TestObject construct\n"); }
-		~TestObject() { printf("TestObject destruct\n"); }
+		virtual ~TestObject() { printf("TestObject destruct\n"); }
 		int a_;
 		bool b_;
 		long c_;
@@ -96,6 +96,7 @@ TEST(AllocatorTestSuite, error) {
 	for (std::vector<struct object>::iterator it = all.begin(); it != all.end(); it++) {
 		allocator.DeAllocate(it->ptr, it->size);
 	}
+	jc_replace_allocator(malloc, realloc, calloc, free);
 }
 
 TEST(AllocatorTestSuite, null) {
@@ -114,4 +115,5 @@ TEST(AllocatorTestSuite, null) {
 	for (std::vector<struct object>::iterator it = all.begin(); it != all.end(); it++) {
 		allocator.DeAllocate(it->ptr, it->size);
 	}
+	jc_replace_allocator(malloc, realloc, calloc, free);
 }

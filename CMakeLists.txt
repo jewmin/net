@@ -34,7 +34,7 @@ SET(Common
 	# ${CMAKE_CURRENT_LIST_DIR}/ObjectMgr.h
 	# ${CMAKE_CURRENT_LIST_DIR}/Packet.hpp
 	# ${CMAKE_CURRENT_LIST_DIR}/PacketReader.hpp
-	# ${CMAKE_CURRENT_LIST_DIR}/RefCountedObject.h
+	${CMAKE_CURRENT_LIST_DIR}/RefCountedObject.h
 	# ${CMAKE_CURRENT_LIST_DIR}/SharedPtr.h
 )
 SET(Address

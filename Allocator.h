@@ -42,6 +42,8 @@ public:
 	void * Allocate(i32 size);
 	void DeAllocate(void * ptr, i32 size);
 	void Stat(int & alloc, int & used);
+	void SetMutex(uv_mutex_t * mutex);
+	static Allocator * Get();
 
 protected:
 	void * Refill(i32 size);
@@ -53,6 +55,8 @@ private:
 	i32 RoundUpSize(i32 size);
 	struct Obj * * GetFreeList(i32 size);
 	void AppendToFreeList(void * ptr, i32 size);
+	void Lock();
+	void Unlock();
 
 protected:
 	static const i32 SmallAlign = 8;
@@ -66,6 +70,7 @@ protected:
 
 	struct Obj * free_list_[TotalFreeListSize];
 	struct Chunk * chunk_list_;
+	uv_mutex_t * mutex_;
 };
 
 inline i32 Allocator::SmallSizeClass(i32 size) {
@@ -89,6 +94,22 @@ inline struct Allocator::Obj * * Allocator::GetFreeList(i32 size) {
 		return free_list_ + SmallSizeClass(size);
 	} else {
 		return free_list_ + LargeSizeClass(size);
+	}
+}
+
+inline void Allocator::SetMutex(uv_mutex_t * mutex) {
+	mutex_ = mutex;
+}
+
+inline void Allocator::Lock() {
+	if (mutex_) {
+		uv_mutex_lock(mutex_);
+	}
+}
+
+inline void Allocator::Unlock() {
+	if (mutex_) {
+		uv_mutex_unlock(mutex_);
 	}
 }
 

@@ -22,171 +22,158 @@
  * SOFTWARE.
  */
 
-#ifndef Foundation_RefCountedObject_INCLUDED
-#define Foundation_RefCountedObject_INCLUDED
+#ifndef Net_RefCountedObject_INCLUDED
+#define Net_RefCountedObject_INCLUDED
 
-#include "Net.h"
+#include "Logger.h"
+#include "NetObject.h"
 
-namespace Foundation {
-	class RefCounter {
-	public:
-		RefCounter() : counter_(1) {
+namespace Net {
+
+class RefCounter {
+public:
+	RefCounter() : counter_(1) {}
+	~RefCounter() {}
+
+	i32 operator++();
+	i32 operator++(i32);
+	i32 operator--();
+	i32 operator--(i32);
+	operator int();
+
+private:
+	RefCounter(RefCounter &&) = delete;
+	RefCounter(const RefCounter &) = delete;
+	RefCounter & operator=(RefCounter &&) = delete;
+	RefCounter & operator=(const RefCounter &) = delete;
+
+private:
+	mutable std::atomic<i32> counter_;
+};
+
+class RefCountedObject : public NetObject {
+public:
+	RefCountedObject() {}
+	virtual ~RefCountedObject() {}
+
+	void Duplicate() const;
+	void Release();
+	i32 ReferenceCount() const;
+
+private:
+	RefCountedObject(RefCountedObject &&) = delete;
+	RefCountedObject(const RefCountedObject &) = delete;
+	RefCountedObject & operator=(RefCountedObject &&) = delete;
+	RefCountedObject & operator=(const RefCountedObject &) = delete;
+
+private:
+	mutable RefCounter counter_;
+};
+
+template<class C>
+class RefPtr {
+public:
+	RefPtr() : ptr_(nullptr) {}
+
+	explicit RefPtr(C * ptr) : ptr_(ptr) {}
+
+	RefPtr(const RefPtr & rhs) : ptr_(rhs.ptr_) {
+		if (ptr_) {
+			ptr_->Duplicate();
 		}
+	}
 
-		~RefCounter() {
-		}
-
-		int operator++();
-		int operator++(int);
-		int operator--();
-		int operator--(int);
-		operator int();
-
-	private:
-		RefCounter(RefCounter &&) = delete;
-		RefCounter(const RefCounter &) = delete;
-		RefCounter & operator=(RefCounter &&) = delete;
-		RefCounter & operator=(const RefCounter &) = delete;
-
-		mutable std::atomic<int> counter_;
-	};
-
-	class RefCountedObject {
-	public:
-		RefCountedObject() {
-		}
-
-		void Duplicate() const;
-		void Release();
-		int ReferenceCount() const;
-
-	protected:
-		virtual ~RefCountedObject() {
-		}
-
-	private:
-		RefCountedObject(RefCountedObject &&) = delete;
-		RefCountedObject(const RefCountedObject &) = delete;
-		RefCountedObject & operator=(RefCountedObject &&) = delete;
-		RefCountedObject & operator=(const RefCountedObject &) = delete;
-
-		mutable RefCounter counter_;
-	};
-
-	template<class C>
-	class RefPtr {
-	public:
-		RefPtr() : ptr_(nullptr) {
-		}
-
-		RefPtr(C * ptr) : ptr_(ptr) {
-		}
-
-		RefPtr(C * ptr, bool shared) : ptr_(ptr) {
-			if (shared && ptr_) {
-				ptr_->Duplicate();
+	RefPtr & operator=(C * ptr) {
+		if (ptr_ != ptr) {
+			if (ptr_) {
+				ptr_->Release();
 			}
+			ptr_ = ptr;
 		}
+		return *this;
+	}
 
-		RefPtr(const RefPtr & ptr) : ptr_(ptr.ptr_) {
+	RefPtr & operator=(const RefPtr & ptr) {
+		if (this != &ptr) {
+			if (ptr_) {
+				ptr_->Release();
+			}
+			ptr_ = ptr.ptr_;
 			if (ptr_) {
 				ptr_->Duplicate();
 			}
 		}
+		return *this;
+	}
 
-		RefPtr(RefPtr && ptr) : ptr_(ptr.ptr_) {
-			ptr.ptr_ = nullptr;
+	~RefPtr() {
+		if (ptr_) {
+			ptr_->Release();
 		}
+	}
 
-		RefPtr & operator=(C * ptr) {
-			return Assign(ptr);
-		}
+	void Swap(RefPtr & ptr);
+	C * Duplicate();
 
-		RefPtr & operator=(const RefPtr & ptr) {
-			return Assign(ptr);
-		}
+	C * operator->();
+	const C * operator->() const;
+	C & operator*();
+	const C & operator*() const;
+	C * Get();
+	const C * Get() const;
+	operator C * ();
+	operator const C * () const;
+	bool operator!() const;
+	bool operator==(C * ptr) const;
+	bool operator==(const C * ptr) const;
+	bool operator==(const RefPtr & ptr) const;
+	bool operator!=(C * ptr) const;
+	bool operator!=(const C * ptr) const;
+	bool operator!=(const RefPtr & ptr) const;
+	bool operator<(C * ptr) const;
+	bool operator<(const C * ptr) const;
+	bool operator<(const RefPtr & ptr) const;
+	bool operator<=(C * ptr) const;
+	bool operator<=(const C * ptr) const;
+	bool operator<=(const RefPtr & ptr) const;
+	bool operator>(C * ptr) const;
+	bool operator>(const C * ptr) const;
+	bool operator>(const RefPtr & ptr) const;
+	bool operator>=(C * ptr) const;
+	bool operator>=(const C * ptr) const;
+	bool operator>=(const RefPtr & ptr) const;
 
-		RefPtr & operator=(RefPtr && ptr) {
-			MoveAssign(&ptr.ptr_);
-			return *this;
-		}
+protected:
+	C * Deref() const;
 
-		~RefPtr() {
-			Release();
-		}
+private:
+	C * ptr_;
+};
 
-		RefPtr & Assign(C * ptr);
-		RefPtr & Assign(C * ptr, bool shared);
-		RefPtr & Assign(const RefPtr & ptr);
-		void MoveAssign(C * * ptr);
-		void Reset();
-		void Reset(C * ptr);
-		void Reset(C * ptr, bool shared);
-		void Reset(const RefPtr & ptr);
-		void Swap(RefPtr & ptr);
-		C * Duplicate();
-
-		C * operator->();
-		const C * operator->() const;
-		C & operator*();
-		const C & operator*() const;
-		C * Get();
-		const C * Get() const;
-		operator C * ();
-		operator const C * () const;
-		bool operator!() const;
-		bool operator==(C * ptr) const;
-		bool operator==(const C * ptr) const;
-		bool operator==(const RefPtr & ptr) const;
-		bool operator!=(C * ptr) const;
-		bool operator!=(const C * ptr) const;
-		bool operator!=(const RefPtr & ptr) const;
-		bool operator<(C * ptr) const;
-		bool operator<(const C * ptr) const;
-		bool operator<(const RefPtr & ptr) const;
-		bool operator<=(C * ptr) const;
-		bool operator<=(const C * ptr) const;
-		bool operator<=(const RefPtr & ptr) const;
-		bool operator>(C * ptr) const;
-		bool operator>(const C * ptr) const;
-		bool operator>(const RefPtr & ptr) const;
-		bool operator>=(C * ptr) const;
-		bool operator>=(const C * ptr) const;
-		bool operator>=(const RefPtr & ptr) const;
-
-	protected:
-		C * Deref() const;
-		void Release();
-
-	private:
-		C * ptr_;
-	};
-
-	template<class T>
-	using AutoPtr = RefPtr<T>;
-}
+template<class T>
+using AutoPtr = RefPtr<T>;
 
 //*********************************************************************
 //RefCounter
 //*********************************************************************
 
-inline int Foundation::RefCounter::operator++() {
+inline i32 Net::RefCounter::operator++() {
 	return counter_.fetch_add(1, std::memory_order_relaxed) + 1;
 }
 
-inline int Foundation::RefCounter::operator++(int) {
+inline i32 Net::RefCounter::operator++(i32) {
 	return counter_.fetch_add(1, std::memory_order_relaxed);
 }
 
-inline int Foundation::RefCounter::operator--() {
+inline i32 Net::RefCounter::operator--() {
 	return counter_.fetch_sub(1, std::memory_order_acquire) - 1;
 }
 
-inline int Foundation::RefCounter::operator--(int) {
+inline i32 Net::RefCounter::operator--(i32) {
 	return counter_.fetch_sub(1, std::memory_order_acquire);
 }
 
-inline Foundation::RefCounter::operator int() {
+inline Net::RefCounter::operator int() {
 	return counter_;
 }
 
@@ -194,17 +181,17 @@ inline Foundation::RefCounter::operator int() {
 //RefCountedObject
 //*********************************************************************
 
-inline void Foundation::RefCountedObject::Duplicate() const {
+inline void Net::RefCountedObject::Duplicate() const {
 	counter_++;
 }
 
-inline void Foundation::RefCountedObject::Release() {
+inline void Net::RefCountedObject::Release() {
 	if (--counter_ == 0) {
 		delete this;
 	}
 }
 
-inline int Foundation::RefCountedObject::ReferenceCount() const {
+inline i32 Net::RefCountedObject::ReferenceCount() const {
 	return counter_;
 }
 
@@ -213,238 +200,161 @@ inline int Foundation::RefCountedObject::ReferenceCount() const {
 //*********************************************************************
 
 template<class C>
-inline Foundation::RefPtr<C> & Foundation::RefPtr<C>::Assign(C * ptr) {
-	if (ptr_ != ptr) {
-		Release();
-		ptr_ = ptr;
-	}
-
-	return *this;
-}
-
-template<class C>
-inline Foundation::RefPtr<C> & Foundation::RefPtr<C>::Assign(C * ptr, bool shared) {
-	if (ptr_ != ptr) {
-		Release();
-		ptr_ = ptr;
-		if (shared && ptr_) {
-			ptr_->Duplicate();
-		}
-	}
-
-	return *this;
-}
-
-template<class C>
-inline Foundation::RefPtr<C> & Foundation::RefPtr<C>::Assign(const RefPtr & ptr) {
-	if (this != &ptr) {
-		Release();
-		ptr_ = ptr.ptr_;
-		if (ptr_) {
-			ptr_->Duplicate();
-		}
-	}
-
-	return *this;
-}
-
-template<class C>
-inline void Foundation::RefPtr<C>::MoveAssign(C ** ptr) {
-	if (ptr_ != *ptr) {
-		Reset();
-		if (*ptr) {
-			ptr_ = *ptr;
-			*ptr = nullptr;
-		}
-	}
-}
-
-template<class C>
-inline void Foundation::RefPtr<C>::Reset() {
-	if (ptr_) {
-		Release();
-		ptr_ = nullptr;
-	}
-}
-
-template<class C>
-inline void Foundation::RefPtr<C>::Reset(C * ptr) {
-	Assign(ptr);
-}
-
-template<class C>
-inline void Foundation::RefPtr<C>::Reset(C * ptr, bool shared) {
-	Assign(ptr, shared);
-}
-
-template<class C>
-inline void Foundation::RefPtr<C>::Reset(const RefPtr & ptr) {
-	Assign(ptr);
-}
-
-template<class C>
-inline void Foundation::RefPtr<C>::Swap(RefPtr & ptr) {
+inline void Net::RefPtr<C>::Swap(RefPtr & ptr) {
 	std::swap(ptr_, ptr.ptr_);
 }
 
 template<class C>
-inline C * Foundation::RefPtr<C>::Duplicate() {
+inline C * Net::RefPtr<C>::Duplicate() {
 	if (ptr_) {
 		ptr_->Duplicate();
 	}
-
 	return ptr_;
 }
 
 template<class C>
-inline C * Foundation::RefPtr<C>::Deref() const {
-	if (ptr_) {
-		return ptr_;
-	} else {
-		throw std::invalid_argument("Deref(): ptr_ is null");
+inline C * Net::RefPtr<C>::Deref() const {
+	if (!ptr_) {
+		Log(kCrash, __FILE__, __LINE__, "ptr_ is null");
 	}
+	return ptr_;
 }
 
 template<class C>
-inline void Foundation::RefPtr<C>::Release() {
-	if (ptr_) {
-		ptr_->Release();
-	}
-}
-
-template<class C>
-inline C * Foundation::RefPtr<C>::operator->() {
+inline C * Net::RefPtr<C>::operator->() {
 	return Deref();
 }
 
 template<class C>
-inline const C * Foundation::RefPtr<C>::operator->() const {
+inline const C * Net::RefPtr<C>::operator->() const {
 	return Deref();
 }
 
 template<class C>
-inline C & Foundation::RefPtr<C>::operator*() {
+inline C & Net::RefPtr<C>::operator*() {
 	return *Deref();
 }
 
 template<class C>
-inline const C & Foundation::RefPtr<C>::operator*() const {
+inline const C & Net::RefPtr<C>::operator*() const {
 	return *Deref();
 }
 
 template<class C>
-inline C * Foundation::RefPtr<C>::Get() {
+inline C * Net::RefPtr<C>::Get() {
 	return ptr_;
 }
 
 template<class C>
-inline const C * Foundation::RefPtr<C>::Get() const {
+inline const C * Net::RefPtr<C>::Get() const {
 	return ptr_;
 }
 
 template<class C>
-inline Foundation::RefPtr<C>::operator C*() {
+inline Net::RefPtr<C>::operator C*() {
 	return ptr_;
 }
 
 template<class C>
-inline Foundation::RefPtr<C>::operator const C*() const {
+inline Net::RefPtr<C>::operator const C*() const {
 	return ptr_;
 }
 
 template<class C>
-inline bool Foundation::RefPtr<C>::operator!() const {
+inline bool Net::RefPtr<C>::operator!() const {
 	return nullptr == ptr_;
 }
 
 template<class C>
-inline bool Foundation::RefPtr<C>::operator==(C * ptr) const {
+inline bool Net::RefPtr<C>::operator==(C * ptr) const {
 	return ptr_ == ptr;
 }
 
 template<class C>
-inline bool Foundation::RefPtr<C>::operator==(const C * ptr) const {
+inline bool Net::RefPtr<C>::operator==(const C * ptr) const {
 	return ptr_ == ptr;
 }
 
 template<class C>
-inline bool Foundation::RefPtr<C>::operator==(const RefPtr & ptr) const {
+inline bool Net::RefPtr<C>::operator==(const RefPtr & ptr) const {
 	return ptr_ == ptr.ptr_;
 }
 
 template<class C>
-inline bool Foundation::RefPtr<C>::operator!=(C * ptr) const {
+inline bool Net::RefPtr<C>::operator!=(C * ptr) const {
 	return ptr_ != ptr;
 }
 
 template<class C>
-inline bool Foundation::RefPtr<C>::operator!=(const C * ptr) const {
+inline bool Net::RefPtr<C>::operator!=(const C * ptr) const {
 	return ptr_ != ptr;
 }
 
 template<class C>
-inline bool Foundation::RefPtr<C>::operator!=(const RefPtr & ptr) const {
+inline bool Net::RefPtr<C>::operator!=(const RefPtr & ptr) const {
 	return ptr_ != ptr.ptr_;
 }
 
 template<class C>
-inline bool Foundation::RefPtr<C>::operator<(C * ptr) const {
+inline bool Net::RefPtr<C>::operator<(C * ptr) const {
 	return ptr_ < ptr;
 }
 
 template<class C>
-inline bool Foundation::RefPtr<C>::operator<(const C * ptr) const {
+inline bool Net::RefPtr<C>::operator<(const C * ptr) const {
 	return ptr_ < ptr;
 }
 
 template<class C>
-inline bool Foundation::RefPtr<C>::operator<(const RefPtr & ptr) const {
+inline bool Net::RefPtr<C>::operator<(const RefPtr & ptr) const {
 	return ptr_ < ptr.ptr_;
 }
 
 template<class C>
-inline bool Foundation::RefPtr<C>::operator<=(C * ptr) const {
+inline bool Net::RefPtr<C>::operator<=(C * ptr) const {
 	return ptr_ <= ptr;
 }
 
 template<class C>
-inline bool Foundation::RefPtr<C>::operator<=(const C * ptr) const {
+inline bool Net::RefPtr<C>::operator<=(const C * ptr) const {
 	return ptr_ <= ptr;
 }
 
 template<class C>
-inline bool Foundation::RefPtr<C>::operator<=(const RefPtr & ptr) const {
+inline bool Net::RefPtr<C>::operator<=(const RefPtr & ptr) const {
 	return ptr_ <= ptr.ptr_;
 }
 
 template<class C>
-inline bool Foundation::RefPtr<C>::operator>(C * ptr) const {
+inline bool Net::RefPtr<C>::operator>(C * ptr) const {
 	return ptr_ > ptr;
 }
 
 template<class C>
-inline bool Foundation::RefPtr<C>::operator>(const C * ptr) const {
+inline bool Net::RefPtr<C>::operator>(const C * ptr) const {
 	return ptr_ > ptr;
 }
 
 template<class C>
-inline bool Foundation::RefPtr<C>::operator>(const RefPtr & ptr) const {
+inline bool Net::RefPtr<C>::operator>(const RefPtr & ptr) const {
 	return ptr_ > ptr.ptr_;
 }
 
 template<class C>
-inline bool Foundation::RefPtr<C>::operator>=(C * ptr) const {
+inline bool Net::RefPtr<C>::operator>=(C * ptr) const {
 	return ptr_ >= ptr;
 }
 
 template<class C>
-inline bool Foundation::RefPtr<C>::operator>=(const C * ptr) const {
+inline bool Net::RefPtr<C>::operator>=(const C * ptr) const {
 	return ptr_ >= ptr;
 }
 
 template<class C>
-inline bool Foundation::RefPtr<C>::operator>=(const RefPtr & ptr) const {
+inline bool Net::RefPtr<C>::operator>=(const RefPtr & ptr) const {
 	return ptr_ >= ptr.ptr_;
+}
+
 }
 
 #endif

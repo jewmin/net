@@ -37,7 +37,7 @@ public:
 	SocketAddress(const struct sockaddr * addr, socklen_t length);
 	SocketAddress(const SocketAddress & rhs);
 	SocketAddress & operator=(const SocketAddress & rhs);
-	~SocketAddress();
+	virtual ~SocketAddress();
 
 	IPAddress Host() const;
 	u16 Port() const;

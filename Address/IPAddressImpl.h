@@ -45,7 +45,9 @@ protected:
 	IPAddressImpl();
 
 private:
+	IPAddressImpl(IPAddressImpl &&) = delete;
 	IPAddressImpl(const IPAddressImpl &) = delete;
+	IPAddressImpl & operator=(IPAddressImpl &&) = delete;
 	IPAddressImpl & operator=(const IPAddressImpl &) = delete;
 };
 

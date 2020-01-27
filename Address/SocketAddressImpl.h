@@ -45,7 +45,9 @@ protected:
 	SocketAddressImpl();
 
 private:
+	SocketAddressImpl(SocketAddressImpl &&) = delete;
 	SocketAddressImpl(const SocketAddressImpl &) = delete;
+	SocketAddressImpl & operator=(SocketAddressImpl &&) = delete;
 	SocketAddressImpl & operator=(const SocketAddressImpl &) = delete;
 };
 

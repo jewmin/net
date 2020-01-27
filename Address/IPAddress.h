@@ -47,7 +47,7 @@ public:
 	IPAddress(const void * addr, socklen_t length, u32 scope = 0);
 	IPAddress(const IPAddress & rhs);
 	IPAddress & operator=(const IPAddress & rhs);
-	~IPAddress();
+	virtual ~IPAddress();
 
 	std::string ToString() const;
 	socklen_t Length() const;

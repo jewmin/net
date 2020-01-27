@@ -57,6 +57,7 @@ Allocator::Allocator() {
 		free_list_[i] = nullptr;
 	}
 	chunk_list_ = nullptr;
+	mutex_ = nullptr;
 }
 
 Allocator::~Allocator() {
@@ -68,10 +69,16 @@ Allocator::~Allocator() {
 	}
 }
 
+Allocator * Allocator::Get() {
+	static Allocator instance;
+	return &instance;
+}
+
 void * Allocator::Allocate(i32 size) {
 	if (size > LargeMaxBytes) {
 		return jc_allocator.local_malloc(size);
 	} else {
+		Lock();
 		struct Obj * * free_list = GetFreeList(size);
 		struct Obj * result = *free_list;
 		if (result) {
@@ -79,6 +86,7 @@ void * Allocator::Allocate(i32 size) {
 		} else {
 			result = static_cast<Obj *>(Refill(RoundUpSize(size)));
 		}
+		Unlock();
 		return result;
 	}
 }
@@ -91,7 +99,9 @@ void Allocator::DeAllocate(void * ptr, i32 size) {
 	if (size > LargeMaxBytes) {
 		jc_allocator.local_free(ptr);
 	} else {
+		Lock();
 		AppendToFreeList(ptr, size);
+		Unlock();
 	}
 }
 
