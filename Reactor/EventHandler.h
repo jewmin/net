@@ -29,34 +29,40 @@
 #include "EventReactor.h"
 
 namespace Net {
-	class EventHandler : public Foundation::RefCountedObject {
-		friend class EventReactor;
-	public:
-		EventHandler() = delete;
-		EventHandler(const EventHandler &) = delete;
-		EventHandler & operator=(const EventHandler &) = delete;
 
-		virtual void Destroy() = 0;
-		EventReactor * GetReactor() const;
-		void SetReactor(EventReactor * reactor);
+class EventHandler : public RefCountedObject {
+	friend class EventReactor;
 
-	protected:
-		explicit EventHandler(EventReactor * reactor);
-		virtual ~EventHandler();
-		virtual bool RegisterToReactor() = 0;
-		virtual bool UnRegisterFromReactor() = 0;
+public:
+	virtual void Destroy() = 0;
+	EventReactor * GetReactor() const;
+	void SetReactor(EventReactor * reactor);
 
-	private:
-		EventReactor * reactor_;
-	};
-}
+protected:
+	explicit EventHandler(EventReactor * reactor);
+	virtual ~EventHandler();
+	virtual bool RegisterToReactor() = 0;
+	virtual bool UnRegisterFromReactor() = 0;
 
-inline Net::EventReactor * Net::EventHandler::GetReactor() const {
+private:
+	EventHandler() = delete;
+	EventHandler(EventHandler &&) = delete;
+	EventHandler(const EventHandler &) = delete;
+	EventHandler & operator=(EventHandler &&) = delete;
+	EventHandler & operator=(const EventHandler &) = delete;
+
+private:
+	EventReactor * reactor_;
+};
+
+inline EventReactor * EventHandler::GetReactor() const {
 	return reactor_;
 }
 
-inline void Net::EventHandler::SetReactor(EventReactor * reactor) {
+inline void EventHandler::SetReactor(EventReactor * reactor) {
 	reactor_ = reactor;
+}
+
 }
 
 #endif

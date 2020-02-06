@@ -26,13 +26,15 @@
 #include "EventReactor.h"
 #include "EventHandler.h"
 
-Net::EventReactor::EventReactor() {
-	Foundation::LogDebug("使用网络底层<libuv>");
-	loop_ = static_cast<uv_loop_t *>(malloc(sizeof(uv_loop_t)));
+namespace Net {
+
+EventReactor::EventReactor() {
+	Log(kLog, __FILE__, __LINE__, "使用网络底层<libuv>");
+	loop_ = static_cast<uv_loop_t *>(Allocator::Get()->Allocate(sizeof(uv_loop_t)));
 	uv_loop_init(loop_);
 }
 
-Net::EventReactor::~EventReactor() {
+EventReactor::~EventReactor() {
 	while (!handlers_.empty()) {
 		RemoveEventHandler(handlers_.front());
 	}
@@ -40,10 +42,10 @@ Net::EventReactor::~EventReactor() {
 		Dispatch(UV_RUN_ONCE);
 	}
 	uv_loop_close(loop_);
-	free(loop_);
+	Allocator::Get()->DeAllocate(loop_, sizeof(uv_loop_t));
 }
 
-bool Net::EventReactor::AddEventHandler(EventHandler * handler) {
+bool EventReactor::AddEventHandler(EventHandler * handler) {
 	bool success = handler->RegisterToReactor();
 	if (success) {
 		handlers_.push_back(handler);
@@ -51,10 +53,12 @@ bool Net::EventReactor::AddEventHandler(EventHandler * handler) {
 	return success;
 }
 
-bool Net::EventReactor::RemoveEventHandler(EventHandler * handler) {
+bool EventReactor::RemoveEventHandler(EventHandler * handler) {
 	bool success = handler->UnRegisterFromReactor();
 	if (success) {
 		handlers_.remove(handler);
 	}
 	return success;
+}
+
 }

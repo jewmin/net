@@ -24,8 +24,12 @@
 
 #include "EventHandler.h"
 
-Net::EventHandler::EventHandler(EventReactor * reactor) : reactor_(reactor) {
+namespace Net {
+
+EventHandler::EventHandler(EventReactor * reactor) : reactor_(reactor) {
 }
 
-Net::EventHandler::~EventHandler() {
+EventHandler::~EventHandler() {
+}
+
 }

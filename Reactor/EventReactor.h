@@ -25,35 +25,40 @@
 #ifndef Net_EventReactor_INCLUDED
 #define Net_EventReactor_INCLUDED
 
-#include "uv.h"
-#include "Net.h"
+#include "NetObject.h"
 
 namespace Net {
-	class EventHandler;
-	class EventReactor {
-	public:
-		EventReactor(const EventReactor &) = delete;
-		EventReactor & operator=(const EventReactor &) = delete;
-		EventReactor();
-		~EventReactor();
 
-		bool AddEventHandler(EventHandler * handler);
-		bool RemoveEventHandler(EventHandler * handler);
-		bool Dispatch(uv_run_mode mode = UV_RUN_NOWAIT);
-		uv_loop_t * GetEventLoop() const;
+class EventHandler;
+class EventReactor : public NetObject {
+public:
+	EventReactor();
+	virtual ~EventReactor();
 
-	private:
-		uv_loop_t * loop_;
-		std::list<EventHandler *> handlers_;
-	};
-}
+	bool AddEventHandler(EventHandler * handler);
+	bool RemoveEventHandler(EventHandler * handler);
+	bool Dispatch(uv_run_mode mode = UV_RUN_NOWAIT);
+	uv_loop_t * GetEventLoop() const;
 
-inline bool Net::EventReactor::Dispatch(uv_run_mode mode) {
+private:
+	EventReactor(EventReactor &&) = delete;
+	EventReactor(const EventReactor &) = delete;
+	EventReactor & operator=(EventReactor &&) = delete;
+	EventReactor & operator=(const EventReactor &) = delete;
+
+private:
+	uv_loop_t * loop_;
+	std::list<EventHandler *> handlers_;
+};
+
+inline bool EventReactor::Dispatch(uv_run_mode mode) {
 	return uv_run(loop_, mode) > 0;
 }
 
-inline uv_loop_t * Net::EventReactor::GetEventLoop() const {
+inline uv_loop_t * EventReactor::GetEventLoop() const {
 	return loop_;
+}
+
 }
 
 #endif
