@@ -28,55 +28,56 @@
 #include "Socket.h"
 
 namespace Net {
-	class StreamSocket : public Socket {
-	public:
-		StreamSocket();
-		StreamSocket(const Socket & socket);
-		StreamSocket & operator=(const Socket & socket);
-		virtual ~StreamSocket();
 
-		int Bind(const SocketAddress & address, bool ipV6Only = false, bool reuseAddress = false);
-		int Connect(const SocketAddress & address, uv_connect_t * req, uv_connect_cb cb);
-		void ShutdownReceive();
-		void ShutdownSend(uv_shutdown_t * req, uv_shutdown_cb cb);
-		void Shutdown(uv_shutdown_t * req, uv_shutdown_cb cb);
-		int Established(uv_alloc_cb alloc_cb, uv_read_cb read_cb);
-		int Send(const char * data, int len, uv_write_t * req, uv_write_cb cb);
+class StreamSocket : public Socket {
+	friend class ServerSocket;
 
-	protected:
-		explicit StreamSocket(SocketImpl * impl);
+public:
+	StreamSocket();
+	StreamSocket(const Socket & rhs);
+	StreamSocket & operator=(const Socket & rhs);
+	virtual ~StreamSocket();
 
-	private:
-		friend class ServerSocket;
-	};
+	int Bind(const SocketAddress & address, bool ipv6_only = false, bool reuse_address = false);
+	int Connect(const SocketAddress & address, uv_connect_t * req, uv_connect_cb cb);
+	void ShutdownReceive();
+	void ShutdownSend(uv_shutdown_t * req, uv_shutdown_cb cb);
+	void Shutdown(uv_shutdown_t * req, uv_shutdown_cb cb);
+	int Established(uv_alloc_cb alloc_cb, uv_read_cb read_cb);
+	int Send(const char * data, int len, uv_write_t * req, uv_write_cb cb);
+
+protected:
+	explicit StreamSocket(SocketImpl * impl);
+};
+
+inline int StreamSocket::Bind(const SocketAddress & address, bool ipv6_only, bool reuse_address) {
+	return Impl()->Bind(address, ipv6_only, reuse_address);
 }
 
-inline int Net::StreamSocket::Bind(const SocketAddress & address, bool ipV6Only, bool reuseAddress) {
-	return Impl()->Bind(address, ipV6Only, reuseAddress);
-}
-
-inline int Net::StreamSocket::Connect(const SocketAddress & address, uv_connect_t * req, uv_connect_cb cb) {
+inline int StreamSocket::Connect(const SocketAddress & address, uv_connect_t * req, uv_connect_cb cb) {
 	return Impl()->Connect(address, req, cb);
 }
 
-inline void Net::StreamSocket::ShutdownReceive() {
+inline void StreamSocket::ShutdownReceive() {
 	Impl()->ShutdownReceive();
 }
 
-inline void Net::StreamSocket::ShutdownSend(uv_shutdown_t * req, uv_shutdown_cb cb) {
+inline void StreamSocket::ShutdownSend(uv_shutdown_t * req, uv_shutdown_cb cb) {
 	Impl()->ShutdownSend(req, cb);
 }
 
-inline void Net::StreamSocket::Shutdown(uv_shutdown_t * req, uv_shutdown_cb cb) {
+inline void StreamSocket::Shutdown(uv_shutdown_t * req, uv_shutdown_cb cb) {
 	Impl()->Shutdown(req, cb);
 }
 
-inline int Net::StreamSocket::Established(uv_alloc_cb allocCb, uv_read_cb readCb) {
-	return Impl()->Established(allocCb, readCb);
+inline int StreamSocket::Established(uv_alloc_cb alloc_cb, uv_read_cb read_cb) {
+	return Impl()->Established(alloc_cb, read_cb);
 }
 
-inline int Net::StreamSocket::Send(const char * data, int len, uv_write_t * req, uv_write_cb cb) {
+inline int StreamSocket::Send(const char * data, int len, uv_write_t * req, uv_write_cb cb) {
 	return Impl()->Send(data, len, req, cb);
+}
+
 }
 
 #endif

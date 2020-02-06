@@ -22,32 +22,37 @@
  * SOFTWARE.
  */
 
+#include "Logger.h"
 #include "StreamSocket.h"
 #include "StreamSocketImpl.h"
 
-Net::StreamSocket::StreamSocket() : Socket(new StreamSocketImpl()) {
+namespace Net {
+
+StreamSocket::StreamSocket() : Socket(new StreamSocketImpl()) {
 }
 
-Net::StreamSocket::StreamSocket(SocketImpl * impl) : Socket(impl) {
+StreamSocket::StreamSocket(SocketImpl * impl) : Socket(impl) {
 	if (!dynamic_cast<StreamSocketImpl *>(Impl())) {
-		throw std::invalid_argument("Cannot assign incompatible socket");
+		Log(kCrash, __FILE__, __LINE__, "Cannot assign incompatible socket");
 	}
 }
 
-Net::StreamSocket::StreamSocket(const Socket & socket) : Socket(socket) {
+StreamSocket::StreamSocket(const Socket & rhs) : Socket(rhs) {
 	if (!dynamic_cast<StreamSocketImpl *>(Impl())) {
-		throw std::invalid_argument("Cannot assign incompatible socket");
+		Log(kCrash, __FILE__, __LINE__, "Cannot assign incompatible socket");
 	}
 }
 
-Net::StreamSocket & Net::StreamSocket::operator=(const Socket & socket) {
-	if (dynamic_cast<StreamSocketImpl *>(socket.Impl())) {
-		Socket::operator=(socket);
+StreamSocket & StreamSocket::operator=(const Socket & rhs) {
+	if (dynamic_cast<StreamSocketImpl *>(rhs.Impl())) {
+		Socket::operator=(rhs);
 	} else {
-		throw std::invalid_argument("Cannot assign incompatible socket");
+		Log(kCrash, __FILE__, __LINE__, "Cannot assign incompatible socket");
 	}
 	return *this;
 }
 
-Net::StreamSocket::~StreamSocket() {
+StreamSocket::~StreamSocket() {
+}
+
 }

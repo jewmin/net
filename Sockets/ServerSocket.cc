@@ -25,30 +25,31 @@
 #include "ServerSocket.h"
 #include "ServerSocketImpl.h"
 
-Net::ServerSocket::ServerSocket() : Socket(new ServerSocketImpl()) {
+namespace Net {
+
+ServerSocket::ServerSocket() : Socket(new ServerSocketImpl()) {
 }
 
-Net::ServerSocket::ServerSocket(const Socket & socket) : Socket(socket) {
+ServerSocket::ServerSocket(const Socket & rhs) : Socket(rhs) {
 	if (!dynamic_cast<ServerSocketImpl *>(Impl())) {
-		throw std::invalid_argument("Cannot assign incompatible socket");
+		Log(kCrash, __FILE__, __LINE__, "Cannot assign incompatible socket");
 	}
 }
 
-Net::ServerSocket & Net::ServerSocket::operator=(const Socket & socket) {
-	if (dynamic_cast<ServerSocketImpl *>(socket.Impl())) {
-		Socket::operator=(socket);
+ServerSocket & ServerSocket::operator=(const Socket & rhs) {
+	if (dynamic_cast<ServerSocketImpl *>(rhs.Impl())) {
+		Socket::operator=(rhs);
 	} else {
-		throw std::invalid_argument("Cannot assign incompatible socket");
+		Log(kCrash, __FILE__, __LINE__, "Cannot assign incompatible socket");
 	}
-
 	return *this;
 }
 
-Net::ServerSocket::~ServerSocket() {
+ServerSocket::~ServerSocket() {
 }
 
-bool Net::ServerSocket::AcceptConnection(StreamSocket & socket, SocketAddress & clientAddr) {
-	SocketImpl * client = Impl()->AcceptConnection(clientAddr);
+bool ServerSocket::AcceptConnection(StreamSocket & socket, SocketAddress & client_address) {
+	SocketImpl * client = Impl()->AcceptConnection(client_address);
 	if (client) {
 		socket = StreamSocket(client);
 		return true;
@@ -56,7 +57,9 @@ bool Net::ServerSocket::AcceptConnection(StreamSocket & socket, SocketAddress & 
 	return false;
 }
 
-bool Net::ServerSocket::AcceptConnection(StreamSocket & socket) {
-	SocketAddress clientAddr;
-	return AcceptConnection(socket, clientAddr);
+bool ServerSocket::AcceptConnection(StreamSocket & socket) {
+	SocketAddress client_address;
+	return AcceptConnection(socket, client_address);
+}
+
 }

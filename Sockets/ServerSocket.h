@@ -29,26 +29,28 @@
 #include "StreamSocket.h"
 
 namespace Net {
-	class ServerSocket : public Socket {
-	public:
-		ServerSocket();
-		ServerSocket(const Socket & socket);
-		ServerSocket & operator=(const Socket & socket);
-		virtual ~ServerSocket();
 
-		int Bind(const SocketAddress & address, bool ipV6Only = false, bool reuseAddress = false);
-		int Listen(int backlog, uv_connection_cb cb);
-		bool AcceptConnection(StreamSocket & socket, SocketAddress & clientAddr);
-		bool AcceptConnection(StreamSocket & socket);
-	};
+class ServerSocket : public Socket {
+public:
+	ServerSocket();
+	ServerSocket(const Socket & rhs);
+	ServerSocket & operator=(const Socket & rhs);
+	virtual ~ServerSocket();
+
+	int Bind(const SocketAddress & address, bool ipv6_only = false, bool reuse_address = false);
+	int Listen(int backlog, uv_connection_cb cb);
+	bool AcceptConnection(StreamSocket & socket, SocketAddress & client_address);
+	bool AcceptConnection(StreamSocket & socket);
+};
+
+inline int ServerSocket::Bind(const SocketAddress & address, bool ipv6_only, bool reuse_address) {
+	return Impl()->Bind(address, ipv6_only, reuse_address);
 }
 
-inline int Net::ServerSocket::Bind(const SocketAddress & address, bool ipV6Only, bool reuseAddress) {
-	return Impl()->Bind(address, ipV6Only, reuseAddress);
-}
-
-inline int Net::ServerSocket::Listen(int backlog, uv_connection_cb cb) {
+inline int ServerSocket::Listen(int backlog, uv_connection_cb cb) {
 	return Impl()->Listen(backlog, cb);
+}
+
 }
 
 #endif
