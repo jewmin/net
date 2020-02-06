@@ -25,17 +25,19 @@
 #include "Socket.h"
 #include "StreamSocketImpl.h"
 
-Net::Socket::Socket() : impl_(new StreamSocketImpl()) {
+namespace Net {
+
+Socket::Socket() : impl_(new StreamSocketImpl()) {
 }
 
-Net::Socket::Socket(SocketImpl * impl) : impl_(impl) {
+Socket::Socket(SocketImpl * impl) : impl_(impl) {
 }
 
-Net::Socket::Socket(const Socket & rhs) : impl_(rhs.impl_) {
+Socket::Socket(const Socket & rhs) : impl_(rhs.impl_) {
 	impl_->Duplicate();
 }
 
-Net::Socket & Net::Socket::operator=(const Socket & rhs) {
+Socket & Socket::operator=(const Socket & rhs) {
 	if (this != &rhs) {
 		if (impl_) {
 			impl_->Release();
@@ -48,6 +50,8 @@ Net::Socket & Net::Socket::operator=(const Socket & rhs) {
 	return *this;
 }
 
-Net::Socket::~Socket() {
+Socket::~Socket() {
 	impl_->Release();
+}
+
 }

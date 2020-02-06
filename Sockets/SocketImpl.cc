@@ -52,6 +52,16 @@ void SocketImpl::Close(uv_close_cb cb) {
 	}
 }
 
+void SocketImpl::FreeHandle(uv_handle_t * handle) {
+	if (handle) {
+		if (UV_TCP == handle->type) {
+			Allocator::Get()->DeAllocate(handle, sizeof(uv_tcp_t));
+		} else {
+			Log(kCrash, __FILE__, __LINE__, "释放内存失败", uv_handle_type_name(handle->type));
+		}
+	}
+}
+
 int SocketImpl::Bind(const SocketAddress & address, bool ipv6_only, bool reuse_address) {
 	int status = UV_UNKNOWN;
 	if (handle_ && UV_TCP == handle_->type) {

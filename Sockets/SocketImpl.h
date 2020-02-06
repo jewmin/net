@@ -35,7 +35,7 @@ class SocketImpl : public RefCountedObject {
 public:
 	virtual ~SocketImpl();
 	virtual void Open(uv_loop_t * loop);
-	virtual void Close(uv_close_cb cb = reinterpret_cast<uv_close_cb>(free));
+	virtual void Close(uv_close_cb cb = FreeHandle);
 	virtual int Bind(const SocketAddress & address, bool ipv6_only = false, bool reuse_address = false);
 	virtual int Listen(int backlog, uv_connection_cb cb);
 	virtual int Connect(const SocketAddress & address, uv_connect_t * req, uv_connect_cb cb);
@@ -56,6 +56,8 @@ public:
 	virtual void Attach(uv_handle_t * handle);
 	virtual uv_handle_t * Detatch();
 	virtual uv_handle_t * GetHandle();
+
+	static void FreeHandle(uv_handle_t * handle);
 
 protected:
 	SocketImpl();

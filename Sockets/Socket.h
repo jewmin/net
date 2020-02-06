@@ -28,121 +28,123 @@
 #include "SocketImpl.h"
 
 namespace Net {
-	class Socket {
-	public:
-		Socket();
-		Socket(const Socket & rhs);
-		Socket & operator=(const Socket & rhs);
-		virtual ~Socket();
-		
-		void Open(uv_loop_t * loop);
-		void Close(uv_close_cb cb = reinterpret_cast<uv_close_cb>(free));
-		void SetSendBufferSize(int size);
-		int GetSendBufferSize() const;
-		void SetReceiveBufferSize(int size);
-		int GetReceiveBufferSize() const;
-		SocketAddress LocalAddress();
-		SocketAddress RemoteAddress();
-		void SetNoDelay();
-		void SetKeepAlive(int interval);
-		void Attach(uv_handle_t * handle);
-		uv_handle_t * Detatch();
-		uv_handle_t * GetHandle();
-		SocketImpl * Impl() const;
 
-		bool operator==(const Socket & socket) const;
-		bool operator!=(const Socket & socket) const;
-		bool operator<(const Socket & socket) const;
-		bool operator<=(const Socket & socket) const;
-		bool operator>(const Socket & socket) const;
-		bool operator>=(const Socket & socket) const;
+class Socket {
+public:
+	Socket();
+	Socket(const Socket & rhs);
+	Socket & operator=(const Socket & rhs);
+	virtual ~Socket();
+	
+	void Open(uv_loop_t * loop);
+	void Close(uv_close_cb cb = SocketImpl::FreeHandle);
+	void SetSendBufferSize(int size);
+	int GetSendBufferSize() const;
+	void SetReceiveBufferSize(int size);
+	int GetReceiveBufferSize() const;
+	SocketAddress LocalAddress();
+	SocketAddress RemoteAddress();
+	void SetNoDelay();
+	void SetKeepAlive(int interval);
+	void Attach(uv_handle_t * handle);
+	uv_handle_t * Detatch();
+	uv_handle_t * GetHandle();
+	SocketImpl * Impl() const;
 
-	protected:
-		explicit Socket(SocketImpl * impl);
+	bool operator==(const Socket & rhs) const;
+	bool operator!=(const Socket & rhs) const;
+	bool operator<(const Socket & rhs) const;
+	bool operator<=(const Socket & rhs) const;
+	bool operator>(const Socket & rhs) const;
+	bool operator>=(const Socket & rhs) const;
 
-	private:
-		SocketImpl * impl_;
-	};
-}
+protected:
+	explicit Socket(SocketImpl * impl);
 
-inline void Net::Socket::Open(uv_loop_t * loop) {
+private:
+	SocketImpl * impl_;
+};
+
+inline void Socket::Open(uv_loop_t * loop) {
 	impl_->Open(loop);
 }
 
-inline void Net::Socket::Close(uv_close_cb cb) {
+inline void Socket::Close(uv_close_cb cb) {
 	impl_->Close(cb);
 }
 
-inline void Net::Socket::SetSendBufferSize(int size) {
+inline void Socket::SetSendBufferSize(int size) {
 	impl_->SetSendBufferSize(size);
 }
 
-inline int Net::Socket::GetSendBufferSize() const {
+inline int Socket::GetSendBufferSize() const {
 	return impl_->GetSendBufferSize();
 }
 
-inline void Net::Socket::SetReceiveBufferSize(int size) {
+inline void Socket::SetReceiveBufferSize(int size) {
 	impl_->SetReceiveBufferSize(size);
 }
 
-inline int Net::Socket::GetReceiveBufferSize() const {
+inline int Socket::GetReceiveBufferSize() const {
 	return impl_->GetReceiveBufferSize();
 }
 
-inline Net::SocketAddress Net::Socket::LocalAddress() {
+inline SocketAddress Socket::LocalAddress() {
 	return impl_->LocalAddress();
 }
 
-inline Net::SocketAddress Net::Socket::RemoteAddress() {
+inline SocketAddress Socket::RemoteAddress() {
 	return impl_->RemoteAddress();
 }
 
-inline void Net::Socket::SetNoDelay() {
+inline void Socket::SetNoDelay() {
 	impl_->SetNoDelay();
 }
 
-inline void Net::Socket::SetKeepAlive(int interval) {
+inline void Socket::SetKeepAlive(int interval) {
 	impl_->SetKeepAlive(interval);
 }
 
-inline void Net::Socket::Attach(uv_handle_t * handle) {
+inline void Socket::Attach(uv_handle_t * handle) {
 	impl_->Attach(handle);
 }
 
-inline uv_handle_t * Net::Socket::Detatch() {
+inline uv_handle_t * Socket::Detatch() {
 	return impl_->Detatch();
 }
 
-inline uv_handle_t * Net::Socket::GetHandle() {
+inline uv_handle_t * Socket::GetHandle() {
 	return impl_->GetHandle();
 }
 
-inline Net::SocketImpl * Net::Socket::Impl() const {
+inline SocketImpl * Socket::Impl() const {
 	return impl_;
 }
 
-inline bool Net::Socket::operator==(const Socket & socket) const {
-	return impl_ == socket.impl_;
+inline bool Socket::operator==(const Socket & rhs) const {
+	return impl_ == rhs.impl_;
 }
 
-inline bool Net::Socket::operator!=(const Socket & socket) const {
-	return impl_ != socket.impl_;
+inline bool Socket::operator!=(const Socket & rhs) const {
+	return impl_ != rhs.impl_;
 }
 
-inline bool Net::Socket::operator<(const Socket & socket) const {
-	return impl_ < socket.impl_;
+inline bool Socket::operator<(const Socket & rhs) const {
+	return impl_ < rhs.impl_;
 }
 
-inline bool Net::Socket::operator<=(const Socket & socket) const {
-	return impl_ <= socket.impl_;
+inline bool Socket::operator<=(const Socket & rhs) const {
+	return impl_ <= rhs.impl_;
 }
 
-inline bool Net::Socket::operator>(const Socket & socket) const {
-	return impl_ > socket.impl_;
+inline bool Socket::operator>(const Socket & rhs) const {
+	return impl_ > rhs.impl_;
 }
 
-inline bool Net::Socket::operator>=(const Socket & socket) const {
-	return impl_ >= socket.impl_;
+inline bool Socket::operator>=(const Socket & rhs) const {
+	return impl_ >= rhs.impl_;
+}
+
 }
 
 #endif
