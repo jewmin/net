@@ -24,8 +24,12 @@
 
 #include "StreamSocketImpl.h"
 
-Net::StreamSocketImpl::StreamSocketImpl() : SocketImpl() {
+namespace Net {
+
+StreamSocketImpl::StreamSocketImpl() : SocketImpl() {
 }
 
-Net::StreamSocketImpl::~StreamSocketImpl() {
+StreamSocketImpl::~StreamSocketImpl() {
+}
+
 }

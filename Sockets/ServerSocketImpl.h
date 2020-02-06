@@ -29,13 +29,13 @@
 #include "SocketImpl.h"
 
 namespace Net {
-	class ServerSocketImpl : public SocketImpl {
-	public:
-		ServerSocketImpl();
 
-	protected:
-		virtual ~ServerSocketImpl();
-	};
+class ServerSocketImpl : public SocketImpl {
+public:
+	ServerSocketImpl();
+	virtual ~ServerSocketImpl();
+};
+
 }
 
 #endif

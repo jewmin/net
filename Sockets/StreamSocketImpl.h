@@ -28,13 +28,13 @@
 #include "SocketImpl.h"
 
 namespace Net {
-	class StreamSocketImpl : public SocketImpl {
-	public:
-		StreamSocketImpl();
 
-	protected:
-		virtual ~StreamSocketImpl();
-	};
+class StreamSocketImpl : public SocketImpl {
+public:
+	StreamSocketImpl();
+	virtual ~StreamSocketImpl();
+};
+
 }
 
 #endif

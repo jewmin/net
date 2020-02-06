@@ -24,8 +24,12 @@
 
 #include "ServerSocketImpl.h"
 
-Net::ServerSocketImpl::ServerSocketImpl() : SocketImpl() {
+namespace Net {
+
+ServerSocketImpl::ServerSocketImpl() : SocketImpl() {
 }
 
-Net::ServerSocketImpl::~ServerSocketImpl() {
+ServerSocketImpl::~ServerSocketImpl() {
+}
+
 }
