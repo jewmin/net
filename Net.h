@@ -88,6 +88,9 @@ typedef void (*jc_free_func)(void * ptr);
 // 定义日志打印原子函数
 typedef void (*log_message_writer)(const i8 * msg, i32 length);
 
+// 定义日志崩溃函数
+typedef void (*log_abort)();
+
 // 动态库开放函数
 #ifdef __cplusplus
 extern "C" {
@@ -113,6 +116,7 @@ extern "C" {
 
 NET_EXTERN int jc_replace_allocator(jc_malloc_func malloc_func, jc_realloc_func realloc_func, jc_calloc_func calloc_func, jc_free_func free_func);
 NET_EXTERN int jc_replace_logger(log_message_writer log_func);
+NET_EXTERN int jc_replace_abort(log_abort abort_func);
 
 #ifdef __cplusplus
 }

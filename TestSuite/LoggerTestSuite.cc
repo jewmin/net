@@ -45,6 +45,10 @@ TEST_F(LoggerTestSuite, use2) {
 	Net::Log(Net::kLog, __FILE__, __LINE__, buf1);
 }
 
-//TEST_F(LoggerTestSuite, use3) {
-//	Net::Log(Net::kCrash, __FILE__, __LINE__, "crash");
-//}
+TEST_F(LoggerTestSuite, use3) {
+	try {
+		Net::Log(Net::kCrash, __FILE__, __LINE__, "crash");
+	} catch (std::exception & e) {
+		printf("LoggerTestSuite - use3: %s\n", e.what());
+	}
+}

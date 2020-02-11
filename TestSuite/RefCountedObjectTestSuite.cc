@@ -137,8 +137,20 @@ TEST(RefCountedObjectTestSuite, RefPtrReset) {
 	EXPECT_TRUE(obj1.Get() == nullptr);
 }
 
-//TEST(RefCountedObjectTestSuite, Catch) {
-//	RefCountedObjectTestSuite_TestRefObj * obj = nullptr;
-//	RefPtr<RefCountedObjectTestSuite_TestRefObj> ptr(obj);
-//	ptr->GetValue();
-//}
+TEST(RefCountedObjectTestSuite, Catch) {
+	try {
+		RefCountedObjectTestSuite_TestRefObj * obj = nullptr;
+		RefPtr<RefCountedObjectTestSuite_TestRefObj> ptr(obj);
+		ptr->GetValue();
+	} catch (std::exception & e) {
+		printf("RefCountedObjectTestSuite - Catch: %s\n", e.what());
+	}
+}
+
+TEST(RefCountedObjectTestSuite, Assign) {
+	RefPtr<RefCountedObjectTestSuite_TestRefObj> ptr(new RefCountedObjectTestSuite_TestRefObj());
+	ptr = nullptr;
+
+	RefPtr<RefCountedObjectTestSuite_TestRefObj> ptr2(new RefCountedObjectTestSuite_TestRefObj()), ptr3;
+	ptr2 = ptr3;
+}

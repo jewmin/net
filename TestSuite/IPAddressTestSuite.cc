@@ -88,10 +88,18 @@ TEST(IPAddressTestSuite, Impl) {
 	impl63 = IPv6AddressImpl::Parse("");
 }
 
-//TEST(IPAddressTestSuite, Error) {
-//	IPAddress ip("localhost");
-//}
+TEST(IPAddressTestSuite, Error) {
+	try {
+		IPAddress ip("localhost");
+	} catch (std::exception & e) {
+		printf("IPAddressTestSuite - Error: %s\n", e.what());
+	}
+}
 
-//TEST(IPAddressTestSuite, Error2) {
-//	IPAddress ip(nullptr, 0);
-//}
+TEST(IPAddressTestSuite, Error2) {
+	try {
+		IPAddress ip(nullptr, 0);
+	} catch (std::exception & e) {
+		printf("IPAddressTestSuite - Error2: %s\n", e.what());
+	}
+}

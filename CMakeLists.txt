@@ -106,7 +106,7 @@ SET(Timer
 SET(all_srcs
 	${Common}
 	${Address}
-	# ${Sockets}
+	${Sockets}
 	# ${Reactor}
 	# ${Core}
 	# ${Interface}
@@ -117,7 +117,7 @@ SET(all_srcs
 # 生成目录结构
 SOURCE_GROUP("" FILES ${Common})
 SOURCE_GROUP(Address FILES ${Address})
-# SOURCE_GROUP(Sockets FILES ${Sockets})
+SOURCE_GROUP(Sockets FILES ${Sockets})
 # SOURCE_GROUP(Reactor FILES ${Reactor})
 # SOURCE_GROUP(Core FILES ${Core})
 # SOURCE_GROUP(Interface FILES ${Interface})

@@ -39,7 +39,7 @@ struct Context {
 
 void close_cb(uv_handle_t* handle) {
 	Context * context = static_cast<Context *>(handle->data);
-	free(handle);
+	Allocator::Get()->DeAllocate(handle, sizeof(uv_tcp_t));
 	if (context) {
 		delete context;
 	}
@@ -135,7 +135,7 @@ void connect_cb(uv_connect_t* req, int status) {
 TEST(SocketTestSuite, Operation) {
 	ServerSocket server;
 	server.Open(uv_default_loop());
-	server.Bind(SocketAddress("0.0.0.0", 6789));
+	server.Bind(SocketAddress(IPAddress("0.0.0.0"), 6789));
 	server.Listen(128, connection_cb);
 	Context * server_context = new Context();
 	server_context->server = server;
@@ -144,7 +144,7 @@ TEST(SocketTestSuite, Operation) {
 	StreamSocket client;
 	client.Open(uv_default_loop());
 	uv_connect_t * req = new uv_connect_t();
-	client.Connect(SocketAddress("127.0.0.1", 6789), req, connect_cb);
+	client.Connect(SocketAddress(IPAddress("127.0.0.1"), 6789), req, connect_cb);
 	Context * client_context = new Context();
 	client_context->server = server;
 	client_context->client = client;
@@ -173,8 +173,8 @@ TEST(SocketTestSuite, Assign) {
 	ServerSocket t3;
 	t3 = socket;
 
-	s3.Bind(SocketAddress("127.0.0.1", 6789), true, true);
-	s3.Bind(SocketAddress("::1", 6789), true, true);
+	s3.Bind(SocketAddress(IPAddress("127.0.0.1"), 6789), true, true);
+	s3.Bind(SocketAddress(IPAddress("::1"), 6789), true, true);
 	other.Close();
 	uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 	uv_loop_close(uv_default_loop());
@@ -288,10 +288,40 @@ TEST(SocketTestSuite, ConnectError) {
 	client.Open(uv_default_loop());
 	uv_connect_t * req1 = new uv_connect_t();
 	uv_connect_t * req2 = new uv_connect_t();
-	client.Connect(SocketAddress("127.0.0.1", 6789), req1, SocketTestSuite_connect_cb);
-	client.Connect(SocketAddress("127.0.0.1", 6789), req2, SocketTestSuite_connect_cb);
+	client.Connect(SocketAddress(IPAddress("127.0.0.1"), 6789), req1, SocketTestSuite_connect_cb);
+	client.Connect(SocketAddress(IPAddress("127.0.0.1"), 6789), req2, SocketTestSuite_connect_cb);
 	delete req2;
 	client.Close();
 	uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 	uv_loop_close(uv_default_loop());
+}
+
+TEST(SocketTestSuite, handleError) {
+	MockSocketImpl * impl = new MockSocketImpl();
+	uv_tcp_t handle;
+	uv_tcp_init(uv_default_loop(), &handle);
+#ifdef _WIN32
+	handle.socket = 10000;
+#else
+	handle.io_watcher.fd = 10000;
+#endif
+	impl->Attach(reinterpret_cast<uv_handle_t *>(&handle));
+	impl->Listen(128, nullptr);
+	impl->ShutdownReceive();
+	impl->SetNoDelay();
+	impl->SetKeepAlive(60);
+	impl->Release();
+	uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+	uv_loop_close(uv_default_loop());
+}
+
+TEST(SocketTestSuite, FreeCatch) {
+	uv_udp_t * handle = new uv_udp_t();
+	try {
+		handle->type = UV_UDP;
+		SocketImpl::FreeHandle(reinterpret_cast<uv_handle_t *>(handle));
+	} catch (std::exception & e) {
+		printf("SocketTestSuite - FreeCatch: %s\n", e.what());
+	}
+	delete handle;
 }

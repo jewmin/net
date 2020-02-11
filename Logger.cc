@@ -28,7 +28,12 @@ void WriteMessage(const i8 * msg, i32 length) {
 	write(STDERR_FILENO, msg, length);
 }
 
+void DefaultAbort() {
+	abort();
+}
+
 static log_message_writer jc_logger = WriteMessage;
+static log_abort jc_abort = DefaultAbort;
 
 int jc_replace_logger(log_message_writer log_func) {
 	if (nullptr == log_func) {
@@ -36,6 +41,15 @@ int jc_replace_logger(log_message_writer log_func) {
 	}
 
 	jc_logger = log_func;
+	return 0;
+}
+
+int jc_replace_abort(log_abort abort_func) {
+	if (nullptr == abort_func) {
+		return -1;
+	}
+
+	jc_abort = abort_func;
 	return 0;
 }
 
@@ -128,7 +142,7 @@ void Log(LogMode mode, const i8 * filename, i32 line, LogItem a, LogItem b, LogI
 
 	jc_logger(state.buf_, static_cast<i32>(state.p_ - state.buf_));
 	if (kCrash == mode) {
-		abort();
+		jc_abort();
 	}
 }
 

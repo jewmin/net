@@ -246,6 +246,7 @@ SocketAddress SocketImpl::RemoteAddress() {
 void SocketImpl::SetNoDelay() {
 	if (handle_ && UV_TCP == handle_->type) {
 		int status = uv_tcp_nodelay(reinterpret_cast<uv_tcp_t *>(handle_), 1);
+		status = uv_translate_sys_error(status);
 		if (status < 0) {
 			Log(kLog, __FILE__, __LINE__, "禁止Negale算法失败", uv_strerror(status));
 		}
@@ -255,6 +256,7 @@ void SocketImpl::SetNoDelay() {
 void SocketImpl::SetKeepAlive(int interval) {
 	if (handle_ && UV_TCP == handle_->type) {
 		int status = uv_tcp_keepalive(reinterpret_cast<uv_tcp_t *>(handle_), 1, interval);
+		status = uv_translate_sys_error(status);
 		if (status < 0) {
 			Log(kLog, __FILE__, __LINE__, "设置KeepAlive机制失败", uv_strerror(status));
 		}
