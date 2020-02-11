@@ -29,81 +29,85 @@
 #include "Sockets/StreamSocket.h"
 
 namespace Net {
-	class SocketConnection : public EventHandler {
-	public:
-		enum eConnectState { kConnecting, kConnected, kDisconnecting, kDisconnected };
-		SocketConnection(int maxOutBufferSize, int maxInBufferSize);
-		virtual ~SocketConnection();
 
-		bool Open();
-		void Shutdown(bool now);
-		virtual void Destroy();
-		virtual void OnConnected();
-		virtual void OnConnectFailed(int reason);
-		virtual void OnDisconnected(bool isRemote);
-		virtual void OnNewDataReceived();
-		virtual void OnSomeDataSent();
-		virtual void OnError(int reason);
-		void Error(int reason);
-		int Write(const char * data, int len);
-		int Read(char * data, int len);
-		char * GetRecvData() const;
-		int GetRecvDataSize() const;
-		void PopRecvData(int size);
-		eConnectState GetConnectState() const;
-		void SetConnectState(eConnectState state);
-		StreamSocket * GetSocket();
-		void SetMaxOutBufferSize(int size);
-		void SetMaxInBufferSize(int size);
-		int GetMaxOutBufferSize() const;
-		int GetMaxInBufferSize() const;
-		int GetOutBufferUsedSize();
+class SocketConnection : public EventHandler {
+public:
+	enum eConnectState { kConnecting, kConnected, kDisconnecting, kDisconnected };
 
-	protected:
-		virtual bool RegisterToReactor();
-		virtual bool UnRegisterFromReactor();
+	SocketConnection(i32 max_out_buffer_size, i32 max_in_buffer_size);
+	virtual ~SocketConnection();
 
-	private:
-		void ShutdownImmediately();
-		void HandleClose4EOF(int reason);
-		void HandleClose4Error(int reason);
-		void CallOnDisconnected(bool isRemote);
-		static void CloseCb(uv_handle_t * handle);
-		static void AllocCb(uv_handle_t * handle, size_t suggested_size, uv_buf_t * buf);
-		static void ReadCb(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf);
-		static void ShutdownCb(uv_shutdown_t * req, int status);
-		static void WriteCb(uv_write_t * req, int status);
+	bool Open();
+	void Shutdown(bool now);
+	virtual void Destroy();
+	virtual void OnConnected();
+	virtual void OnConnectFailed(i32 reason);
+	virtual void OnDisconnected(bool isRemote);
+	virtual void OnNewDataReceived();
+	virtual void OnSomeDataSent();
+	virtual void OnError(i32 reason);
+	void Error(i32 reason);
+	i32 Write(const i8 * data, i32 len);
+	i32 Read(i8 * data, i32 len);
+	i8 * GetRecvData() const;
+	i32 GetRecvDataSize() const;
+	void PopRecvData(i32 size);
+	eConnectState GetConnectState() const;
+	void SetConnectState(eConnectState state);
+	StreamSocket * GetSocket();
+	void SetMaxOutBufferSize(i32 size);
+	void SetMaxInBufferSize(i32 size);
+	i32 GetMaxOutBufferSize() const;
+	i32 GetMaxInBufferSize() const;
+	i32 GetOutBufferUsedSize();
 
-	private:
-		StreamSocket socket_;
-		eConnectState connect_state_;
-		uv_buf_t in_buffer_;
-		uv_shutdown_t * shutdown_req_;
-		int max_out_buffer_size_;
-		int max_in_buffer_size_;
-		bool shutdown_;
-		bool called_on_disconnected_;
-	};
-}
+protected:
+	virtual bool RegisterToReactor();
+	virtual bool UnRegisterFromReactor();
 
-inline Net::SocketConnection::eConnectState Net::SocketConnection::GetConnectState() const {
+private:
+	void ShutdownImmediately();
+	void HandleClose4EOF(i32 reason);
+	void HandleClose4Error(i32 reason);
+	void CallOnDisconnected(bool isRemote);
+
+	static void CloseCb(uv_handle_t * handle);
+	static void AllocCb(uv_handle_t * handle, size_t suggested_size, uv_buf_t * buf);
+	static void ReadCb(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf);
+	static void ShutdownCb(uv_shutdown_t * req, i32 status);
+	static void WriteCb(uv_write_t * req, i32 status);
+
+private:
+	StreamSocket socket_;
+	eConnectState connect_state_;
+	uv_buf_t in_buffer_;
+	uv_shutdown_t * shutdown_req_;
+	i32 max_out_buffer_size_;
+	i32 max_in_buffer_size_;
+	bool shutdown_;
+	bool called_on_disconnected_;
+};
+
+inline SocketConnection::eConnectState SocketConnection::GetConnectState() const {
 	return connect_state_;
 }
 
-inline void Net::SocketConnection::SetConnectState(eConnectState state) {
+inline void SocketConnection::SetConnectState(eConnectState state) {
 	connect_state_ = state;
 }
 
-inline Net::StreamSocket * Net::SocketConnection::GetSocket() {
+inline StreamSocket * SocketConnection::GetSocket() {
 	return &socket_;
 }
 
-inline int Net::SocketConnection::GetMaxOutBufferSize() const {
+inline i32 SocketConnection::GetMaxOutBufferSize() const {
 	return max_out_buffer_size_;
 }
 
-inline int Net::SocketConnection::GetMaxInBufferSize() const {
+inline i32 SocketConnection::GetMaxInBufferSize() const {
 	return max_in_buffer_size_;
+}
+
 }
 
 #endif

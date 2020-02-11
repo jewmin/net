@@ -37,17 +37,17 @@ public:
 	ServerSocket & operator=(const Socket & rhs);
 	virtual ~ServerSocket();
 
-	int Bind(const SocketAddress & address, bool ipv6_only = false, bool reuse_address = false);
-	int Listen(int backlog, uv_connection_cb cb);
+	i32 Bind(const SocketAddress & address, bool ipv6_only = false, bool reuse_address = false);
+	i32 Listen(i32 backlog, uv_connection_cb cb);
 	bool AcceptConnection(StreamSocket & socket, SocketAddress & client_address);
 	bool AcceptConnection(StreamSocket & socket);
 };
 
-inline int ServerSocket::Bind(const SocketAddress & address, bool ipv6_only, bool reuse_address) {
+inline i32 ServerSocket::Bind(const SocketAddress & address, bool ipv6_only, bool reuse_address) {
 	return Impl()->Bind(address, ipv6_only, reuse_address);
 }
 
-inline int ServerSocket::Listen(int backlog, uv_connection_cb cb) {
+inline i32 ServerSocket::Listen(i32 backlog, uv_connection_cb cb) {
 	return Impl()->Listen(backlog, cb);
 }
 

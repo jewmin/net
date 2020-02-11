@@ -25,18 +25,20 @@
 #include "Logger.h"
 #include "SocketAcceptor.h"
 
-Net::SocketAcceptor::SocketAcceptor(EventReactor * reactor) : EventHandler(reactor), opened_(false) {
+namespace Net {
+
+SocketAcceptor::SocketAcceptor(EventReactor * reactor) : EventHandler(reactor), opened_(false) {
 }
 
-Net::SocketAcceptor::~SocketAcceptor() {
+SocketAcceptor::~SocketAcceptor() {
 }
 
-bool Net::SocketAcceptor::Open(const SocketAddress & address, int backlog, bool ipV6Only) {
+bool SocketAcceptor::Open(const SocketAddress & address, i32 backlog, bool ipv6_only) {
 	if (opened_) {
 		return false;
 	}
 	socket_.Open(GetReactor()->GetEventLoop());
-	if (socket_.Bind(address, ipV6Only) < 0) {
+	if (socket_.Bind(address, ipv6_only) < 0) {
 		return false;
 	}
 	if (socket_.Listen(backlog, AcceptCb) < 0) {
@@ -45,42 +47,42 @@ bool Net::SocketAcceptor::Open(const SocketAddress & address, int backlog, bool 
 	return GetReactor()->AddEventHandler(this);
 }
 
-void Net::SocketAcceptor::Close() {
+void SocketAcceptor::Close() {
 	if (opened_) {
 		GetReactor()->RemoveEventHandler(this);
 	}
 }
 
-void Net::SocketAcceptor::Destroy() {
+void SocketAcceptor::Destroy() {
 	Close();
 	Release();
 }
 
-bool Net::SocketAcceptor::RegisterToReactor() {
+bool SocketAcceptor::RegisterToReactor() {
 	uv_handle_set_data(socket_.GetHandle(), this);
 	Duplicate();
 	opened_ = true;
 	return true;
 }
 
-bool Net::SocketAcceptor::UnRegisterFromReactor() {
+bool SocketAcceptor::UnRegisterFromReactor() {
 	opened_ = false;
 	socket_.Close(CloseCb);
 	return true;
 }
 
-void Net::SocketAcceptor::AcceptConnection(SocketConnection * connection, uv_handle_t * handle) {
+void SocketAcceptor::AcceptConnection(SocketConnection * connection, uv_handle_t * handle) {
 	connection->GetSocket()->Attach(handle);
 	connection->GetSocket()->SetNoDelay();
 	connection->GetSocket()->SetKeepAlive(60);
 }
 
-bool Net::SocketAcceptor::ActivateConnection(SocketConnection * connection) {
+bool SocketAcceptor::ActivateConnection(SocketConnection * connection) {
 	connection->SetReactor(GetReactor());
 	return connection->Open();
 }
 
-void Net::SocketAcceptor::Accept() {
+void SocketAcceptor::Accept() {
 	StreamSocket client;
 	if (!socket_.AcceptConnection(client)) {
 		return;
@@ -94,22 +96,24 @@ void Net::SocketAcceptor::Accept() {
 	}
 }
 
-void Net::SocketAcceptor::CloseCb(uv_handle_t * handle) {
+void SocketAcceptor::CloseCb(uv_handle_t * handle) {
 	SocketAcceptor * acceptor = static_cast<SocketAcceptor *>(handle->data);
-	free(handle);
+	SocketImpl::FreeHandle(handle);
 	if (acceptor) {
 		acceptor->Release();
 	}
 }
 
-void Net::SocketAcceptor::AcceptCb(uv_stream_t * server, int status) {
+void SocketAcceptor::AcceptCb(uv_stream_t * server, i32 status) {
 	SocketAcceptor * acceptor = static_cast<SocketAcceptor *>(server->data);
 	if (acceptor) {
 		if (status < 0) {
-			Foundation::LogErr("监听回调失败. %s", uv_strerror(status));
+			Log(kLog, __FILE__, __LINE__, "监听回调失败", uv_strerror(status));
 			acceptor->Close();
 		} else {
 			acceptor->Accept();
 		}
 	}
+}
+
 }

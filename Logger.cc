@@ -35,7 +35,7 @@ void DefaultAbort() {
 static log_message_writer jc_logger = WriteMessage;
 static log_abort jc_abort = DefaultAbort;
 
-int jc_replace_logger(log_message_writer log_func) {
+i32 jc_replace_logger(log_message_writer log_func) {
 	if (nullptr == log_func) {
 		return -1;
 	}
@@ -44,7 +44,7 @@ int jc_replace_logger(log_message_writer log_func) {
 	return 0;
 }
 
-int jc_replace_abort(log_abort abort_func) {
+i32 jc_replace_abort(log_abort abort_func) {
 	if (nullptr == abort_func) {
 		return -1;
 	}

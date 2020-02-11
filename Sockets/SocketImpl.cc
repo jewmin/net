@@ -62,10 +62,10 @@ void SocketImpl::FreeHandle(uv_handle_t * handle) {
 	}
 }
 
-int SocketImpl::Bind(const SocketAddress & address, bool ipv6_only, bool reuse_address) {
-	int status = UV_UNKNOWN;
+i32 SocketImpl::Bind(const SocketAddress & address, bool ipv6_only, bool reuse_address) {
+	i32 status = UV_UNKNOWN;
 	if (handle_ && UV_TCP == handle_->type) {
-		int flags = 0;
+		i32 flags = 0;
 		if (ipv6_only) {
 			flags |= UV_TCP_IPV6ONLY;
 		}
@@ -78,8 +78,8 @@ int SocketImpl::Bind(const SocketAddress & address, bool ipv6_only, bool reuse_a
 	return status;
 }
 
-int SocketImpl::Listen(int backlog, uv_connection_cb cb) {
-	int status = UV_UNKNOWN;
+i32 SocketImpl::Listen(i32 backlog, uv_connection_cb cb) {
+	i32 status = UV_UNKNOWN;
 	if (handle_ && UV_TCP == handle_->type) {
 		status = uv_listen(reinterpret_cast<uv_stream_t *>(handle_), backlog, cb);
 		if (status < 0) {
@@ -90,8 +90,8 @@ int SocketImpl::Listen(int backlog, uv_connection_cb cb) {
 	return status;
 }
 
-int SocketImpl::Connect(const SocketAddress & address, uv_connect_t * req, uv_connect_cb cb) {
-	int status = UV_UNKNOWN;
+i32 SocketImpl::Connect(const SocketAddress & address, uv_connect_t * req, uv_connect_cb cb) {
+	i32 status = UV_UNKNOWN;
 	if (handle_ && UV_TCP == handle_->type) {
 		status = uv_tcp_connect(req, reinterpret_cast<uv_tcp_t *>(handle_), address.Addr(), cb);
 		if (status < 0) {
@@ -106,12 +106,12 @@ SocketImpl * SocketImpl::AcceptConnection(SocketAddress & client_address) {
 	if (handle_ && UV_TCP == handle_->type) {
 		SocketImpl * client = new StreamSocketImpl();
 		client->Open(handle_->loop);
-		int status = uv_accept(reinterpret_cast<uv_stream_t *>(handle_), reinterpret_cast<uv_stream_t *>(client->GetHandle()));
+		i32 status = uv_accept(reinterpret_cast<uv_stream_t *>(handle_), reinterpret_cast<uv_stream_t *>(client->GetHandle()));
 		if (0 == status) {
 			struct sockaddr_storage buffer;
 			struct sockaddr * sa = reinterpret_cast<struct sockaddr *>(&buffer);
 			socklen_t len = sizeof(buffer);
-			status = uv_tcp_getpeername(reinterpret_cast<uv_tcp_t *>(client->GetHandle()), sa, reinterpret_cast<int *>(&len));
+			status = uv_tcp_getpeername(reinterpret_cast<uv_tcp_t *>(client->GetHandle()), sa, reinterpret_cast<i32 *>(&len));
 			if (0 == status) {
 				client_address = SocketAddress(sa, len);
 				return client;
@@ -125,7 +125,7 @@ SocketImpl * SocketImpl::AcceptConnection(SocketAddress & client_address) {
 
 void SocketImpl::ShutdownReceive() {
 	if (handle_ && UV_TCP == handle_->type) {
-		int status = uv_read_stop(reinterpret_cast<uv_stream_t *>(handle_));
+		i32 status = uv_read_stop(reinterpret_cast<uv_stream_t *>(handle_));
 		if (status < 0) {
 			Log(kLog, __FILE__, __LINE__, "关闭接收端失败", uv_strerror(status));
 		}
@@ -134,7 +134,7 @@ void SocketImpl::ShutdownReceive() {
 
 void SocketImpl::ShutdownSend(uv_shutdown_t * req, uv_shutdown_cb cb) {
 	if (handle_ && UV_TCP == handle_->type) {
-		int status = uv_shutdown(req, reinterpret_cast<uv_stream_t *>(handle_), cb);
+		i32 status = uv_shutdown(req, reinterpret_cast<uv_stream_t *>(handle_), cb);
 		if (status < 0) {
 			Log(kLog, __FILE__, __LINE__, "关闭发送端失败", uv_strerror(status));
 		}
@@ -146,8 +146,8 @@ void SocketImpl::Shutdown(uv_shutdown_t * req, uv_shutdown_cb cb) {
 	ShutdownSend(req, cb);
 }
 
-int SocketImpl::Established(uv_alloc_cb allocCb, uv_read_cb readCb) {
-	int status = UV_UNKNOWN;
+i32 SocketImpl::Established(uv_alloc_cb allocCb, uv_read_cb readCb) {
+	i32 status = UV_UNKNOWN;
 	if (handle_ && UV_TCP == handle_->type) {
 		status = uv_read_start(reinterpret_cast<uv_stream_t *>(handle_), allocCb, readCb);
 		if (status < 0) {
@@ -157,15 +157,15 @@ int SocketImpl::Established(uv_alloc_cb allocCb, uv_read_cb readCb) {
 	return status;
 }
 
-int SocketImpl::Send(const char * data, int len, uv_write_t * req, uv_write_cb cb) {
+i32 SocketImpl::Send(const i8 * data, i32 len, uv_write_t * req, uv_write_cb cb) {
 	if (!handle_ || UV_TCP != handle_->type) {
 		return UV_EPROTONOSUPPORT;
 	}
 	if (!data || len <= 0) {
 		return UV_ENOBUFS;
 	}
-	uv_buf_t buf = uv_buf_init(const_cast<char *>(data), len);
-	int status = uv_write(req, reinterpret_cast<uv_stream_t * >(handle_), &buf, 1, cb);
+	uv_buf_t buf = uv_buf_init(const_cast<i8 *>(data), len);
+	i32 status = uv_write(req, reinterpret_cast<uv_stream_t * >(handle_), &buf, 1, cb);
 	if (status < 0) {
 		Log(kLog, __FILE__, __LINE__, "发送数据失败", uv_strerror(status));
 		return status;
@@ -173,19 +173,19 @@ int SocketImpl::Send(const char * data, int len, uv_write_t * req, uv_write_cb c
 	return len;
 }
 
-void SocketImpl::SetSendBufferSize(int size) {
+void SocketImpl::SetSendBufferSize(i32 size) {
 	if (handle_) {
-		int status = uv_send_buffer_size(handle_, &size);
+		i32 status = uv_send_buffer_size(handle_, &size);
 		if (status < 0) {
 			Log(kLog, __FILE__, __LINE__, "设置发送缓冲大小失败", uv_strerror(status));
 		}
 	}
 }
 
-int SocketImpl::GetSendBufferSize() {
-	int size = 0;
+i32 SocketImpl::GetSendBufferSize() {
+	i32 size = 0;
 	if (handle_) {
-		int status = uv_send_buffer_size(handle_, &size);
+		i32 status = uv_send_buffer_size(handle_, &size);
 		if (status < 0) {
 			Log(kLog, __FILE__, __LINE__, "获取发送缓冲大小失败", uv_strerror(status));
 		}
@@ -193,19 +193,19 @@ int SocketImpl::GetSendBufferSize() {
 	return size;
 }
 
-void SocketImpl::SetReceiveBufferSize(int size) {
+void SocketImpl::SetReceiveBufferSize(i32 size) {
 	if (handle_) {
-		int status = uv_recv_buffer_size(handle_, &size);
+		i32 status = uv_recv_buffer_size(handle_, &size);
 		if (status < 0) {
 			Log(kLog, __FILE__, __LINE__, "设置接收缓冲大小失败", uv_strerror(status));
 		}
 	}
 }
 
-int SocketImpl::GetReceiveBufferSize() {
-	int size = 0;
+i32 SocketImpl::GetReceiveBufferSize() {
+	i32 size = 0;
 	if (handle_) {
-		int status = uv_recv_buffer_size(handle_, &size);
+		i32 status = uv_recv_buffer_size(handle_, &size);
 		if (status < 0) {
 			Log(kLog, __FILE__, __LINE__, "获取接收缓冲大小失败", uv_strerror(status));
 		}
@@ -218,7 +218,7 @@ SocketAddress SocketImpl::LocalAddress() {
 		struct sockaddr_storage buffer;
 		struct sockaddr * sa = reinterpret_cast<struct sockaddr *>(&buffer);
 		socklen_t len = sizeof(buffer);
-		int status = uv_tcp_getsockname(reinterpret_cast<uv_tcp_t *>(handle_), sa, reinterpret_cast<int *>(&len));
+		i32 status = uv_tcp_getsockname(reinterpret_cast<uv_tcp_t *>(handle_), sa, reinterpret_cast<i32 *>(&len));
 		if (status < 0) {
 			Log(kLog, __FILE__, __LINE__, "获取本地地址失败", uv_strerror(status));
 		} else {
@@ -233,7 +233,7 @@ SocketAddress SocketImpl::RemoteAddress() {
 		struct sockaddr_storage buffer;
 		struct sockaddr * sa = reinterpret_cast<struct sockaddr *>(&buffer);
 		socklen_t len = sizeof(buffer);
-		int status = uv_tcp_getpeername(reinterpret_cast<uv_tcp_t *>(handle_), sa, reinterpret_cast<int *>(&len));
+		i32 status = uv_tcp_getpeername(reinterpret_cast<uv_tcp_t *>(handle_), sa, reinterpret_cast<i32 *>(&len));
 		if (status < 0) {
 			Log(kLog, __FILE__, __LINE__, "获取远端地址失败", uv_strerror(status));
 		} else {
@@ -245,7 +245,7 @@ SocketAddress SocketImpl::RemoteAddress() {
 
 void SocketImpl::SetNoDelay() {
 	if (handle_ && UV_TCP == handle_->type) {
-		int status = uv_tcp_nodelay(reinterpret_cast<uv_tcp_t *>(handle_), 1);
+		i32 status = uv_tcp_nodelay(reinterpret_cast<uv_tcp_t *>(handle_), 1);
 		status = uv_translate_sys_error(status);
 		if (status < 0) {
 			Log(kLog, __FILE__, __LINE__, "禁止Negale算法失败", uv_strerror(status));
@@ -253,9 +253,9 @@ void SocketImpl::SetNoDelay() {
 	}
 }
 
-void SocketImpl::SetKeepAlive(int interval) {
+void SocketImpl::SetKeepAlive(i32 interval) {
 	if (handle_ && UV_TCP == handle_->type) {
-		int status = uv_tcp_keepalive(reinterpret_cast<uv_tcp_t *>(handle_), 1, interval);
+		i32 status = uv_tcp_keepalive(reinterpret_cast<uv_tcp_t *>(handle_), 1, interval);
 		status = uv_translate_sys_error(status);
 		if (status < 0) {
 			Log(kLog, __FILE__, __LINE__, "设置KeepAlive机制失败", uv_strerror(status));

@@ -34,13 +34,14 @@ class EventHandler : public RefCountedObject {
 	friend class EventReactor;
 
 public:
+	virtual ~EventHandler();
+
 	virtual void Destroy() = 0;
 	EventReactor * GetReactor() const;
 	void SetReactor(EventReactor * reactor);
 
 protected:
 	explicit EventHandler(EventReactor * reactor);
-	virtual ~EventHandler();
 	virtual bool RegisterToReactor() = 0;
 	virtual bool UnRegisterFromReactor() = 0;
 

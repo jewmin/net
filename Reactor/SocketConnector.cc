@@ -24,18 +24,20 @@
 
 #include "SocketConnector.h"
 
-Net::SocketConnector::SocketConnector(EventReactor * reactor) : EventHandler(reactor) {
+namespace Net {
+
+SocketConnector::SocketConnector(EventReactor * reactor) : EventHandler(reactor) {
 }
 
-Net::SocketConnector::~SocketConnector() {
+SocketConnector::~SocketConnector() {
 }
 
-int Net::SocketConnector::Connect(SocketConnection * connection, const SocketAddress & address) {
+i32 SocketConnector::Connect(SocketConnection * connection, const SocketAddress & address) {
 	connection->GetSocket()->Open(GetReactor()->GetEventLoop());
-	uv_connect_t * req = static_cast<uv_connect_t *>(malloc(sizeof(uv_connect_t)));
-	int status = connection->GetSocket()->Connect(address, req, ConnectCb);
+	uv_connect_t * req = static_cast<uv_connect_t *>(Allocator::Get()->Allocate(sizeof(uv_connect_t)));
+	i32 status = connection->GetSocket()->Connect(address, req, ConnectCb);
 	if (status < 0) {
-		free(req);
+		Allocator::Get()->DeAllocate(req, sizeof(uv_connect_t));
 		connection->GetSocket()->Close();
 		connection->OnConnectFailed(status);
 	} else {
@@ -45,19 +47,19 @@ int Net::SocketConnector::Connect(SocketConnection * connection, const SocketAdd
 	return status;
 }
 
-void Net::SocketConnector::Destroy() {
+void SocketConnector::Destroy() {
 	Release();
 }
 
-bool Net::SocketConnector::RegisterToReactor() {
+bool SocketConnector::RegisterToReactor() {
 	return false;
 }
 
-bool Net::SocketConnector::UnRegisterFromReactor() {
+bool SocketConnector::UnRegisterFromReactor() {
 	return false;
 }
 
-void Net::SocketConnector::OnOneConnectSuccess(SocketConnection * connection) {
+void SocketConnector::OnOneConnectSuccess(SocketConnection * connection) {
 	connection->GetSocket()->SetNoDelay();
 	connection->GetSocket()->SetKeepAlive(60);
 	if (ActivateConnection(connection)) {
@@ -65,12 +67,12 @@ void Net::SocketConnector::OnOneConnectSuccess(SocketConnection * connection) {
 	}
 }
 
-bool Net::SocketConnector::ActivateConnection(SocketConnection * connection) {
+bool SocketConnector::ActivateConnection(SocketConnection * connection) {
 	connection->SetReactor(GetReactor());
 	return connection->Open();
 }
 
-void Net::SocketConnector::ConnectCb(uv_connect_t * req, int status) {
+void SocketConnector::ConnectCb(uv_connect_t * req, i32 status) {
 	Context * context = static_cast<Context *>(req->data);
 	SocketConnector * connector = nullptr;
 	SocketConnection * connection = nullptr;
@@ -79,7 +81,7 @@ void Net::SocketConnector::ConnectCb(uv_connect_t * req, int status) {
 		connection = context->connection_;
 		delete context;
 	}
-	free(req);
+	Allocator::Get()->DeAllocate(req, sizeof(uv_connect_t));
 	if (status < 0) {
 		if (UV_ECANCELED != status) {
 			connection->SetConnectState(SocketConnection::kDisconnected);
@@ -89,4 +91,6 @@ void Net::SocketConnector::ConnectCb(uv_connect_t * req, int status) {
 	} else {
 		connector->OnOneConnectSuccess(connection);
 	}
+}
+
 }

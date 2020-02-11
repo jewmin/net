@@ -38,23 +38,23 @@ public:
 	StreamSocket & operator=(const Socket & rhs);
 	virtual ~StreamSocket();
 
-	int Bind(const SocketAddress & address, bool ipv6_only = false, bool reuse_address = false);
-	int Connect(const SocketAddress & address, uv_connect_t * req, uv_connect_cb cb);
+	i32 Bind(const SocketAddress & address, bool ipv6_only = false, bool reuse_address = false);
+	i32 Connect(const SocketAddress & address, uv_connect_t * req, uv_connect_cb cb);
 	void ShutdownReceive();
 	void ShutdownSend(uv_shutdown_t * req, uv_shutdown_cb cb);
 	void Shutdown(uv_shutdown_t * req, uv_shutdown_cb cb);
-	int Established(uv_alloc_cb alloc_cb, uv_read_cb read_cb);
-	int Send(const char * data, int len, uv_write_t * req, uv_write_cb cb);
+	i32 Established(uv_alloc_cb alloc_cb, uv_read_cb read_cb);
+	i32 Send(const i8 * data, i32 len, uv_write_t * req, uv_write_cb cb);
 
 protected:
 	explicit StreamSocket(SocketImpl * impl);
 };
 
-inline int StreamSocket::Bind(const SocketAddress & address, bool ipv6_only, bool reuse_address) {
+inline i32 StreamSocket::Bind(const SocketAddress & address, bool ipv6_only, bool reuse_address) {
 	return Impl()->Bind(address, ipv6_only, reuse_address);
 }
 
-inline int StreamSocket::Connect(const SocketAddress & address, uv_connect_t * req, uv_connect_cb cb) {
+inline i32 StreamSocket::Connect(const SocketAddress & address, uv_connect_t * req, uv_connect_cb cb) {
 	return Impl()->Connect(address, req, cb);
 }
 
@@ -70,11 +70,11 @@ inline void StreamSocket::Shutdown(uv_shutdown_t * req, uv_shutdown_cb cb) {
 	Impl()->Shutdown(req, cb);
 }
 
-inline int StreamSocket::Established(uv_alloc_cb alloc_cb, uv_read_cb read_cb) {
+inline i32 StreamSocket::Established(uv_alloc_cb alloc_cb, uv_read_cb read_cb) {
 	return Impl()->Established(alloc_cb, read_cb);
 }
 
-inline int StreamSocket::Send(const char * data, int len, uv_write_t * req, uv_write_cb cb) {
+inline i32 StreamSocket::Send(const i8 * data, i32 len, uv_write_t * req, uv_write_cb cb) {
 	return Impl()->Send(data, len, req, cb);
 }
 

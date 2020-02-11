@@ -38,14 +38,14 @@ public:
 	
 	void Open(uv_loop_t * loop);
 	void Close(uv_close_cb cb = SocketImpl::FreeHandle);
-	void SetSendBufferSize(int size);
-	int GetSendBufferSize() const;
-	void SetReceiveBufferSize(int size);
-	int GetReceiveBufferSize() const;
+	void SetSendBufferSize(i32 size);
+	i32 GetSendBufferSize() const;
+	void SetReceiveBufferSize(i32 size);
+	i32 GetReceiveBufferSize() const;
 	SocketAddress LocalAddress();
 	SocketAddress RemoteAddress();
 	void SetNoDelay();
-	void SetKeepAlive(int interval);
+	void SetKeepAlive(i32 interval);
 	void Attach(uv_handle_t * handle);
 	uv_handle_t * Detatch();
 	uv_handle_t * GetHandle();
@@ -73,19 +73,19 @@ inline void Socket::Close(uv_close_cb cb) {
 	impl_->Close(cb);
 }
 
-inline void Socket::SetSendBufferSize(int size) {
+inline void Socket::SetSendBufferSize(i32 size) {
 	impl_->SetSendBufferSize(size);
 }
 
-inline int Socket::GetSendBufferSize() const {
+inline i32 Socket::GetSendBufferSize() const {
 	return impl_->GetSendBufferSize();
 }
 
-inline void Socket::SetReceiveBufferSize(int size) {
+inline void Socket::SetReceiveBufferSize(i32 size) {
 	impl_->SetReceiveBufferSize(size);
 }
 
-inline int Socket::GetReceiveBufferSize() const {
+inline i32 Socket::GetReceiveBufferSize() const {
 	return impl_->GetReceiveBufferSize();
 }
 
@@ -101,7 +101,7 @@ inline void Socket::SetNoDelay() {
 	impl_->SetNoDelay();
 }
 
-inline void Socket::SetKeepAlive(int interval) {
+inline void Socket::SetKeepAlive(i32 interval) {
 	impl_->SetKeepAlive(interval);
 }
 

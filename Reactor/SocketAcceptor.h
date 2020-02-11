@@ -30,35 +30,35 @@
 #include "Sockets/ServerSocket.h"
 
 namespace Net {
-	class SocketAcceptor : public EventHandler {
-	public:
-		SocketAcceptor() = delete;
-		SocketAcceptor(const SocketAcceptor &) = delete;
-		SocketAcceptor & operator=(const SocketAcceptor &) = delete;
 
-		bool Open(const SocketAddress & address, int backlog = 128, bool ipV6Only = false);
-		void Close();
-		virtual void Destroy();
+class SocketAcceptor : public EventHandler {
+public:
+	virtual ~SocketAcceptor();
 
-	protected:
-		explicit SocketAcceptor(EventReactor * reactor);
-		virtual ~SocketAcceptor();
-		virtual bool RegisterToReactor();
-		virtual bool UnRegisterFromReactor();
-		virtual void MakeConnection(SocketConnection * & connection) = 0;
-		virtual void OnAccepted(SocketConnection * connection) = 0;
+	bool Open(const SocketAddress & address, i32 backlog = 128, bool ipv6_only = false);
+	void Close();
+	virtual void Destroy();
 
-	private:
-		void AcceptConnection(SocketConnection * connection, uv_handle_t * handle);
-		bool ActivateConnection(SocketConnection * connection);
-		void Accept();
-		static void CloseCb(uv_handle_t * handle);
-		static void AcceptCb(uv_stream_t * server, int status);
+protected:
+	explicit SocketAcceptor(EventReactor * reactor);
+	virtual bool RegisterToReactor();
+	virtual bool UnRegisterFromReactor();
+	virtual void MakeConnection(SocketConnection * & connection) = 0;
+	virtual void OnAccepted(SocketConnection * connection) = 0;
 
-	private:
-		bool opened_;
-		ServerSocket socket_;
-	};
+private:
+	void AcceptConnection(SocketConnection * connection, uv_handle_t * handle);
+	bool ActivateConnection(SocketConnection * connection);
+	void Accept();
+
+	static void CloseCb(uv_handle_t * handle);
+	static void AcceptCb(uv_stream_t * server, i32 status);
+
+private:
+	bool opened_;
+	ServerSocket socket_;
+};
+
 }
 
 #endif

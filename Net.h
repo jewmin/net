@@ -114,9 +114,9 @@ extern "C" {
 #	define NET_EXTERN /* nothing */
 #endif
 
-NET_EXTERN int jc_replace_allocator(jc_malloc_func malloc_func, jc_realloc_func realloc_func, jc_calloc_func calloc_func, jc_free_func free_func);
-NET_EXTERN int jc_replace_logger(log_message_writer log_func);
-NET_EXTERN int jc_replace_abort(log_abort abort_func);
+NET_EXTERN i32 jc_replace_allocator(jc_malloc_func malloc_func, jc_realloc_func realloc_func, jc_calloc_func calloc_func, jc_free_func free_func);
+NET_EXTERN i32 jc_replace_logger(log_message_writer log_func);
+NET_EXTERN i32 jc_replace_abort(log_abort abort_func);
 
 #ifdef __cplusplus
 }

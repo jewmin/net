@@ -27,6 +27,11 @@
 
 #include "Net.h"
 
+void * jc_malloc(size_t size);
+void * jc_realloc(void * ptr, size_t size);
+void * jc_calloc(size_t count, size_t size);
+void jc_free(void * ptr);
+
 namespace Net {
 
 class Allocator {
@@ -41,7 +46,7 @@ public:
 
 	void * Allocate(i32 size);
 	void DeAllocate(void * ptr, i32 size);
-	void Stat(int & alloc, int & used);
+	void Stat(i32 & alloc, i32 & used);
 	void SetMutex(uv_mutex_t * mutex);
 	static Allocator * Get();
 

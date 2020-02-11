@@ -211,7 +211,7 @@ TEST(ReactorTestSuite, use) {
 	SocketConnector * pConnector = new SocketConnector(pReactor);
 	SocketConnection * pConnection = new ConnectionImpl();
 	pAcceptor->Open(SocketAddress(6789));
-	pConnector->Connect(pConnection, SocketAddress("127.0.0.1", 6789));
+	pConnector->Connect(pConnection, SocketAddress(IPAddress("127.0.0.1"), 6789));
 	
 	pReactor->Dispatch(UV_RUN_DEFAULT);
 	pConnection->Destroy();
@@ -224,7 +224,7 @@ TEST(ReactorTestSuite, ConnectError) {
 	EventReactor * pReactor = new EventReactor();
 	SocketConnector * pConnector = new SocketConnector(pReactor);
 	SocketConnection * pConnection = new ConnectionImpl();
-	pConnector->Connect(pConnection, SocketAddress("0.0.0.0", 6789));
+	pConnector->Connect(pConnection, SocketAddress(IPAddress("0.0.0.0"), 6789));
 	pReactor->Dispatch(UV_RUN_DEFAULT);
 	pConnection->Destroy();
 	pConnector->Destroy();
@@ -235,7 +235,7 @@ TEST(ReactorTestSuite, ConnectShutdown) {
 	EventReactor * pReactor = new EventReactor();
 	SocketConnector * pConnector = new SocketConnector(pReactor);
 	SocketConnection * pConnection = new ConnectionImpl();
-	pConnector->Connect(pConnection, SocketAddress("0.0.0.0", 6789));
+	pConnector->Connect(pConnection, SocketAddress(IPAddress("0.0.0.0"), 6789));
 	pConnection->Shutdown(true);
 	pReactor->Dispatch(UV_RUN_DEFAULT);
 	pConnection->Destroy();
@@ -257,7 +257,7 @@ TEST(ReactorTestSuite, use2) {
 	SocketConnector * pConnector = new SocketConnector(pReactor);
 	SocketConnection * pConnection = new ConnectionImpl2();
 	pAcceptor->Open(SocketAddress(6789));
-	pConnector->Connect(pConnection, SocketAddress("127.0.0.1", 6789));
+	pConnector->Connect(pConnection, SocketAddress(IPAddress("127.0.0.1"), 6789));
 
 	pReactor->Dispatch(UV_RUN_DEFAULT);
 	pConnection->Destroy();
@@ -272,7 +272,7 @@ TEST(ReactorTestSuite, use3) {
 	SocketConnector * pConnector = new SocketConnector(pReactor);
 	SocketConnection * pConnection = new ConnectionImpl3();
 	pAcceptor->Open(SocketAddress(6789));
-	pConnector->Connect(pConnection, SocketAddress("127.0.0.1", 6789));
+	pConnector->Connect(pConnection, SocketAddress(IPAddress("127.0.0.1"), 6789));
 
 	pReactor->Dispatch(UV_RUN_DEFAULT);
 	pConnection->Destroy();
@@ -287,7 +287,7 @@ TEST(ReactorTestSuite, use4) {
 	SocketConnector * pConnector = new SocketConnector(pReactor);
 	SocketConnection * pConnection = new ConnectionImpl4();
 	pAcceptor->Open(SocketAddress(6789));
-	pConnector->Connect(pConnection, SocketAddress("127.0.0.1", 6789));
+	pConnector->Connect(pConnection, SocketAddress(IPAddress("127.0.0.1"), 6789));
 
 	pReactor->Dispatch(UV_RUN_DEFAULT);
 	pConnection->Destroy();
@@ -361,7 +361,7 @@ TEST(ReactorTestSuite, ReadError2) {
 	SocketConnector * pConnector = new SocketConnector(pReactor);
 	SocketConnection * pConnection = new ConnectionImpl5();
 	pAcceptor->Open(SocketAddress(6789));
-	pConnector->Connect(pConnection, SocketAddress("127.0.0.1", 6789));
+	pConnector->Connect(pConnection, SocketAddress(IPAddress("127.0.0.1"), 6789));
 
 	pReactor->Dispatch(UV_RUN_DEFAULT);
 	pConnection->Destroy();

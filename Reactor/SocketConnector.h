@@ -25,35 +25,39 @@
 #ifndef Net_SocketConnector_INCLUDED
 #define Net_SocketConnector_INCLUDED
 
+#include "NetObject.h"
 #include "EventHandler.h"
 #include "SocketConnection.h"
 
 namespace Net {
-	class SocketConnector : public EventHandler {
-		struct Context {
-			Context(SocketConnector * connector, SocketConnection * connection)
-				: connector_(connector), connection_(connection) {
-			}
-			SocketConnector * connector_;
-			SocketConnection * connection_;
-		};
 
+class SocketConnector : public EventHandler {
+	class Context : public NetObject {
 	public:
-		SocketConnector(EventReactor * reactor);
-		virtual ~SocketConnector();
-
-		int Connect(SocketConnection * connection, const SocketAddress & address);
-		virtual void Destroy();
-
-	protected:
-		virtual bool RegisterToReactor();
-		virtual bool UnRegisterFromReactor();
-
-	private:
-		void OnOneConnectSuccess(SocketConnection * connection);
-		bool ActivateConnection(SocketConnection * connection);
-		static void ConnectCb(uv_connect_t * req, int status);
+		Context(SocketConnector * connector, SocketConnection * connection) : connector_(connector), connection_(connection) {}
+		virtual ~Context() {}
+		SocketConnector * connector_;
+		SocketConnection * connection_;
 	};
+
+public:
+	SocketConnector(EventReactor * reactor);
+	virtual ~SocketConnector();
+
+	i32 Connect(SocketConnection * connection, const SocketAddress & address);
+	virtual void Destroy();
+
+protected:
+	virtual bool RegisterToReactor();
+	virtual bool UnRegisterFromReactor();
+
+private:
+	void OnOneConnectSuccess(SocketConnection * connection);
+	bool ActivateConnection(SocketConnection * connection);
+
+	static void ConnectCb(uv_connect_t * req, i32 status);
+};
+
 }
 
 #endif

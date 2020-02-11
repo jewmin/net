@@ -39,7 +39,7 @@ struct Context {
 
 void close_cb(uv_handle_t* handle) {
 	Context * context = static_cast<Context *>(handle->data);
-	Allocator::Get()->DeAllocate(handle, sizeof(uv_tcp_t));
+	SocketImpl::FreeHandle(handle);
 	if (context) {
 		delete context;
 	}
