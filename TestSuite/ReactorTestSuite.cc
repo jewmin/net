@@ -329,16 +329,18 @@ TEST(ReactorTestSuite, ConnectionError) {
 }
 
 TEST(ReactorTestSuite, WriteError) {
+	uv_loop_t loop;
+	uv_loop_init(&loop);
 	char buf[2048] = {1};
 	SocketConnection * connection = new SocketConnection(1024, 1024);
 	EXPECT_EQ(connection->Write(nullptr, 0), UV_ENOTCONN);
 	connection->SetConnectState(SocketConnection::kConnected);
-	connection->GetSocket()->Open(uv_default_loop());
+	connection->GetSocket()->Open(&loop);
 	connection->Write(buf, sizeof(buf));
 	connection->SetConnectState(SocketConnection::kDisconnected);
 	connection->Destroy();
-	uv_run(uv_default_loop(), UV_RUN_DEFAULT);
-	uv_loop_close(uv_default_loop());
+	uv_run(&loop, UV_RUN_DEFAULT);
+	uv_loop_close(&loop);
 }
 
 TEST(ReactorTestSuite, ReadError) {

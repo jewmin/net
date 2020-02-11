@@ -35,10 +35,6 @@ TEST(SocketAddressTestSuite, Constructor) {
 	EXPECT_STREQ(address5.ToString().c_str(), "192.168.245.81:6666");
 	EXPECT_EQ(address1.Length(), sizeof(si6));
 	EXPECT_EQ(address3.Length(), sizeof(si4));
-
-	struct sockaddr si;
-	memcpy(&si, address2.Addr(), address2.Length());
-	EXPECT_EQ(si.sa_family, AF_INET);
 }
 
 TEST(SocketAddressTestSuite, Impl) {

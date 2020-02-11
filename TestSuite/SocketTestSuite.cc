@@ -133,8 +133,10 @@ void connect_cb(uv_connect_t* req, int status) {
 }
 
 TEST(SocketTestSuite, Operation) {
+	uv_loop_t loop;
+	uv_loop_init(&loop);
 	ServerSocket server;
-	server.Open(uv_default_loop());
+	server.Open(&loop);
 	server.Bind(SocketAddress(IPAddress("0.0.0.0"), 6789));
 	server.Listen(128, connection_cb);
 	Context * server_context = new Context();
@@ -142,7 +144,7 @@ TEST(SocketTestSuite, Operation) {
 	uv_handle_set_data(server.GetHandle(), server_context);
 
 	StreamSocket client;
-	client.Open(uv_default_loop());
+	client.Open(&loop);
 	uv_connect_t * req = new uv_connect_t();
 	client.Connect(SocketAddress(IPAddress("127.0.0.1"), 6789), req, connect_cb);
 	Context * client_context = new Context();
@@ -150,13 +152,15 @@ TEST(SocketTestSuite, Operation) {
 	client_context->client = client;
 	uv_handle_set_data(client.GetHandle(), client_context);
 
-	uv_run(uv_default_loop(), UV_RUN_DEFAULT);
-	uv_loop_close(uv_default_loop());
+	uv_run(&loop, UV_RUN_DEFAULT);
+	uv_loop_close(&loop);
 }
 
 TEST(SocketTestSuite, Assign) {
+	uv_loop_t loop;
+	uv_loop_init(&loop);
 	Socket socket, other;
-	socket.Open(uv_default_loop());
+	socket.Open(&loop);
 	uv_handle_t * handle = socket.GetHandle();
 	other.Attach(socket.Detatch());
 	EXPECT_EQ(other.GetHandle(), handle);
@@ -176,8 +180,8 @@ TEST(SocketTestSuite, Assign) {
 	s3.Bind(SocketAddress(IPAddress("127.0.0.1"), 6789), true, true);
 	s3.Bind(SocketAddress(IPAddress("::1"), 6789), true, true);
 	other.Close();
-	uv_run(uv_default_loop(), UV_RUN_DEFAULT);
-	uv_loop_close(uv_default_loop());
+	uv_run(&loop, UV_RUN_DEFAULT);
+	uv_loop_close(&loop);
 }
 
 class MockSocketImpl : public SocketImpl {
@@ -234,10 +238,12 @@ TEST(SocketTestSuite, Catch) {
 }
 
 TEST(SocketTestSuite, ImplCatch) {
+	uv_loop_t loop;
+	uv_loop_init(&loop);
 	MockSocketImpl * impl = new MockSocketImpl();
 
 	try {
-		impl->Open(uv_default_loop());
+		impl->Open(&loop);
 		impl->Attach(nullptr);
 	} catch (std::exception & e) {
 		printf("SocketTestSuite - ImplCatch: %s\n", e.what());
@@ -261,18 +267,20 @@ TEST(SocketTestSuite, ImplCatch) {
 	impl->Send(nullptr, 0, nullptr, nullptr);
 
 	impl->Release();
-	uv_run(uv_default_loop(), UV_RUN_DEFAULT);
-	uv_loop_close(uv_default_loop());
+	uv_run(&loop, UV_RUN_DEFAULT);
+	uv_loop_close(&loop);
 }
 
 TEST(SocketTestSuite, AcceptError) {
+	uv_loop_t loop;
+	uv_loop_init(&loop);
 	ServerSocket socket;
-	socket.Open(uv_default_loop());
+	socket.Open(&loop);
 	StreamSocket client;
 	EXPECT_EQ(socket.AcceptConnection(client), false);
 	socket.Close();
-	uv_run(uv_default_loop(), UV_RUN_DEFAULT);
-	uv_loop_close(uv_default_loop());
+	uv_run(&loop, UV_RUN_DEFAULT);
+	uv_loop_close(&loop);
 }
 
 void SocketTestSuite_connect_cb(uv_connect_t* req, int status) {
@@ -284,35 +292,38 @@ void SocketTestSuite_listen_cb(uv_stream_t* server, int status) {
 }
 
 TEST(SocketTestSuite, ConnectError) {
+	uv_loop_t loop;
+	uv_loop_init(&loop);
 	StreamSocket client;
-	client.Open(uv_default_loop());
+	client.Open(&loop);
 	uv_connect_t * req1 = new uv_connect_t();
 	uv_connect_t * req2 = new uv_connect_t();
 	client.Connect(SocketAddress(IPAddress("127.0.0.1"), 6789), req1, SocketTestSuite_connect_cb);
 	client.Connect(SocketAddress(IPAddress("127.0.0.1"), 6789), req2, SocketTestSuite_connect_cb);
 	delete req2;
 	client.Close();
-	uv_run(uv_default_loop(), UV_RUN_DEFAULT);
-	uv_loop_close(uv_default_loop());
+	uv_run(&loop, UV_RUN_DEFAULT);
+	uv_loop_close(&loop);
 }
 
 TEST(SocketTestSuite, handleError) {
+	uv_loop_t loop;
+	uv_loop_init(&loop);
 	MockSocketImpl * impl = new MockSocketImpl();
-	uv_tcp_t handle;
-	uv_tcp_init(uv_default_loop(), &handle);
+	impl->Open(&loop);
+	uv_tcp_t * handle = reinterpret_cast<uv_tcp_t *>(impl->GetHandle());
 #ifdef _WIN32
-	handle.socket = 10000;
+	handle->socket = 10000;
 #else
-	handle.io_watcher.fd = 10000;
+	handle->io_watcher.fd = 10000;
 #endif
-	impl->Attach(reinterpret_cast<uv_handle_t *>(&handle));
-	impl->Listen(128, nullptr);
 	impl->ShutdownReceive();
 	impl->SetNoDelay();
 	impl->SetKeepAlive(60);
+	impl->Listen(128, nullptr);
 	impl->Release();
-	uv_run(uv_default_loop(), UV_RUN_DEFAULT);
-	uv_loop_close(uv_default_loop());
+	uv_run(&loop, UV_RUN_DEFAULT);
+	uv_loop_close(&loop);
 }
 
 TEST(SocketTestSuite, FreeCatch) {

@@ -60,7 +60,6 @@ TEST(AllocatorTestSuite, object) {
 	TestObject * b = new TestObject(2);
 	TestObject * c = new(buf)TestObject(3);
 	delete b;
-	delete c;
 }
 
 TEST(AllocatorTestSuite, error) {
