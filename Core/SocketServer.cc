@@ -25,23 +25,25 @@
 #include "SocketServer.h"
 #include "SocketAcceptorImpl.h"
 
-Net::SocketServer::SocketServer(const std::string & name, EventReactor * reactor, int maxOutBufferSize, int maxInBufferSize)
+namespace Net {
+
+SocketServer::SocketServer(const std::string & name, EventReactor * reactor, i32 max_out_buffer_size, i32 max_in_buffer_size)
 	: SocketWrapperMgr(name), reactor_(reactor), accpetor_(nullptr)
-	, max_out_buffer_size_(maxOutBufferSize), max_in_buffer_size_(maxInBufferSize), listen_(false) {
+	, max_out_buffer_size_(max_out_buffer_size), max_in_buffer_size_(max_in_buffer_size), listen_(false) {
 }
 
-Net::SocketServer::~SocketServer() {
+SocketServer::~SocketServer() {
 	Terminate();
 }
 
-bool Net::SocketServer::Listen(const std::string & address, int port, int backlog, bool ipV6Only) {
+bool SocketServer::Listen(const std::string & address, i32 port, i32 backlog, bool ipv6_only) {
 	if (listen_) {
 		return false;
 	}
 	if (!accpetor_) {
 		accpetor_ = new SocketAcceptorImpl(reactor_, this, max_out_buffer_size_, max_in_buffer_size_);
 	}
-	if (accpetor_->Open(SocketAddress(address, static_cast<u16>(port)), backlog, ipV6Only)) {
+	if (accpetor_->Open(SocketAddress(IPAddress(address), static_cast<u16>(port)), backlog, ipv6_only)) {
 		listen_ = true;
 		return true;
 	} else {
@@ -51,7 +53,7 @@ bool Net::SocketServer::Listen(const std::string & address, int port, int backlo
 	}
 }
 
-bool Net::SocketServer::Terminate() {
+bool SocketServer::Terminate() {
 	if (!listen_) {
 		return false;
 	}
@@ -61,4 +63,6 @@ bool Net::SocketServer::Terminate() {
 		accpetor_ = nullptr;
 	}
 	return true;
+}
+
 }

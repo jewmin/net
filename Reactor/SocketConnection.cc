@@ -22,9 +22,9 @@
  * SOFTWARE.
  */
 
-#include "Logger.h"
-#include "Allocator.h"
-#include "SocketConnection.h"
+#include "Reactor/SocketConnection.h"
+#include "Common/Logger.h"
+#include "Common/Allocator.h"
 
 namespace Net {
 

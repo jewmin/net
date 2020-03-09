@@ -22,12 +22,12 @@
  * SOFTWARE.
  */
 
-#ifndef Net_SocketImpl_INCLUDED
-#define Net_SocketImpl_INCLUDED
+#ifndef Net_Sockets_SocketImpl_INCLUDED
+#define Net_Sockets_SocketImpl_INCLUDED
 
-#include "Logger.h"
-#include "RefCountedObject.h"
+#include "Common/RefCountedObject.h"
 #include "Address/SocketAddress.h"
+#include "Common/Logger.h"
 
 namespace Net {
 

@@ -29,77 +29,79 @@
 #include "Reactor/SocketConnection.h"
 
 namespace Net {
-	class SocketWrapperMgr;
-	class SocketWrapper : public INotification {
-	public:
-		SocketWrapper(SocketWrapperMgr * mgr, int maxOutBufferSize, int maxInBufferSize);
-		virtual ~SocketWrapper();
 
-		void Shutdown();
-		void ShutdownNow();
-		void NeedToShutdown();
-		int Write(const char * data, int len);
-		int Read(char * data, int len);
-		char * GetRecvData() const;
-		int GetRecvDataSize() const;
-		void PopRecvData(int size);
-		void SetMaxOutBufferSize(int size);
-		void SetMaxInBufferSize(int size);
-		int GetMaxOutBufferSize() const;
-		int GetMaxInBufferSize() const;
-		int GetOutBufferUsedSize();
-		void SetId(u32 id);
-		u32 GetId() const;
-		SocketWrapperMgr * GetMgr() const;
-		void SetIsRegister2Mgr(bool reg);
-		bool GetIsRegister2Mgr() const;
-		SocketConnection * GetConnection() const;
-		void SetRawRecv(bool isRaw);
-		bool IsRawRecv() const;
+class SocketWrapperMgr;
+class SocketWrapper : public INotification {
+public:
+	SocketWrapper(SocketWrapperMgr * mgr, i32 max_out_buffer_size, i32 max_in_buffer_size);
+	virtual ~SocketWrapper();
 
-	protected:
-		virtual void OnConnected();
-		virtual void OnConnectFailed(int reason);
-		virtual void OnDisconnected(bool isRemote);
-		virtual void OnNewDataReceived();
-		virtual void OnSomeDataSent();
-		virtual void OnError(int reason);
+	void Shutdown();
+	void ShutdownNow();
+	void NeedToShutdown();
+	int Write(const char * data, int len);
+	int Read(char * data, int len);
+	char * GetRecvData() const;
+	int GetRecvDataSize() const;
+	void PopRecvData(int size);
+	void SetMaxOutBufferSize(int size);
+	void SetMaxInBufferSize(int size);
+	int GetMaxOutBufferSize() const;
+	int GetMaxInBufferSize() const;
+	int GetOutBufferUsedSize();
+	void SetId(u32 id);
+	u32 GetId() const;
+	SocketWrapperMgr * GetMgr() const;
+	void SetIsRegister2Mgr(bool reg);
+	bool GetIsRegister2Mgr() const;
+	SocketConnection * GetConnection() const;
+	void SetRawRecv(bool is_raw);
+	bool IsRawRecv() const;
 
-	private:
-		u32 id_;
-		bool is_raw_recv_;
-		bool register_mgr_;
-		SocketWrapperMgr * mgr_;
-		SocketConnection * connection_;
-	};
-}
+protected:
+	virtual void OnConnected();
+	virtual void OnConnectFailed(int reason);
+	virtual void OnDisconnected(bool isRemote);
+	virtual void OnNewDataReceived();
+	virtual void OnSomeDataSent();
+	virtual void OnError(int reason);
 
-inline void Net::SocketWrapper::SetId(u32 id) {
+private:
+	u32 id_;
+	bool is_raw_recv_;
+	bool register_mgr_;
+	SocketWrapperMgr * mgr_;
+	SocketConnection * connection_;
+};
+
+inline void SocketWrapper::SetId(u32 id) {
 	id_ = id;
 }
 
-inline u32 Net::SocketWrapper::GetId() const {
+inline u32 SocketWrapper::GetId() const {
 	return id_;
 }
 
-inline Net::SocketWrapperMgr * Net::SocketWrapper::GetMgr() const {
+inline SocketWrapperMgr * SocketWrapper::GetMgr() const {
 	return mgr_;
 }
 
-inline void Net::SocketWrapper::SetIsRegister2Mgr(bool reg) {
+inline void SocketWrapper::SetIsRegister2Mgr(bool reg) {
 	register_mgr_ = reg;
 }
 
-inline bool Net::SocketWrapper::GetIsRegister2Mgr() const {
+inline bool SocketWrapper::GetIsRegister2Mgr() const {
 	return register_mgr_;
 }
 
-inline void Net::SocketWrapper::SetRawRecv(bool isRaw) {
-	is_raw_recv_ = isRaw;
+inline void SocketWrapper::SetRawRecv(bool is_raw) {
+	is_raw_recv_ = is_raw;
 }
 
-inline bool Net::SocketWrapper::IsRawRecv() const {
+inline bool SocketWrapper::IsRawRecv() const {
 	return is_raw_recv_;
+}
+
 }
 
 #endif

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include "Allocator.h"
+#include "Common/Allocator.h"
 
 typedef struct {
 	jc_malloc_func local_malloc;
@@ -80,7 +80,7 @@ Allocator::~Allocator() {
 	struct Chunk * next = nullptr;
 	while (chunk_list_) {
 		next = chunk_list_->next;
-		jc_allocator.local_free(chunk_list_);
+		jc_free(chunk_list_);
 		chunk_list_ = next;
 	}
 }
@@ -92,7 +92,7 @@ Allocator * Allocator::Get() {
 
 void * Allocator::Allocate(i32 size) {
 	if (size > LargeMaxBytes) {
-		return jc_allocator.local_malloc(size);
+		return jc_malloc(size);
 	} else {
 		Lock();
 		struct Obj * * free_list = GetFreeList(size);
@@ -113,7 +113,7 @@ void Allocator::DeAllocate(void * ptr, i32 size) {
 	}
 
 	if (size > LargeMaxBytes) {
-		jc_allocator.local_free(ptr);
+		jc_free(ptr);
 	} else {
 		Lock();
 		AppendToFreeList(ptr, size);
@@ -148,7 +148,7 @@ void * Allocator::Refill(i32 size) {
 
 void * Allocator::AllocateChunk(i32 size, i32 & num) {
 	i32 total_size = size * num;
-	struct Chunk * result = static_cast<struct Chunk *>(jc_allocator.local_malloc(sizeof(struct Chunk) + total_size));
+	struct Chunk * result = static_cast<struct Chunk *>(jc_malloc(sizeof(struct Chunk) + total_size));
 	if (result) {
 		result->size = total_size;
 		result->next = chunk_list_;

@@ -22,9 +22,9 @@
  * SOFTWARE.
  */
 
-#include "Logger.h"
-#include "StreamSocket.h"
-#include "StreamSocketImpl.h"
+#include "Sockets/StreamSocket.h"
+#include "Sockets/StreamSocketImpl.h"
+#include "Common/Logger.h"
 
 namespace Net {
 

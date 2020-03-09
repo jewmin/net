@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include "IPAddressImpl.h"
+#include "Address/IPAddressImpl.h"
 
 namespace Net {
 

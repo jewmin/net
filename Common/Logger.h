@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef Foundation_Logger_INCLUDED
-#define Foundation_Logger_INCLUDED
+#ifndef Net_Common_Logger_INCLUDED
+#define Net_Common_Logger_INCLUDED
 
 #include "Net.h"
 

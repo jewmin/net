@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef Net_EventHandler_INCLUDED
-#define Net_EventHandler_INCLUDED
+#ifndef Net_Reactor_EventHandler_INCLUDED
+#define Net_Reactor_EventHandler_INCLUDED
 
-#include "RefCountedObject.h"
-#include "EventReactor.h"
+#include "Reactor/EventReactor.h"
+#include "Common/RefCountedObject.h"
 
 namespace Net {
 

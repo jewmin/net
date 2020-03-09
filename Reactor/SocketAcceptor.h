@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef Net_SocketAcceptor_INCLUDED
-#define Net_SocketAcceptor_INCLUDED
+#ifndef Net_Reactor_SocketAcceptor_INCLUDED
+#define Net_Reactor_SocketAcceptor_INCLUDED
 
-#include "EventHandler.h"
-#include "SocketConnection.h"
+#include "Reactor/EventHandler.h"
+#include "Reactor/SocketConnection.h"
 #include "Sockets/ServerSocket.h"
 
 namespace Net {

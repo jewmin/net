@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "Net.h"
-#include "Allocator.h"
-#include "NetObject.h"
+#include "Common/Allocator.h"
+#include "Common/NetObject.h"
 
 void * AllocatorTestSuite_Malloc(size_t size) {
 	return nullptr;

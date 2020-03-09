@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#include "ServerSocket.h"
-#include "ServerSocketImpl.h"
+#include "Sockets/ServerSocket.h"
+#include "Sockets/ServerSocketImpl.h"
 
 namespace Net {
 

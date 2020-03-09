@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef Net_RefCountedObject_INCLUDED
-#define Net_RefCountedObject_INCLUDED
+#ifndef Net_Common_RefCountedObject_INCLUDED
+#define Net_Common_RefCountedObject_INCLUDED
 
-#include "Logger.h"
-#include "NetObject.h"
+#include "Common/Logger.h"
+#include "Common/NetObject.h"
 
 namespace Net {
 
@@ -70,6 +70,7 @@ private:
 	mutable RefCounter counter_;
 };
 
+// 模板类型 C 必须是 RefCountedObject 或其派生类
 template<class C>
 class RefPtr {
 public:
@@ -93,12 +94,12 @@ public:
 		return *this;
 	}
 
-	RefPtr & operator=(const RefPtr & ptr) {
-		if (this != &ptr) {
+	RefPtr & operator=(const RefPtr & rhs) {
+		if (this != &rhs) {
 			if (ptr_) {
 				ptr_->Release();
 			}
-			ptr_ = ptr.ptr_;
+			ptr_ = rhs.ptr_;
 			if (ptr_) {
 				ptr_->Duplicate();
 			}
@@ -112,7 +113,7 @@ public:
 		}
 	}
 
-	void Swap(RefPtr & ptr);
+	void Swap(RefPtr & rhs);
 	C * Duplicate();
 
 	C * operator->();
@@ -126,22 +127,22 @@ public:
 	bool operator!() const;
 	bool operator==(C * ptr) const;
 	bool operator==(const C * ptr) const;
-	bool operator==(const RefPtr & ptr) const;
+	bool operator==(const RefPtr & rhs) const;
 	bool operator!=(C * ptr) const;
 	bool operator!=(const C * ptr) const;
-	bool operator!=(const RefPtr & ptr) const;
+	bool operator!=(const RefPtr & rhs) const;
 	bool operator<(C * ptr) const;
 	bool operator<(const C * ptr) const;
-	bool operator<(const RefPtr & ptr) const;
+	bool operator<(const RefPtr & rhs) const;
 	bool operator<=(C * ptr) const;
 	bool operator<=(const C * ptr) const;
-	bool operator<=(const RefPtr & ptr) const;
+	bool operator<=(const RefPtr & rhs) const;
 	bool operator>(C * ptr) const;
 	bool operator>(const C * ptr) const;
-	bool operator>(const RefPtr & ptr) const;
+	bool operator>(const RefPtr & rhs) const;
 	bool operator>=(C * ptr) const;
 	bool operator>=(const C * ptr) const;
-	bool operator>=(const RefPtr & ptr) const;
+	bool operator>=(const RefPtr & rhs) const;
 
 protected:
 	C * Deref() const;
@@ -200,8 +201,8 @@ inline i32 Net::RefCountedObject::ReferenceCount() const {
 //*********************************************************************
 
 template<class C>
-inline void Net::RefPtr<C>::Swap(RefPtr & ptr) {
-	std::swap(ptr_, ptr.ptr_);
+inline void Net::RefPtr<C>::Swap(RefPtr & rhs) {
+	std::swap(ptr_, rhs.ptr_);
 }
 
 template<class C>
@@ -276,8 +277,8 @@ inline bool Net::RefPtr<C>::operator==(const C * ptr) const {
 }
 
 template<class C>
-inline bool Net::RefPtr<C>::operator==(const RefPtr & ptr) const {
-	return ptr_ == ptr.ptr_;
+inline bool Net::RefPtr<C>::operator==(const RefPtr & rhs) const {
+	return ptr_ == rhs.ptr_;
 }
 
 template<class C>
@@ -291,8 +292,8 @@ inline bool Net::RefPtr<C>::operator!=(const C * ptr) const {
 }
 
 template<class C>
-inline bool Net::RefPtr<C>::operator!=(const RefPtr & ptr) const {
-	return ptr_ != ptr.ptr_;
+inline bool Net::RefPtr<C>::operator!=(const RefPtr & rhs) const {
+	return ptr_ != rhs.ptr_;
 }
 
 template<class C>
@@ -306,8 +307,8 @@ inline bool Net::RefPtr<C>::operator<(const C * ptr) const {
 }
 
 template<class C>
-inline bool Net::RefPtr<C>::operator<(const RefPtr & ptr) const {
-	return ptr_ < ptr.ptr_;
+inline bool Net::RefPtr<C>::operator<(const RefPtr & rhs) const {
+	return ptr_ < rhs.ptr_;
 }
 
 template<class C>
@@ -321,8 +322,8 @@ inline bool Net::RefPtr<C>::operator<=(const C * ptr) const {
 }
 
 template<class C>
-inline bool Net::RefPtr<C>::operator<=(const RefPtr & ptr) const {
-	return ptr_ <= ptr.ptr_;
+inline bool Net::RefPtr<C>::operator<=(const RefPtr & rhs) const {
+	return ptr_ <= rhs.ptr_;
 }
 
 template<class C>
@@ -336,8 +337,8 @@ inline bool Net::RefPtr<C>::operator>(const C * ptr) const {
 }
 
 template<class C>
-inline bool Net::RefPtr<C>::operator>(const RefPtr & ptr) const {
-	return ptr_ > ptr.ptr_;
+inline bool Net::RefPtr<C>::operator>(const RefPtr & rhs) const {
+	return ptr_ > rhs.ptr_;
 }
 
 template<class C>
@@ -351,8 +352,8 @@ inline bool Net::RefPtr<C>::operator>=(const C * ptr) const {
 }
 
 template<class C>
-inline bool Net::RefPtr<C>::operator>=(const RefPtr & ptr) const {
-	return ptr_ >= ptr.ptr_;
+inline bool Net::RefPtr<C>::operator>=(const RefPtr & rhs) const {
+	return ptr_ >= rhs.ptr_;
 }
 
 }

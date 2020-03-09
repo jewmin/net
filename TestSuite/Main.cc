@@ -3,7 +3,7 @@
 #include "vld.h"
 #endif
 #include "Net.h"
-#include "Allocator.h"
+#include "Common/Allocator.h"
 
 void MyAbort() {
 	throw std::exception("abort");

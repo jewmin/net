@@ -29,20 +29,22 @@
 #include "Reactor/SocketConnector.h"
 
 namespace Net {
-	class SocketClient : public SocketWrapperMgr {
-	public:
-		SocketClient(const std::string & name, EventReactor * reactor, SocketConnector * connector, int maxOutBufferSize, int maxInBufferSize);
-		virtual ~SocketClient();
 
-		virtual bool Connect(const std::string & address, int port, u32 & id);
-		virtual bool Terminate();
+class SocketClient : public SocketWrapperMgr {
+public:
+	SocketClient(const std::string & name, EventReactor * reactor, SocketConnector * connector, i32 max_out_buffer_size, i32 max_in_buffer_size);
+	virtual ~SocketClient();
 
-	protected:
-		EventReactor * reactor_;
-		SocketConnector * connector_;
-		int max_out_buffer_size_;
-		int max_in_buffer_size_;
-	};
+	virtual bool Connect(const std::string & address, i32 port, u32 & id);
+	virtual bool Terminate();
+
+protected:
+	EventReactor * reactor_;
+	SocketConnector * connector_;
+	i32 max_out_buffer_size_;
+	i32 max_in_buffer_size_;
+};
+
 }
 
 #endif

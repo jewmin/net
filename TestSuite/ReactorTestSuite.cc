@@ -371,3 +371,11 @@ TEST(ReactorTestSuite, ReadError2) {
 	pAcceptor->Destroy();
 	delete pReactor;
 }
+
+TEST(ReactorTestSuite, ServerError) {
+	EventReactor * pReactor = new EventReactor();
+	SocketAcceptor * pAcceptor = new AcceptorImpl(pReactor);
+	pAcceptor->Open(SocketAddress(IPAddress("1.1.1.1"), 6789));
+	pAcceptor->Destroy();
+	delete pReactor;
+}

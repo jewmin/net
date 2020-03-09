@@ -30,21 +30,23 @@
 #include "Reactor/SocketAcceptor.h"
 
 namespace Net {
-	class SocketServer : public SocketWrapperMgr {
-	public:
-		SocketServer(const std::string & name, EventReactor * reactor, int maxOutBufferSize, int maxInBufferSize);
-		virtual ~SocketServer();
 
-		virtual bool Listen(const std::string & address, int port, int backlog = 128, bool ipV6Only = false);
-		virtual bool Terminate();
+class SocketServer : public SocketWrapperMgr {
+public:
+	SocketServer(const std::string & name, EventReactor * reactor, i32 max_out_buffer_size, i32 max_in_buffer_size);
+	virtual ~SocketServer();
 
-	protected:
-		EventReactor * reactor_;
-		SocketAcceptor * accpetor_;
-		int max_out_buffer_size_;
-		int max_in_buffer_size_;
-		bool listen_;
-	};
+	virtual bool Listen(const std::string & address, i32 port, i32 backlog = 128, bool ipv6_only = false);
+	virtual bool Terminate();
+
+protected:
+	EventReactor * reactor_;
+	SocketAcceptor * accpetor_;
+	i32 max_out_buffer_size_;
+	i32 max_in_buffer_size_;
+	bool listen_;
+};
+
 }
 
 #endif

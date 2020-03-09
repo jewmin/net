@@ -22,10 +22,10 @@
  * SOFTWARE.
  */
 
-#ifndef Net_IPAddress_INCLUDED
-#define Net_IPAddress_INCLUDED
+#ifndef Net_Address_IPAddress_INCLUDED
+#define Net_Address_IPAddress_INCLUDED
 
-#include "IPAddressImpl.h"
+#include "Address/IPAddressImpl.h"
 
 namespace Net {
 

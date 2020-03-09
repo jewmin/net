@@ -24,53 +24,57 @@
 
 #include "SocketConnectionImpl.h"
 
-Net::SocketConnectionImpl::SocketConnectionImpl(INotification * notification, int maxOutBufferSize, int maxInBufferSize)
-	: SocketConnection(maxOutBufferSize, maxInBufferSize), notification_(notification) {
+namespace Net {
+
+SocketConnectionImpl::SocketConnectionImpl(INotification * notification, i32 max_out_buffer_size, i32 max_in_buffer_size)
+	: SocketConnection(max_out_buffer_size, max_in_buffer_size), notification_(notification) {
 	if (!notification_) {
-		throw std::invalid_argument("notification is nullptr!");
+		Log(kCrash, __FILE__, __LINE__, "notification is nullptr!");
 	}
 }
 
-Net::SocketConnectionImpl::~SocketConnectionImpl() {
+SocketConnectionImpl::~SocketConnectionImpl() {
 }
 
-void Net::SocketConnectionImpl::Destroy() {
+void SocketConnectionImpl::Destroy() {
 	notification_ = nullptr;
 	SocketConnection::Destroy();
 }
 
-void Net::SocketConnectionImpl::OnConnected() {
+void SocketConnectionImpl::OnConnected() {
 	if (notification_) {
 		notification_->OnConnected();
 	}
 }
 
-void Net::SocketConnectionImpl::OnConnectFailed(int reason) {
+void SocketConnectionImpl::OnConnectFailed(int reason) {
 	if (notification_) {
 		notification_->OnConnectFailed(reason);
 	}
 }
 
-void Net::SocketConnectionImpl::OnDisconnected(bool isRemote) {
+void SocketConnectionImpl::OnDisconnected(bool is_remote) {
 	if (notification_) {
-		notification_->OnDisconnected(isRemote);
+		notification_->OnDisconnected(is_remote);
 	}
 }
 
-void Net::SocketConnectionImpl::OnNewDataReceived() {
+void SocketConnectionImpl::OnNewDataReceived() {
 	if (notification_) {
 		notification_->OnNewDataReceived();
 	}
 }
 
-void Net::SocketConnectionImpl::OnSomeDataSent() {
+void SocketConnectionImpl::OnSomeDataSent() {
 	if (notification_) {
 		notification_->OnSomeDataSent();
 	}
 }
 
-void Net::SocketConnectionImpl::OnError(int reason) {
+void SocketConnectionImpl::OnError(int reason) {
 	if (notification_) {
 		notification_->OnError(reason);
 	}
+}
+
 }

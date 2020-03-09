@@ -22,10 +22,10 @@
  * SOFTWARE.
  */
 
-#ifndef Net_SocketConnection_INCLUDED
-#define Net_SocketConnection_INCLUDED
+#ifndef Net_Reactor_SocketConnection_INCLUDED
+#define Net_Reactor_SocketConnection_INCLUDED
 
-#include "EventHandler.h"
+#include "Reactor/EventHandler.h"
 #include "Sockets/StreamSocket.h"
 
 namespace Net {

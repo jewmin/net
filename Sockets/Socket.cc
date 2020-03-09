@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#include "Socket.h"
-#include "StreamSocketImpl.h"
+#include "Sockets/Socket.h"
+#include "Sockets/StreamSocketImpl.h"
 
 namespace Net {
 

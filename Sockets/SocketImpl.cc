@@ -22,9 +22,9 @@
  * SOFTWARE.
  */
 
-#include "Allocator.h"
-#include "SocketImpl.h"
-#include "StreamSocketImpl.h"
+#include "Sockets/SocketImpl.h"
+#include "Sockets/StreamSocketImpl.h"
+#include "Common/Allocator.h"
 
 namespace Net {
 

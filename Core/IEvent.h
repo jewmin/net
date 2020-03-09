@@ -28,15 +28,17 @@
 #include "SocketWrapper.h"
 
 namespace Net {
-	class IEvent {
-	public:
-		virtual int OnConnected(SocketWrapper * wrapper) = 0;
-		virtual int OnConnectFailed(SocketWrapper * wrapper, int reason) = 0;
-		virtual int OnDisconnected(SocketWrapper * wrapper, bool isRemote) = 0;
-		virtual int OnNewDataReceived(SocketWrapper * wrapper) = 0;
-		virtual int OnSomeDataSent(SocketWrapper * wrapper) = 0;
-		// virtual int OnTick(SocketWrapper * wrapper) = 0;
-	};
+
+class IEvent {
+public:
+	virtual i32 OnConnected(SocketWrapper * wrapper) = 0;
+	virtual i32 OnConnectFailed(SocketWrapper * wrapper, i32 reason) = 0;
+	virtual i32 OnDisconnected(SocketWrapper * wrapper, bool is_remote) = 0;
+	virtual i32 OnNewDataReceived(SocketWrapper * wrapper) = 0;
+	virtual i32 OnSomeDataSent(SocketWrapper * wrapper) = 0;
+	// virtual i32 OnTick(SocketWrapper * wrapper) = 0;
+};
+
 }
 
 #endif

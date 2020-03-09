@@ -22,10 +22,10 @@
  * SOFTWARE.
  */
 
-#ifndef Net_EventReactor_INCLUDED
-#define Net_EventReactor_INCLUDED
+#ifndef Net_Reactor_EventReactor_INCLUDED
+#define Net_Reactor_EventReactor_INCLUDED
 
-#include "NetObject.h"
+#include "Common/NetObject.h"
 
 namespace Net {
 

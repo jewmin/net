@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#ifndef Net_ServerSocket_INCLUDED
-#define Net_ServerSocket_INCLUDED
+#ifndef Net_Sockets_ServerSocket_INCLUDED
+#define Net_Sockets_ServerSocket_INCLUDED
 
-#include "Socket.h"
-#include "StreamSocket.h"
+#include "Sockets/Socket.h"
+#include "Sockets/StreamSocket.h"
 
 namespace Net {
 

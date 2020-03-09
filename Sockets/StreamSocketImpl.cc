@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include "StreamSocketImpl.h"
+#include "Sockets/StreamSocketImpl.h"
 
 namespace Net {
 

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include "Logger.h"
+#include "Common/Logger.h"
 
 void WriteMessage(const i8 * msg, i32 length) {
 	write(STDERR_FILENO, msg, length);

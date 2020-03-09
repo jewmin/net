@@ -29,20 +29,22 @@
 #include "Reactor/SocketAcceptor.h"
 
 namespace Net {
-	class SocketAcceptorImpl : public SocketAcceptor {
-	public:
-		SocketAcceptorImpl(EventReactor * reactor, SocketServer * server, int maxOutBufferSize, int maxInBufferSize);
-		virtual ~SocketAcceptorImpl();
 
-	protected:
-		virtual void MakeConnection(SocketConnection * & connection);
-		virtual void OnAccepted(SocketConnection * connection);
+class SocketAcceptorImpl : public SocketAcceptor {
+public:
+	SocketAcceptorImpl(EventReactor * reactor, SocketServer * server, i32 max_out_buffer_size, i32 max_in_buffer_size);
+	virtual ~SocketAcceptorImpl();
 
-	private:
-		SocketServer * server_;
-		int max_out_buffer_size_;
-		int max_in_buffer_size_;
-	};
+protected:
+	virtual void MakeConnection(SocketConnection * & connection);
+	virtual void OnAccepted(SocketConnection * connection);
+
+private:
+	SocketServer * server_;
+	i32 max_out_buffer_size_;
+	i32 max_in_buffer_size_;
+};
+
 }
 
 #endif

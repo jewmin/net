@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "Logger.h"
+#include "Common/Logger.h"
 
 void LoggerTestSuite_Log(const i8 * msg, i32 length) {
 	static char buf[500];

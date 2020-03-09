@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef Net_AddressFamily_INCLUDED
-#define Net_AddressFamily_INCLUDED
+#ifndef Net_Address_AddressFamily_INCLUDED
+#define Net_Address_AddressFamily_INCLUDED
 
 namespace Net {
 

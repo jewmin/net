@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#include "Logger.h"
-#include "SocketAddress.h"
+#include "Address/SocketAddress.h"
+#include "Common/Logger.h"
 
 namespace Net {
 

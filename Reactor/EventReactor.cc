@@ -22,9 +22,9 @@
  * SOFTWARE.
  */
 
-#include "Logger.h"
-#include "EventReactor.h"
-#include "EventHandler.h"
+#include "Reactor/EventReactor.h"
+#include "Reactor/EventHandler.h"
+#include "Common/Logger.h"
 
 namespace Net {
 

@@ -22,10 +22,10 @@
  * SOFTWARE.
  */
 
-#ifndef Net_SocketAddress_INCLUDED
-#define Net_SocketAddress_INCLUDED
+#ifndef Net_Address_SocketAddress_INCLUDED
+#define Net_Address_SocketAddress_INCLUDED
 
-#include "SocketAddressImpl.h"
+#include "Address/SocketAddressImpl.h"
 
 namespace Net {
 

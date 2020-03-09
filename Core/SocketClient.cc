@@ -25,37 +25,41 @@
 #include "Logger.h"
 #include "SocketClient.h"
 
-Net::SocketClient::SocketClient(const std::string & name, EventReactor * reactor, SocketConnector * connector, int maxOutBufferSize, int maxInBufferSize)
-	: SocketWrapperMgr(name), reactor_(reactor), connector_(connector), max_out_buffer_size_(maxOutBufferSize), max_in_buffer_size_(maxInBufferSize) {
+namespace Net {
+
+SocketClient::SocketClient(const std::string & name, EventReactor * reactor, SocketConnector * connector, i32 max_out_buffer_size, i32 max_in_buffer_size)
+	: SocketWrapperMgr(name), reactor_(reactor), connector_(connector), max_out_buffer_size_(max_out_buffer_size), max_in_buffer_size_(max_in_buffer_size) {
 	if (connector_) {
 		connector_->Duplicate();
 	}
 }
 
-Net::SocketClient::~SocketClient() {
+SocketClient::~SocketClient() {
 	Terminate();
 }
 
-bool Net::SocketClient::Connect(const std::string & address, int port, u32 & id) {
+bool SocketClient::Connect(const std::string & address, i32 port, u32 & id) {
 	id = 0;
 	if (!connector_) {
 		connector_ = new SocketConnector(reactor_);
 	}
 	SocketWrapper * wrapper = new SocketWrapper(this, max_out_buffer_size_, max_in_buffer_size_);
 	id = Register(wrapper);
-	SocketAddress sa(address, static_cast<u16>(port));
-	int status = connector_->Connect(wrapper->GetConnection(), sa);
+	SocketAddress sa(IPAddress(address), static_cast<u16>(port));
+	i32 status = connector_->Connect(wrapper->GetConnection(), sa);
 	if (status < 0) {
-		Foundation::LogWarn("%s: 建立连接[%s]失败", GetName().c_str(), sa.ToString().c_str());
+		Log(kLog, __FILE__, __LINE__, "建立连接失败", GetName().c_str(), sa.ToString().c_str());
 		return false;
 	}
 	return true;
 }
 
-bool Net::SocketClient::Terminate() {
+bool SocketClient::Terminate() {
 	if (connector_) {
 		connector_->Destroy();
 		connector_ = nullptr;
 	}
 	return true;
+}
+
 }

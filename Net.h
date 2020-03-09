@@ -88,10 +88,10 @@ typedef void (*jc_free_func)(void * ptr);
 // 定义日志打印原子函数
 typedef void (*log_message_writer)(const i8 * msg, i32 length);
 
-// 定义日志崩溃函数
+// 定义日志崩溃处理函数
 typedef void (*log_abort)();
 
-// 动态库开放函数
+// 动态库开放函数，采用C语言函数
 #ifdef __cplusplus
 extern "C" {
 #endif

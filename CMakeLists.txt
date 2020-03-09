@@ -12,7 +12,9 @@ OPTION(RELEASE "compile the release version" OFF)
 # 平台
 IF(MSVC)
 	SET(WINDOWS ON)
+	SET(LINUX OFF)
 ELSEIF(CMAKE_COMPILER_IS_GNUCXX)
+	SET(WINDOWS OFF)
 	SET(LINUX ON)
 ENDIF()
 
@@ -25,16 +27,16 @@ MESSAGE(STATUS "LINUX:" ${LINUX})
 # 添加源文件
 SET(Common
 	${CMAKE_CURRENT_LIST_DIR}/Net.h
-	${CMAKE_CURRENT_LIST_DIR}/Allocator.h
-	${CMAKE_CURRENT_LIST_DIR}/Allocator.cc
-	${CMAKE_CURRENT_LIST_DIR}/NetObject.h
-	${CMAKE_CURRENT_LIST_DIR}/NetObject.cc
-	${CMAKE_CURRENT_LIST_DIR}/Logger.h
-	${CMAKE_CURRENT_LIST_DIR}/Logger.cc
+	${CMAKE_CURRENT_LIST_DIR}/Common/Allocator.h
+	${CMAKE_CURRENT_LIST_DIR}/Common/Allocator.cc
+	${CMAKE_CURRENT_LIST_DIR}/Common/NetObject.h
+	${CMAKE_CURRENT_LIST_DIR}/Common/NetObject.cc
+	${CMAKE_CURRENT_LIST_DIR}/Common/Logger.h
+	${CMAKE_CURRENT_LIST_DIR}/Common/Logger.cc
+	${CMAKE_CURRENT_LIST_DIR}/Common/RefCountedObject.h
 	# ${CMAKE_CURRENT_LIST_DIR}/ObjectMgr.h
 	# ${CMAKE_CURRENT_LIST_DIR}/Packet.hpp
 	# ${CMAKE_CURRENT_LIST_DIR}/PacketReader.hpp
-	${CMAKE_CURRENT_LIST_DIR}/RefCountedObject.h
 	# ${CMAKE_CURRENT_LIST_DIR}/SharedPtr.h
 )
 SET(Address
@@ -115,7 +117,7 @@ SET(all_srcs
 # MESSAGE(${all_srcs})
 
 # 生成目录结构
-SOURCE_GROUP("" FILES ${Common})
+SOURCE_GROUP(Common FILES ${Common})
 SOURCE_GROUP(Address FILES ${Address})
 SOURCE_GROUP(Sockets FILES ${Sockets})
 SOURCE_GROUP(Reactor FILES ${Reactor})

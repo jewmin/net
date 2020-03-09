@@ -29,22 +29,24 @@
 #include "Reactor/SocketConnection.h"
 
 namespace Net {
-	class SocketConnectionImpl : public SocketConnection {
-	public:
-		SocketConnectionImpl(INotification * notification, int maxOutBufferSize, int maxInBufferSize);
-		virtual ~SocketConnectionImpl();
 
-		virtual void Destroy();
-		virtual void OnConnected();
-		virtual void OnConnectFailed(int reason);
-		virtual void OnDisconnected(bool isRemote);
-		virtual void OnNewDataReceived();
-		virtual void OnSomeDataSent();
-		virtual void OnError(int reason);
+class SocketConnectionImpl : public SocketConnection {
+public:
+	SocketConnectionImpl(INotification * notification, i32 max_out_buffer_size, i32 max_in_buffer_size);
+	virtual ~SocketConnectionImpl();
 
-	private:
-		INotification * notification_;
-	};
+	virtual void Destroy();
+	virtual void OnConnected();
+	virtual void OnConnectFailed(int reason);
+	virtual void OnDisconnected(bool is_remote);
+	virtual void OnNewDataReceived();
+	virtual void OnSomeDataSent();
+	virtual void OnError(int reason);
+
+private:
+	INotification * notification_;
+};
+
 }
 
 #endif

@@ -25,17 +25,21 @@
 #include "SocketAcceptorImpl.h"
 #include "SocketWrapper.h"
 
-Net::SocketAcceptorImpl::SocketAcceptorImpl(EventReactor * reactor, SocketServer * server, int maxOutBufferSize, int maxInBufferSize)
-	: SocketAcceptor(reactor), server_(server), max_out_buffer_size_(maxOutBufferSize), max_in_buffer_size_(maxInBufferSize) {
+namespace Net {
+
+SocketAcceptorImpl::SocketAcceptorImpl(EventReactor * reactor, SocketServer * server, i32 max_out_buffer_size, i32 max_in_buffer_size)
+	: SocketAcceptor(reactor), server_(server), max_out_buffer_size_(max_out_buffer_size), max_in_buffer_size_(max_in_buffer_size) {
 }
 
-Net::SocketAcceptorImpl::~SocketAcceptorImpl() {
+SocketAcceptorImpl::~SocketAcceptorImpl() {
 }
 
-void Net::SocketAcceptorImpl::MakeConnection(SocketConnection * & connection) {
+void SocketAcceptorImpl::MakeConnection(SocketConnection * & connection) {
 	SocketWrapper * wrapper = new SocketWrapper(server_, max_out_buffer_size_, max_in_buffer_size_);
 	connection = wrapper->GetConnection();
 }
 
-void Net::SocketAcceptorImpl::OnAccepted(SocketConnection * connection) {
+void SocketAcceptorImpl::OnAccepted(SocketConnection * connection) {
+}
+
 }

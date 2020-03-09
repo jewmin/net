@@ -22,29 +22,24 @@
  * SOFTWARE.
  */
 
-#include "NetObject.h"
+#ifndef Net_Common_NetObject_INCLUDED
+#define Net_Common_NetObject_INCLUDED
+
+#include "Common/Allocator.h"
 
 namespace Net {
 
-NetObject::NetObject() {
-}
+class NetObject {
+public:
+	NetObject();
+	virtual ~NetObject();
 
-NetObject::~NetObject() {
-}
-
-void * NetObject::operator new(size_t object_size) {
-	return Allocator::Get()->Allocate(static_cast<i32>(object_size));
-}
-
-void * NetObject::operator new(size_t, void * object) {
-	return object;
-}
-
-void NetObject::operator delete(void * object, size_t object_size) {
-	Allocator::Get()->DeAllocate(object, static_cast<i32>(object_size));
-}
-
-void NetObject::operator delete(void *, void *) {
-}
+	static void * operator new(size_t object_size);
+	static void * operator new(size_t, void * object);
+	static void operator delete(void * object, size_t object_size);
+	static void operator delete(void *, void *);
+};
 
 }
+
+#endif

@@ -25,16 +25,20 @@
 #ifndef Net_INotification_INCLUDED
 #define Net_INotification_INCLUDED
 
+#include "NetObject.h"
+
 namespace Net {
-	class INotification {
-	public:
-		virtual void OnConnected() = 0;
-		virtual void OnConnectFailed(int reason) = 0;
-		virtual void OnDisconnected(bool isRemote) = 0;
-		virtual void OnNewDataReceived() = 0;
-		virtual void OnSomeDataSent() = 0;
-		virtual void OnError(int reason) = 0;
-	};
+
+class INotification : public NetObject {
+public:
+	virtual void OnConnected() = 0;
+	virtual void OnConnectFailed(i32 reason) = 0;
+	virtual void OnDisconnected(bool is_remote) = 0;
+	virtual void OnNewDataReceived() = 0;
+	virtual void OnSomeDataSent() = 0;
+	virtual void OnError(i32 reason) = 0;
+};
+
 }
 
 #endif

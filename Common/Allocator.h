@@ -22,11 +22,12 @@
  * SOFTWARE.
  */
 
-#ifndef Net_Allocator_INCLUDED
-#define Net_Allocator_INCLUDED
+#ifndef Net_Common_Allocator_INCLUDED
+#define Net_Common_Allocator_INCLUDED
 
 #include "Net.h"
 
+// 定义基本内存分配函数，所有内存分配都走这里
 void * jc_malloc(size_t size);
 void * jc_realloc(void * ptr, size_t size);
 void * jc_calloc(size_t count, size_t size);
@@ -41,8 +42,6 @@ class Allocator {
 public:
 	Allocator();
 	virtual ~Allocator();
-	Allocator(const Allocator &) = delete;
-	Allocator & operator=(const Allocator &) = delete;
 
 	void * Allocate(i32 size);
 	void DeAllocate(void * ptr, i32 size);
@@ -62,6 +61,11 @@ private:
 	void AppendToFreeList(void * ptr, i32 size);
 	void Lock();
 	void Unlock();
+
+	Allocator(Allocator &&) = delete;
+	Allocator(const Allocator &) = delete;
+	Allocator & operator=(Allocator &&) = delete;
+	Allocator & operator=(const Allocator &) = delete;
 
 protected:
 	static const i32 SmallAlign = 8;

@@ -23,10 +23,10 @@
  */
 
 
-#ifndef Net_ServerSocketImpl_INCLUDED
-#define Net_ServerSocketImpl_INCLUDED
+#ifndef Net_Sockets_ServerSocketImpl_INCLUDED
+#define Net_Sockets_ServerSocketImpl_INCLUDED
 
-#include "SocketImpl.h"
+#include "Sockets/SocketImpl.h"
 
 namespace Net {
 
