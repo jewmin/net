@@ -22,38 +22,40 @@
  * SOFTWARE.
  */
 
-#include "Logger.h"
-#include "SocketWrapper.h"
-#include "SocketWrapperMgr.h"
-#include "SocketConnectionImpl.h"
+#include "Core/SocketWrapper.h"
+#include "Core/SocketWrapperMgr.h"
+#include "Core/SocketConnectionImpl.h"
+#include "Common/Logger.h"
 
-Net::SocketWrapper::SocketWrapper(SocketWrapperMgr * mgr, int maxOutBufferSize, int maxInBufferSize) : id_(0), is_raw_recv_(false), register_mgr_(false), mgr_(mgr) {
+namespace Net {
+
+SocketWrapper::SocketWrapper(SocketWrapperMgr * mgr, int maxOutBufferSize, int maxInBufferSize) : id_(0), is_raw_recv_(false), register_mgr_(false), mgr_(mgr) {
 	if (!mgr_) {
-		throw std::invalid_argument("mgr is nullptr");
+		Log(kCrash, __FILE__, __LINE__, "mgr is nullptr");
 	}
 	connection_ = new SocketConnectionImpl(this, maxOutBufferSize, maxInBufferSize);
 }
 
-Net::SocketWrapper::~SocketWrapper() {
+SocketWrapper::~SocketWrapper() {
 	if (connection_) {
 		connection_->Destroy();
 		connection_ = nullptr;
 	}
 }
 
-void Net::SocketWrapper::Shutdown() {
+void SocketWrapper::Shutdown() {
 	connection_->Shutdown(false);
 }
 
-void Net::SocketWrapper::ShutdownNow() {
+void SocketWrapper::ShutdownNow() {
 	connection_->Shutdown(true);
 }
 
-void Net::SocketWrapper::NeedToShutdown() {
+void SocketWrapper::NeedToShutdown() {
 	mgr_->InsertToNeedToShutdownList(id_);
 }
 
-int Net::SocketWrapper::Write(const char * data, int len) {
+int SocketWrapper::Write(const char * data, int len) {
 	int status = 0;
 	if (len > 0) {
 		status = connection_->Write(data, len);
@@ -64,47 +66,47 @@ int Net::SocketWrapper::Write(const char * data, int len) {
 	return status;
 }
 
-int Net::SocketWrapper::Read(char * data, int len) {
+int SocketWrapper::Read(char * data, int len) {
 	return connection_->Read(data, len);
 }
 
-char * Net::SocketWrapper::GetRecvData() const {
+char * SocketWrapper::GetRecvData() const {
 	return connection_->GetRecvData();
 }
 
-int Net::SocketWrapper::GetRecvDataSize() const {
+int SocketWrapper::GetRecvDataSize() const {
 	return connection_->GetRecvDataSize();
 }
 
-void Net::SocketWrapper::PopRecvData(int size) {
+void SocketWrapper::PopRecvData(int size) {
 	connection_->PopRecvData(size);
 }
 
-void Net::SocketWrapper::SetMaxOutBufferSize(int size) {
+void SocketWrapper::SetMaxOutBufferSize(int size) {
 	connection_->SetMaxOutBufferSize(size);
 }
 
-void Net::SocketWrapper::SetMaxInBufferSize(int size) {
+void SocketWrapper::SetMaxInBufferSize(int size) {
 	connection_->SetMaxInBufferSize(size);
 }
 
-int Net::SocketWrapper::GetMaxOutBufferSize() const {
+int SocketWrapper::GetMaxOutBufferSize() const {
 	return connection_->GetMaxOutBufferSize();
 }
 
-int Net::SocketWrapper::GetMaxInBufferSize() const {
+int SocketWrapper::GetMaxInBufferSize() const {
 	return connection_->GetMaxInBufferSize();
 }
 
-int Net::SocketWrapper::GetOutBufferUsedSize() {
+int SocketWrapper::GetOutBufferUsedSize() {
 	return connection_->GetOutBufferUsedSize();
 }
 
-Net::SocketConnection * Net::SocketWrapper::GetConnection() const {
+SocketConnection * SocketWrapper::GetConnection() const {
 	return connection_;
 }
 
-void Net::SocketWrapper::OnConnected() {
+void SocketWrapper::OnConnected() {
 	mgr_->Register(this);
 	IEvent * event = mgr_->GetEvent();
 	if (event) {
@@ -114,7 +116,7 @@ void Net::SocketWrapper::OnConnected() {
 	}
 }
 
-void Net::SocketWrapper::OnConnectFailed(int reason) {
+void SocketWrapper::OnConnectFailed(int reason) {
 	IEvent * event = mgr_->GetEvent();
 	if (event) {
 		event->OnConnectFailed(this, reason);
@@ -122,7 +124,7 @@ void Net::SocketWrapper::OnConnectFailed(int reason) {
 	mgr_->UnRegister(this);
 }
 
-void Net::SocketWrapper::OnDisconnected(bool isRemote) {
+void SocketWrapper::OnDisconnected(bool isRemote) {
 	IEvent * event = mgr_->GetEvent();
 	if (event) {
 		event->OnDisconnected(this, isRemote);
@@ -130,7 +132,7 @@ void Net::SocketWrapper::OnDisconnected(bool isRemote) {
 	mgr_->UnRegister(this);
 }
 
-void Net::SocketWrapper::OnNewDataReceived() {
+void SocketWrapper::OnNewDataReceived() {
 	IEvent * event = mgr_->GetEvent();
 	if (event) {
 		if (event->OnNewDataReceived(this) == 1) {
@@ -139,7 +141,7 @@ void Net::SocketWrapper::OnNewDataReceived() {
 	}
 }
 
-void Net::SocketWrapper::OnSomeDataSent() {
+void SocketWrapper::OnSomeDataSent() {
 	IEvent * event = mgr_->GetEvent();
 	if (event) {
 		if (event->OnSomeDataSent(this) == 1) {
@@ -148,10 +150,12 @@ void Net::SocketWrapper::OnSomeDataSent() {
 	}
 }
 
-void Net::SocketWrapper::OnError(int reason) {
+void SocketWrapper::OnError(int reason) {
 	if (UV_EOF == reason) {
-		Foundation::LogInfo("连接[%u] OnError(%s): 收到对端EOF, 正常断开", id_, uv_err_name(reason));
+		Log(kLog, __FILE__, __LINE__, "连接[", id_, uv_err_name(reason), "]: 收到对端EOF, 正常断开");
 	} else if (UV_ECANCELED != reason) {
-		Foundation::LogWarn("连接[%u] OnError(%s): %s", id_, uv_err_name(reason), uv_strerror(reason));
+		Log(kLog, __FILE__, __LINE__, "连接", id_, uv_err_name(reason), uv_strerror(reason));
 	}
+}
+
 }

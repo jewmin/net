@@ -22,10 +22,10 @@
  * SOFTWARE.
  */
 
-#ifndef Net_INotification_INCLUDED
-#define Net_INotification_INCLUDED
+#ifndef Net_Core_INotification_INCLUDED
+#define Net_Core_INotification_INCLUDED
 
-#include "NetObject.h"
+#include "Common/NetObject.h"
 
 namespace Net {
 

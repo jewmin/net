@@ -22,10 +22,10 @@
  * SOFTWARE.
  */
 
-#ifndef Net_SocketAcceptorImpl_INCLUDED
-#define Net_SocketAcceptorImpl_INCLUDED
+#ifndef Net_Core_SocketAcceptorImpl_INCLUDED
+#define Net_Core_SocketAcceptorImpl_INCLUDED
 
-#include "SocketServer.h"
+#include "Core/SocketServer.h"
 #include "Reactor/SocketAcceptor.h"
 
 namespace Net {

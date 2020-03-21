@@ -22,10 +22,10 @@
  * SOFTWARE.
  */
 
-#ifndef Net_IEvent_INCLUDED
-#define Net_IEvent_INCLUDED
+#ifndef Net_Core_IEvent_INCLUDED
+#define Net_Core_IEvent_INCLUDED
 
-#include "SocketWrapper.h"
+#include "Core/SocketWrapper.h"
 
 namespace Net {
 

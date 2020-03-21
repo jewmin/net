@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include "SocketConnectionImpl.h"
+#include "Core/SocketConnectionImpl.h"
 
 namespace Net {
 

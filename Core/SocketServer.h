@@ -22,10 +22,10 @@
  * SOFTWARE.
  */
 
-#ifndef Net_SocketServer_INCLUDED
-#define Net_SocketServer_INCLUDED
+#ifndef Net_Core_SocketServer_INCLUDED
+#define Net_Core_SocketServer_INCLUDED
 
-#include "SocketWrapperMgr.h"
+#include "Core/SocketWrapperMgr.h"
 #include "Reactor/EventReactor.h"
 #include "Reactor/SocketAcceptor.h"
 

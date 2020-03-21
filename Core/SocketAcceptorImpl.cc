@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#include "SocketAcceptorImpl.h"
-#include "SocketWrapper.h"
+#include "Core/SocketAcceptorImpl.h"
+#include "Core/SocketWrapper.h"
 
 namespace Net {
 

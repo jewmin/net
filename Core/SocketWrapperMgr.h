@@ -22,46 +22,46 @@
  * SOFTWARE.
  */
 
-#ifndef Net_SocketWrapperMgr_INCLUDED
-#define Net_SocketWrapperMgr_INCLUDED
+#ifndef Net_Core_SocketWrapperMgr_INCLUDED
+#define Net_Core_SocketWrapperMgr_INCLUDED
 
-#include "IEvent.h"
+#include "Core/IEvent.h"
 #include "ObjectMgr.h"
-#include "SocketWrapper.h"
+#include "Core/SocketWrapper.h"
 
 namespace Net {
-	class SocketWrapperMgr {
-		friend class SocketWrapper;
-	public:
-		virtual SocketWrapper * GetSocketWrapper(u32 id);
-		virtual void ShutDownAllSocketWrappers();
-		virtual void ShutDownOneSocketWrapper(u32 id);
-		virtual void InsertToNeedToShutdownList(u32 id);
-		virtual u32 GetSocketWrapperCount() const;
-		virtual void Update();
-		void SetEvent(IEvent * event);
-		IEvent * GetEvent() const;
-		std::string GetName() const;
 
-	protected:
-		SocketWrapperMgr(const std::string & name);
-		virtual ~SocketWrapperMgr();
+class SocketWrapperMgr {
+	friend class SocketWrapper;
+public:
+	virtual SocketWrapper * GetSocketWrapper(u32 id);
+	virtual void ShutDownAllSocketWrappers();
+	virtual void ShutDownOneSocketWrapper(u32 id);
+	virtual void InsertToNeedToShutdownList(u32 id);
+	virtual u32 GetSocketWrapperCount() const;
+	virtual void Update();
+	void SetEvent(IEvent * event);
+	IEvent * GetEvent() const;
+	std::string GetName() const;
 
-		virtual u32 Register(SocketWrapper * wrapper);
-		virtual void UnRegister(SocketWrapper * wrapper);
-		void CleanDeathConnection();
+protected:
+	SocketWrapperMgr(const std::string & name);
+	virtual ~SocketWrapperMgr();
 
-	private:
-		static void ShutDownOneSocketWrapper(void * wrapper, void * ud);
+	virtual u32 Register(SocketWrapper * wrapper);
+	virtual void UnRegister(SocketWrapper * wrapper);
+	void CleanDeathConnection();
 
-	private:
-		IEvent * event_;
-		Foundation::ObjectMgr<SocketWrapper> * socket_list_;
-		std::list<u32> * need_to_shutdown_list_;
-		std::list<u32> * need_to_delete_list_;
-		std::string name_;
-	};
-}
+private:
+	static void ShutDownOneSocketWrapper(void * wrapper, void * ud);
+
+private:
+	IEvent * event_;
+	Foundation::ObjectMgr<SocketWrapper> * socket_list_;
+	std::list<u32> * need_to_shutdown_list_;
+	std::list<u32> * need_to_delete_list_;
+	std::string name_;
+};
 
 inline void Net::SocketWrapperMgr::SetEvent(IEvent * event) {
 	event_ = event;
@@ -73,6 +73,8 @@ inline Net::IEvent * Net::SocketWrapperMgr::GetEvent() const {
 
 inline std::string Net::SocketWrapperMgr::GetName() const {
 	return name_;
+}
+
 }
 
 #endif

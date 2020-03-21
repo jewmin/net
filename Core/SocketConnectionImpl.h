@@ -22,10 +22,10 @@
  * SOFTWARE.
  */
 
-#ifndef Net_SocketConnectionImpl_INCLUDED
-#define Net_SocketConnectionImpl_INCLUDED
+#ifndef Net_Core_SocketConnectionImpl_INCLUDED
+#define Net_Core_SocketConnectionImpl_INCLUDED
 
-#include "INotification.h"
+#include "Core/INotification.h"
 #include "Reactor/SocketConnection.h"
 
 namespace Net {
