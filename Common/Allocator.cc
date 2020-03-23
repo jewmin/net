@@ -38,16 +38,16 @@ static jc_allocator_t jc_allocator = {
 	std::free,
 };
 
-i32 jc_replace_allocator(jc_malloc_func malloc_func, jc_realloc_func realloc_func, jc_calloc_func calloc_func, jc_free_func free_func) {
+bool jc_replace_allocator(jc_malloc_func malloc_func, jc_realloc_func realloc_func, jc_calloc_func calloc_func, jc_free_func free_func) {
 	if (nullptr == malloc_func || nullptr == realloc_func || nullptr == calloc_func || nullptr == free_func) {
-		return -1;
+		return false;
 	}
 
 	jc_allocator.local_malloc = malloc_func;
 	jc_allocator.local_realloc = realloc_func;
 	jc_allocator.local_calloc = calloc_func;
 	jc_allocator.local_free = free_func;
-	return 0;
+	return true;
 }
 
 void * jc_malloc(size_t size) {
@@ -64,163 +64,4 @@ void * jc_calloc(size_t count, size_t size) {
 
 void jc_free(void * ptr) {
 	jc_allocator.local_free(ptr);
-}
-
-namespace Net {
-
-Allocator::Allocator() {
-	for (i32 i = 0; i < TotalFreeListSize; ++i) {
-		free_list_[i] = nullptr;
-	}
-	chunk_list_ = nullptr;
-	mutex_ = nullptr;
-}
-
-Allocator::~Allocator() {
-	struct Chunk * next = nullptr;
-	while (chunk_list_) {
-		next = chunk_list_->next;
-		jc_free(chunk_list_);
-		chunk_list_ = next;
-	}
-}
-
-Allocator * Allocator::Get() {
-	static Allocator instance;
-	return &instance;
-}
-
-void * Allocator::Allocate(i32 size) {
-	if (size > LargeMaxBytes) {
-		return jc_malloc(size);
-	} else {
-		Lock();
-		struct Obj * * free_list = GetFreeList(size);
-		struct Obj * result = *free_list;
-		if (result) {
-			*free_list = result->next;
-		} else {
-			result = static_cast<Obj *>(Refill(RoundUpSize(size)));
-		}
-		Unlock();
-		return result;
-	}
-}
-
-void Allocator::DeAllocate(void * ptr, i32 size) {
-	if (!ptr || 0 == size) {
-		return;
-	}
-
-	if (size > LargeMaxBytes) {
-		jc_free(ptr);
-	} else {
-		Lock();
-		AppendToFreeList(ptr, size);
-		Unlock();
-	}
-}
-
-void * Allocator::Refill(i32 size) {
-	i32 num = 20;
-	void * chunk = AllocateChunk(size, num);
-	if (!chunk || 1 == num) {
-		return chunk;
-	}
-
-	struct Obj * * free_list = GetFreeList(size);
-	struct Obj * result = static_cast<struct Obj *>(chunk);
-	struct Obj * current = nullptr;
-	struct Obj * next = nullptr;
-	*free_list = next = reinterpret_cast<struct Obj *>(static_cast<i8 *>(chunk) + size);
-	for (i32 i = 1; ; ++i) {
-		current = next;
-		next = reinterpret_cast<struct Obj *>(reinterpret_cast<i8 *>(next) + size);
-		if (num - 1 == i) {
-			current->next = nullptr;
-			break;
-		} else {
-			current->next = next;
-		}
-	}
-	return result;
-}
-
-void * Allocator::AllocateChunk(i32 size, i32 & num) {
-	i32 total_size = size * num;
-	struct Chunk * result = static_cast<struct Chunk *>(jc_malloc(sizeof(struct Chunk) + total_size));
-	if (result) {
-		result->size = total_size;
-		result->next = chunk_list_;
-		chunk_list_ = result;
-		return result + 1;
-	}
-
-	for (i32 i = size; i <= SmallMaxBytes; i += SmallAlign) {
-		struct Obj * * free_list = GetFreeList(i);
-		struct Obj * ptr = *free_list;
-		if (ptr) {
-			*free_list = ptr->next;
-			num = i / size;
-			i32 left = i - size * num;
-			if (left > 0) {
-				AppendToFreeList(reinterpret_cast<i8 *>(ptr) + size * num, left);
-			}
-			return ptr;
-		}
-	}
-
-	for (i32 i = SmallMaxBytes + LargeAlign; i <= LargeMaxBytes; i += LargeAlign) {
-		struct Obj * * free_list = GetFreeList(i);
-		struct Obj * ptr = *free_list;
-		if (ptr) {
-			*free_list = ptr->next;
-			num = i / size;
-			i32 left = i - size * num;
-			if (left > 0) {
-				AppendToFreeList(reinterpret_cast<i8 *>(ptr) + size * num, left);
-			}
-			return ptr;
-		}
-	}
-
-	return nullptr;
-}
-
-void Allocator::AppendToFreeList(void * ptr, i32 size) {
-	struct Obj * * free_list = GetFreeList(size);
-	struct Obj * result = static_cast<struct Obj *>(ptr);
-	result->next = *free_list;
-	*free_list = result;
-}
-
-void Allocator::Stat(i32 & alloc, i32 & used) {
-	used = alloc = 0;
-
-	struct Chunk * next_chunk = chunk_list_;
-	while (next_chunk) {
-		alloc += next_chunk->size;
-		next_chunk = next_chunk->next;
-	}
-
-	i32 i, j, unused = 0;
-	struct Obj * next_obj = nullptr;
-	for (i = 1, j = SmallAlign; j <= SmallMaxBytes; ++i, j += SmallAlign) {
-		next_obj = free_list_[i];
-		while (next_obj) {
-			unused += j;
-			next_obj = next_obj->next;
-		}
-	}
-	for (j = SmallMaxBytes + LargeAlign; j <= LargeMaxBytes; ++i, j += LargeAlign) {
-		next_obj = free_list_[i];
-		while (next_obj) {
-			unused += j;
-			next_obj = next_obj->next;
-		}
-	}
-
-	used = alloc - unused;
-}
-
 }

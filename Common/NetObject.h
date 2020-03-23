@@ -25,7 +25,7 @@
 #ifndef Net_Common_NetObject_INCLUDED
 #define Net_Common_NetObject_INCLUDED
 
-#include "Common/Allocator.h"
+#include "Net.h"
 
 namespace Net {
 
@@ -35,8 +35,9 @@ public:
 	virtual ~NetObject();
 
 	static void * operator new(size_t object_size);
-	static void * operator new(size_t, void * object);
 	static void operator delete(void * object, size_t object_size);
+
+	static void * operator new(size_t, void * object);
 	static void operator delete(void *, void *);
 };
 

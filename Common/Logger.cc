@@ -35,22 +35,22 @@ void DefaultAbort() {
 static log_message_writer jc_logger = WriteMessage;
 static log_abort jc_abort = DefaultAbort;
 
-i32 jc_replace_logger(log_message_writer log_func) {
+bool jc_replace_logger(log_message_writer log_func) {
 	if (nullptr == log_func) {
-		return -1;
+		return false;
 	}
 
 	jc_logger = log_func;
-	return 0;
+	return true;
 }
 
-i32 jc_replace_abort(log_abort abort_func) {
+bool jc_replace_abort(log_abort abort_func) {
 	if (nullptr == abort_func) {
-		return -1;
+		return false;
 	}
 
 	jc_abort = abort_func;
-	return 0;
+	return true;
 }
 
 namespace Net {
@@ -71,8 +71,7 @@ public:
 
 bool Logger::Add(const LogItem & item) {
 	if (p_ < end_) {
-		*p_ = ' ';
-		++p_;
+		*p_++ = ' ';
 	}
 
 	switch (item.tag_) {
@@ -137,8 +136,7 @@ void Log(LogMode mode, const i8 * filename, i32 line, LogItem a, LogItem b, LogI
 	if (state.p_ >= state.end_) {
 		state.p_ = state.end_ - 1;
 	}
-	*state.p_ = '\n';
-	++state.p_;
+	*state.p_++ = '\n';
 
 	jc_logger(state.buf_, static_cast<i32>(state.p_ - state.buf_));
 	if (kCrash == mode) {

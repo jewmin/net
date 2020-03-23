@@ -23,6 +23,7 @@
  */
 
 #include "Common/NetObject.h"
+#include "Common/Allocator.h"
 
 namespace Net {
 
@@ -33,15 +34,15 @@ NetObject::~NetObject() {
 }
 
 void * NetObject::operator new(size_t object_size) {
-	return Allocator::Get()->Allocate(static_cast<i32>(object_size));
+	return jc_malloc(object_size);
+}
+
+void NetObject::operator delete(void * object, size_t object_size) {
+	jc_free(object);
 }
 
 void * NetObject::operator new(size_t, void * object) {
 	return object;
-}
-
-void NetObject::operator delete(void * object, size_t object_size) {
-	Allocator::Get()->DeAllocate(object, static_cast<i32>(object_size));
 }
 
 void NetObject::operator delete(void *, void *) {
