@@ -58,13 +58,13 @@ public:
 	IPv4AddressImpl(const IPv4AddressImpl & rhs);
 	IPv4AddressImpl & operator=(const IPv4AddressImpl & rhs);
 	virtual ~IPv4AddressImpl();
-	
-	virtual std::string ToString() const;
-	virtual socklen_t Length() const;
-	virtual const void * Addr() const;
-	virtual AddressFamily::Family Family() const;
-	virtual i32 AF() const;
-	virtual u32 Scope() const;
+
+	std::string ToString() const override;
+	socklen_t Length() const override;
+	const void * Addr() const override;
+	AddressFamily::Family Family() const override;
+	i32 AF() const override;
+	u32 Scope() const override;
 	bool operator==(const IPv4AddressImpl & rhs) const;
 	bool operator!=(const IPv4AddressImpl & rhs) const;
 
@@ -82,12 +82,12 @@ public:
 	IPv6AddressImpl & operator=(const IPv6AddressImpl & rhs);
 	virtual ~IPv6AddressImpl();
 
-	virtual std::string ToString() const;
-	virtual socklen_t Length() const;
-	virtual const void * Addr() const;
-	virtual AddressFamily::Family Family() const;
-	virtual i32 AF() const;
-	virtual u32 Scope() const;
+	std::string ToString() const override;
+	socklen_t Length() const override;
+	const void * Addr() const override;
+	AddressFamily::Family Family() const override;
+	i32 AF() const override;
+	u32 Scope() const override;
 	bool operator==(const IPv6AddressImpl & rhs) const;
 	bool operator!=(const IPv6AddressImpl & rhs) const;
 

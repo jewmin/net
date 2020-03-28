@@ -57,13 +57,13 @@ public:
 	explicit IPv4SocketAddressImpl(const struct sockaddr_in * addr);
 	virtual ~IPv4SocketAddressImpl();
 
-	virtual IPAddress Host() const;
-	virtual u16 Port() const;
-	virtual socklen_t Length() const;
-	virtual const struct sockaddr * Addr() const;
-	virtual i32 AF() const;
-	virtual AddressFamily::Family Family() const;
-	virtual std::string ToString() const;
+	IPAddress Host() const override;
+	u16 Port() const override;
+	socklen_t Length() const override;
+	const struct sockaddr * Addr() const override;
+	i32 AF() const override;
+	AddressFamily::Family Family() const override;
+	std::string ToString() const override;
 	
 private:
 	struct sockaddr_in addr_;
@@ -75,13 +75,13 @@ public:
 	explicit IPv6SocketAddressImpl(const struct sockaddr_in6 * addr);
 	virtual ~IPv6SocketAddressImpl();
 
-	virtual IPAddress Host() const;
-	virtual u16 Port() const;
-	virtual socklen_t Length() const;
-	virtual const struct sockaddr * Addr() const;
-	virtual i32 AF() const;
-	virtual AddressFamily::Family Family() const;
-	virtual std::string ToString() const;
+	IPAddress Host() const override;
+	u16 Port() const override;
+	socklen_t Length() const override;
+	const struct sockaddr * Addr() const override;
+	i32 AF() const override;
+	AddressFamily::Family Family() const override;
+	std::string ToString() const override;
 
 private:
 	struct sockaddr_in6 addr_;
