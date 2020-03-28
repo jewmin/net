@@ -37,28 +37,18 @@ SocketImpl::~SocketImpl() {
 
 void SocketImpl::Open(uv_loop_t * loop) {
 	if (!handle_) {
-		handle_ = static_cast<uv_handle_t *>(Allocator::Get()->Allocate(sizeof(uv_tcp_t)));
+		handle_ = static_cast<uv_handle_t *>(jc_malloc(sizeof(uv_tcp_t)));
 		uv_tcp_init(loop, reinterpret_cast<uv_tcp_t *>(handle_));
 		handle_->data = nullptr;
 	}
 }
 
-void SocketImpl::Close(uv_close_cb cb) {
+void SocketImpl::Close() {
 	if (handle_) {
 		if (!uv_is_closing(handle_)) {
-			uv_close(handle_, cb);
+			uv_close(handle_, close_cb);
 		}
 		handle_ = nullptr;
-	}
-}
-
-void SocketImpl::FreeHandle(uv_handle_t * handle) {
-	if (handle) {
-		if (UV_TCP == handle->type) {
-			Allocator::Get()->DeAllocate(handle, sizeof(uv_tcp_t));
-		} else {
-			Log(kCrash, __FILE__, __LINE__, "释放内存失败", uv_handle_type_name(handle->type));
-		}
 	}
 }
 
@@ -71,32 +61,36 @@ i32 SocketImpl::Bind(const SocketAddress & address, bool ipv6_only, bool reuse_a
 		}
 		status = uv_tcp_bind(reinterpret_cast<uv_tcp_t *>(handle_), address.Addr(), flags);
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "绑定端口失败", address.ToString().c_str(), uv_strerror(status));
+			Log(kLog, __FILE__, __LINE__, "uv_tcp_bind()", address.ToString().c_str(), uv_strerror(status));
 			Close();
 		}
 	}
 	return status;
 }
 
-i32 SocketImpl::Listen(i32 backlog, uv_connection_cb cb) {
+i32 SocketImpl::Listen(i32 backlog) {
 	i32 status = UV_UNKNOWN;
 	if (handle_ && UV_TCP == handle_->type) {
-		status = uv_listen(reinterpret_cast<uv_stream_t *>(handle_), backlog, cb);
+		status = uv_listen(reinterpret_cast<uv_stream_t *>(handle_), backlog, connection_cb);
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "监听端口失败", uv_strerror(status));
+			Log(kLog, __FILE__, __LINE__, "uv_listen()", LocalAddress().ToString().c_str(), uv_strerror(status));
 			Close();
 		}
 	}
 	return status;
 }
 
-i32 SocketImpl::Connect(const SocketAddress & address, uv_connect_t * req, uv_connect_cb cb) {
+i32 SocketImpl::Connect(const SocketAddress & address, void * arg) {
 	i32 status = UV_UNKNOWN;
 	if (handle_ && UV_TCP == handle_->type) {
-		status = uv_tcp_connect(req, reinterpret_cast<uv_tcp_t *>(handle_), address.Addr(), cb);
+		uv_connect_t * req = static_cast<uv_connect_t *>(jc_malloc(sizeof(uv_connect_t)));
+		status = uv_tcp_connect(req, reinterpret_cast<uv_tcp_t *>(handle_), address.Addr(), connect_cb);
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "连接远端失败", address.ToString().c_str(), uv_strerror(status));
+			jc_free(req);
+			Log(kLog, __FILE__, __LINE__, "uv_tcp_connect()", address.ToString().c_str(), uv_strerror(status));
 			Close();
+		} else {
+			req->data = arg;
 		}
 	}
 	return status;
@@ -106,58 +100,64 @@ SocketImpl * SocketImpl::AcceptConnection(SocketAddress & client_address) {
 	if (handle_ && UV_TCP == handle_->type) {
 		SocketImpl * client = new StreamSocketImpl();
 		client->Open(handle_->loop);
-		i32 status = uv_accept(reinterpret_cast<uv_stream_t *>(handle_), reinterpret_cast<uv_stream_t *>(client->GetHandle()));
-		if (0 == status) {
-			struct sockaddr_storage buffer;
-			struct sockaddr * sa = reinterpret_cast<struct sockaddr *>(&buffer);
-			socklen_t len = sizeof(buffer);
-			status = uv_tcp_getpeername(reinterpret_cast<uv_tcp_t *>(client->GetHandle()), sa, reinterpret_cast<i32 *>(&len));
-			if (0 == status) {
-				client_address = SocketAddress(sa, len);
-				return client;
-			}
+		i32 status = uv_accept(reinterpret_cast<uv_stream_t *>(handle_), reinterpret_cast<uv_stream_t *>(client->handle_));
+		if (status < 0) {
+			Log(kLog, __FILE__, __LINE__, "uv_accept()", LocalAddress().ToString().c_str(), uv_strerror(status));
+			client->Release();
+		} else {
+			client_address = client->RemoteAddress();
+			return client;
 		}
-		Log(kLog, __FILE__, __LINE__, "接受连接失败", uv_strerror(status));
-		client->Release();
 	}
 	return nullptr;
 }
 
-void SocketImpl::ShutdownReceive() {
-	if (handle_ && UV_TCP == handle_->type) {
-		i32 status = uv_read_stop(reinterpret_cast<uv_stream_t *>(handle_));
-		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "关闭接收端失败", uv_strerror(status));
-		}
+i32 SocketImpl::Shutdown(void * arg) {
+	i32 status = ShutdownSend(arg);
+	if (0 == status) {
+		status = ShutdownReceive();
 	}
+	return status;
 }
 
-void SocketImpl::ShutdownSend(uv_shutdown_t * req, uv_shutdown_cb cb) {
-	if (handle_ && UV_TCP == handle_->type) {
-		i32 status = uv_shutdown(req, reinterpret_cast<uv_stream_t *>(handle_), cb);
-		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "关闭发送端失败", uv_strerror(status));
-		}
-	}
-}
-
-void SocketImpl::Shutdown(uv_shutdown_t * req, uv_shutdown_cb cb) {
-	ShutdownReceive();
-	ShutdownSend(req, cb);
-}
-
-i32 SocketImpl::Established(uv_alloc_cb allocCb, uv_read_cb readCb) {
+i32 SocketImpl::ShutdownSend(void * arg) {
 	i32 status = UV_UNKNOWN;
 	if (handle_ && UV_TCP == handle_->type) {
-		status = uv_read_start(reinterpret_cast<uv_stream_t *>(handle_), allocCb, readCb);
+		uv_shutdown_t * req = static_cast<uv_shutdown_t *>(jc_malloc(sizeof(uv_shutdown_t)));
+		status = uv_shutdown(req, reinterpret_cast<uv_stream_t *>(handle_), shutdown_cb);
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "开始读数据失败", uv_strerror(status));
+			jc_free(req);
+			Log(kLog, __FILE__, __LINE__, "uv_shutdown()", uv_strerror(status));
+		} else {
+			req->data = arg;
 		}
 	}
 	return status;
 }
 
-i32 SocketImpl::Send(const i8 * data, i32 len, uv_write_t * req, uv_write_cb cb) {
+i32 SocketImpl::ShutdownReceive() {
+	i32 status = UV_UNKNOWN;
+	if (handle_ && UV_TCP == handle_->type) {
+		status = uv_read_stop(reinterpret_cast<uv_stream_t *>(handle_));
+		if (status < 0) {
+			Log(kLog, __FILE__, __LINE__, "uv_read_stop()", uv_strerror(status));
+		}
+	}
+	return status;
+}
+
+i32 SocketImpl::Established() {
+	i32 status = UV_UNKNOWN;
+	if (handle_ && UV_TCP == handle_->type) {
+		status = uv_read_start(reinterpret_cast<uv_stream_t *>(handle_), alloc_cb, read_cb);
+		if (status < 0) {
+			Log(kLog, __FILE__, __LINE__, "uv_read_start()", uv_strerror(status));
+		}
+	}
+	return status;
+}
+
+i32 SocketImpl::Send(const i8 * data, i32 len, void * arg) {
 	if (!handle_ || UV_TCP != handle_->type) {
 		return UV_EPROTONOSUPPORT;
 	}
@@ -165,10 +165,14 @@ i32 SocketImpl::Send(const i8 * data, i32 len, uv_write_t * req, uv_write_cb cb)
 		return UV_ENOBUFS;
 	}
 	uv_buf_t buf = uv_buf_init(const_cast<i8 *>(data), len);
-	i32 status = uv_write(req, reinterpret_cast<uv_stream_t * >(handle_), &buf, 1, cb);
+	uv_write_t * req = static_cast<uv_write_t *>(jc_malloc(sizeof(uv_write_t)));
+	i32 status = uv_write(req, reinterpret_cast<uv_stream_t * >(handle_), &buf, 1, write_cb);
 	if (status < 0) {
-		Log(kLog, __FILE__, __LINE__, "发送数据失败", uv_strerror(status));
+		jc_free(req);
+		Log(kLog, __FILE__, __LINE__, "uv_write()", uv_strerror(status));
 		return status;
+	} else {
+		req->data = arg;
 	}
 	return len;
 }
@@ -177,7 +181,7 @@ void SocketImpl::SetSendBufferSize(i32 size) {
 	if (handle_) {
 		i32 status = uv_send_buffer_size(handle_, &size);
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "设置发送缓冲大小失败", uv_strerror(status));
+			Log(kLog, __FILE__, __LINE__, "uv_send_buffer_size() set SO_SNDBUF error", uv_strerror(status));
 		}
 	}
 }
@@ -187,7 +191,7 @@ i32 SocketImpl::GetSendBufferSize() {
 	if (handle_) {
 		i32 status = uv_send_buffer_size(handle_, &size);
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "获取发送缓冲大小失败", uv_strerror(status));
+			Log(kLog, __FILE__, __LINE__, "uv_send_buffer_size() get SO_SNDBUF error", uv_strerror(status));
 		}
 	}
 	return size;
@@ -197,7 +201,7 @@ void SocketImpl::SetReceiveBufferSize(i32 size) {
 	if (handle_) {
 		i32 status = uv_recv_buffer_size(handle_, &size);
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "设置接收缓冲大小失败", uv_strerror(status));
+			Log(kLog, __FILE__, __LINE__, "uv_recv_buffer_size() set SO_RCVBUF error", uv_strerror(status));
 		}
 	}
 }
@@ -207,7 +211,7 @@ i32 SocketImpl::GetReceiveBufferSize() {
 	if (handle_) {
 		i32 status = uv_recv_buffer_size(handle_, &size);
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "获取接收缓冲大小失败", uv_strerror(status));
+			Log(kLog, __FILE__, __LINE__, "uv_recv_buffer_size() get SO_RCVBUF error", uv_strerror(status));
 		}
 	}
 	return size;
@@ -220,7 +224,7 @@ SocketAddress SocketImpl::LocalAddress() {
 		socklen_t len = sizeof(buffer);
 		i32 status = uv_tcp_getsockname(reinterpret_cast<uv_tcp_t *>(handle_), sa, reinterpret_cast<i32 *>(&len));
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "获取本地地址失败", uv_strerror(status));
+			Log(kLog, __FILE__, __LINE__, "uv_tcp_getsockname()", uv_strerror(status));
 		} else {
 			return SocketAddress(sa, len);
 		}
@@ -235,7 +239,7 @@ SocketAddress SocketImpl::RemoteAddress() {
 		socklen_t len = sizeof(buffer);
 		i32 status = uv_tcp_getpeername(reinterpret_cast<uv_tcp_t *>(handle_), sa, reinterpret_cast<i32 *>(&len));
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "获取远端地址失败", uv_strerror(status));
+			Log(kLog, __FILE__, __LINE__, "uv_tcp_getpeername()", uv_strerror(status));
 		} else {
 			return SocketAddress(sa, len);
 		}
@@ -248,7 +252,7 @@ void SocketImpl::SetNoDelay() {
 		i32 status = uv_tcp_nodelay(reinterpret_cast<uv_tcp_t *>(handle_), 1);
 		status = uv_translate_sys_error(status);
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "禁止Negale算法失败", uv_strerror(status));
+			Log(kLog, __FILE__, __LINE__, "uv_tcp_nodelay()", uv_strerror(status));
 		}
 	}
 }
@@ -258,9 +262,97 @@ void SocketImpl::SetKeepAlive(i32 interval) {
 		i32 status = uv_tcp_keepalive(reinterpret_cast<uv_tcp_t *>(handle_), 1, interval);
 		status = uv_translate_sys_error(status);
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "设置KeepAlive机制失败", uv_strerror(status));
+			Log(kLog, __FILE__, __LINE__, "uv_tcp_keepalive()", uv_strerror(status));
 		}
 	}
+}
+
+void SocketImpl::SetUvData(UvData * data) {
+	if (!handle_) {
+		Log(kCrash, __FILE__, __LINE__, "SetUvData() handle_ is nullptr");
+	}
+	void * old_data = handle_->data;
+	handle_->data = data;
+	if (data) {
+		data->Duplicate();
+	}
+	if (old_data) {
+		static_cast<UvData *>(old_data)->Release();
+	}
+}
+
+//*********************************************************************
+//Callback
+//*********************************************************************
+
+void SocketImpl::close_cb(uv_handle_t * handle) {
+	UvData * data = static_cast<UvData *>(handle->data);
+	if (data) {
+		data->CloseCallback();
+		data->Release();
+	}
+	if (UV_TCP == handle->type) {
+		jc_free(handle);
+	} else {
+		Log(kCrash, __FILE__, __LINE__, "close_cb() free specified handle error", uv_handle_type_name(handle->type));
+	}
+}
+
+void SocketImpl::connection_cb(uv_stream_t * server, int status) {
+	UvData * data = static_cast<UvData *>(server->data);
+	if (data) {
+		data->AcceptCallback(status);
+	} else {
+		Log(kLog, __FILE__, __LINE__, "connection_cb() server->data is nullptr");
+	}
+}
+
+void SocketImpl::connect_cb(uv_connect_t * req, int status) {
+	UvData * data = static_cast<UvData *>(req->handle->data);
+	if (data) {
+		data->ConnectCallback(status, req->data);
+	} else {
+		Log(kLog, __FILE__, __LINE__, "connect_cb() req->handle->data is nullptr");
+	}
+	jc_free(req);
+}
+
+void SocketImpl::shutdown_cb(uv_shutdown_t * req, int status) {
+	UvData * data = static_cast<UvData *>(req->handle->data);
+	if (data) {
+		data->ShutdownCallback(status, req->data);
+	} else {
+		Log(kLog, __FILE__, __LINE__, "shutdown_cb() req->handle->data is nullptr");
+	}
+	jc_free(req);
+}
+
+void SocketImpl::alloc_cb(uv_handle_t * handle, size_t suggested_size, uv_buf_t * buf) {
+	UvData * data = static_cast<UvData *>(handle->data);
+	if (data) {
+		data->AllocCallback(buf);
+	} else {
+		Log(kLog, __FILE__, __LINE__, "alloc_cb() handle->data is nullptr");
+	}
+}
+
+void SocketImpl::read_cb(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf) {
+	UvData * data = static_cast<UvData *>(stream->data);
+	if (data) {
+		data->ReadCallback(nread);
+	} else {
+		Log(kLog, __FILE__, __LINE__, "read_cb() stream->data is nullptr");
+	}
+}
+
+void SocketImpl::write_cb(uv_write_t * req, int status) {
+	UvData * data = static_cast<UvData *>(req->handle->data);
+	if (data) {
+		data->WrittenCallback(status, req->data);
+	} else {
+		Log(kLog, __FILE__, __LINE__, "write_cb() req->handle->data is nullptr");
+	}
+	jc_free(req);
 }
 
 }

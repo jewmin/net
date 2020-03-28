@@ -120,7 +120,7 @@ SET(all_srcs
 SOURCE_GROUP(Common FILES ${Common})
 SOURCE_GROUP(Address FILES ${Address})
 SOURCE_GROUP(Sockets FILES ${Sockets})
-SOURCE_GROUP(Reactor FILES ${Reactor})
+# SOURCE_GROUP(Reactor FILES ${Reactor})
 # SOURCE_GROUP(Core FILES ${Core})
 # SOURCE_GROUP(Interface FILES ${Interface})
 # SOURCE_GROUP(Timer FILES ${Timer})
@@ -201,5 +201,5 @@ ELSEIF(LINUX)
 ENDIF()
 
 # 添加单元测试项目、压测项目
-ADD_SUBDIRECTORY(TestSuite)
+# ADD_SUBDIRECTORY(TestSuite)
 # ADD_SUBDIRECTORY(Test)

@@ -28,23 +28,26 @@
 #include "Common/RefCountedObject.h"
 #include "Address/SocketAddress.h"
 #include "Common/Logger.h"
+#include "Sockets/UvData.h"
 
 namespace Net {
 
 class SocketImpl : public RefCountedObject {
 public:
 	virtual ~SocketImpl();
+
 	virtual void Open(uv_loop_t * loop);
-	virtual void Close(uv_close_cb cb = FreeHandle);
+	virtual void Close();
 	virtual i32 Bind(const SocketAddress & address, bool ipv6_only = false, bool reuse_address = false);
-	virtual i32 Listen(i32 backlog, uv_connection_cb cb);
-	virtual i32 Connect(const SocketAddress & address, uv_connect_t * req, uv_connect_cb cb);
+	virtual i32 Listen(i32 backlog = 128);
+	virtual i32 Connect(const SocketAddress & address, void * arg = nullptr);
 	virtual SocketImpl * AcceptConnection(SocketAddress & client_address);
-	virtual void ShutdownReceive();
-	virtual void ShutdownSend(uv_shutdown_t * req, uv_shutdown_cb cb);
-	virtual void Shutdown(uv_shutdown_t * req, uv_shutdown_cb cb);
-	virtual i32 Established(uv_alloc_cb alloc_cb, uv_read_cb read_cb);
-	virtual i32 Send(const i8 * data, i32 len, uv_write_t * req, uv_write_cb cb);
+	virtual i32 Shutdown(void * arg = nullptr);
+	virtual i32 ShutdownSend(void * arg = nullptr);
+	virtual i32 ShutdownReceive();
+	virtual i32 Established();
+	virtual i32 Send(const i8 * data, i32 len, void * arg = nullptr);
+
 	virtual void SetSendBufferSize(i32 size);
 	virtual i32 GetSendBufferSize();
 	virtual void SetReceiveBufferSize(i32 size);
@@ -53,16 +56,21 @@ public:
 	virtual SocketAddress RemoteAddress();
 	virtual void SetNoDelay();
 	virtual void SetKeepAlive(i32 interval);
-	virtual void Attach(uv_handle_t * handle);
-	virtual uv_handle_t * Detatch();
-	virtual uv_handle_t * GetHandle();
 
-	static void FreeHandle(uv_handle_t * handle);
+	virtual void SetUvData(UvData * data);
 
 protected:
 	SocketImpl();
 
 private:
+	static void close_cb(uv_handle_t * handle);
+	static void connection_cb(uv_stream_t * server, int status);
+	static void connect_cb(uv_connect_t * req, int status);
+	static void shutdown_cb(uv_shutdown_t * req, int status);
+	static void alloc_cb(uv_handle_t * handle, size_t suggested_size, uv_buf_t * buf);
+	static void read_cb(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf);
+	static void write_cb(uv_write_t * req, int status);
+
 	SocketImpl(SocketImpl &&) = delete;
 	SocketImpl(const SocketImpl &) = delete;
 	SocketImpl & operator=(SocketImpl &&) = delete;
@@ -71,23 +79,6 @@ private:
 private:
 	uv_handle_t * handle_;
 };
-
-inline void SocketImpl::Attach(uv_handle_t * handle) {
-	if (handle_) {
-		Log(kCrash, __FILE__, __LINE__, "Socket already attached");
-	}
-	handle_ = handle;
-}
-
-inline uv_handle_t * SocketImpl::Detatch() {
-	uv_handle_t * handle = handle_;
-	handle_ = nullptr;
-	return handle;
-}
-
-inline uv_handle_t * SocketImpl::GetHandle() {
-	return handle_;
-}
 
 }
 
