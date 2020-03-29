@@ -28,6 +28,7 @@
 #include "Reactor/EventHandler.h"
 #include "Reactor/SocketConnection.h"
 #include "Sockets/ServerSocket.h"
+#include "Sockets/StreamSocket.h"
 
 namespace Net {
 
@@ -37,22 +38,17 @@ public:
 
 	bool Open(const SocketAddress & address, i32 backlog = 128, bool ipv6_only = false);
 	void Close();
-	virtual void Destroy();
+	void Destroy() override;
 
 protected:
 	explicit SocketAcceptor(EventReactor * reactor);
-	virtual bool RegisterToReactor();
-	virtual bool UnRegisterFromReactor();
-	virtual void MakeConnection(SocketConnection * & connection) = 0;
-	virtual void OnAccepted(SocketConnection * connection) = 0;
+	bool RegisterToReactor() override;
+	bool UnRegisterFromReactor() override;
+	virtual SocketConnection * CreateConnection() = 0;
 
 private:
-	void AcceptConnection(SocketConnection * connection, uv_handle_t * handle);
+	void AcceptCallback(i32 status) override;
 	bool ActivateConnection(SocketConnection * connection);
-	void Accept();
-
-	static void CloseCb(uv_handle_t * handle);
-	static void AcceptCb(uv_stream_t * server, i32 status);
 
 private:
 	bool opened_;

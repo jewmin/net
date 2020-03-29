@@ -312,6 +312,7 @@ void SocketImpl::connect_cb(uv_connect_t * req, int status) {
 	UvData * data = static_cast<UvData *>(req->handle->data);
 	if (data) {
 		data->ConnectCallback(status, req->data);
+		data->Release();
 	} else {
 		Log(kLog, __FILE__, __LINE__, "connect_cb() req->handle->data is nullptr");
 	}

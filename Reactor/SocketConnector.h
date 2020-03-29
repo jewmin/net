@@ -27,35 +27,31 @@
 
 #include "Reactor/EventHandler.h"
 #include "Reactor/SocketConnection.h"
-#include "Common/NetObject.h"
 
 namespace Net {
 
 class SocketConnector : public EventHandler {
-	class Context : public NetObject {
+	class Context : public UvData {
 	public:
-		Context(SocketConnector * connector, SocketConnection * connection) : connector_(connector), connection_(connection) {}
-		virtual ~Context() {}
+		Context(SocketConnector * connector, SocketConnection * connection);
+		virtual ~Context();
+		void ConnectCallback(i32 status, void * arg) override;
 		SocketConnector * connector_;
 		SocketConnection * connection_;
 	};
 
 public:
-	SocketConnector(EventReactor * reactor);
+	explicit SocketConnector(EventReactor * reactor);
 	virtual ~SocketConnector();
 
 	i32 Connect(SocketConnection * connection, const SocketAddress & address);
-	virtual void Destroy();
 
 protected:
-	virtual bool RegisterToReactor();
-	virtual bool UnRegisterFromReactor();
+	bool RegisterToReactor() override;
+	bool UnRegisterFromReactor() override;
 
 private:
-	void OnOneConnectSuccess(SocketConnection * connection);
 	bool ActivateConnection(SocketConnection * connection);
-
-	static void ConnectCb(uv_connect_t * req, i32 status);
 };
 
 }

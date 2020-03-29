@@ -37,11 +37,11 @@ bool SocketAcceptor::Open(const SocketAddress & address, i32 backlog, bool ipv6_
 	if (opened_) {
 		return false;
 	}
-	socket_.Open(GetReactor()->GetEventLoop());
+	socket_.Open(GetReactor()->GetUvLoop());
 	if (socket_.Bind(address, ipv6_only) < 0) {
 		return false;
 	}
-	if (socket_.Listen(backlog, AcceptCb) < 0) {
+	if (socket_.Listen(backlog) < 0) {
 		return false;
 	}
 	return GetReactor()->AddEventHandler(this);
@@ -55,26 +55,19 @@ void SocketAcceptor::Close() {
 
 void SocketAcceptor::Destroy() {
 	Close();
-	Release();
+	EventHandler::Destroy();
 }
 
 bool SocketAcceptor::RegisterToReactor() {
-	uv_handle_set_data(socket_.GetHandle(), this);
-	Duplicate();
+	socket_.SetUvData(this);
 	opened_ = true;
 	return true;
 }
 
 bool SocketAcceptor::UnRegisterFromReactor() {
 	opened_ = false;
-	socket_.Close(CloseCb);
+	socket_.Close();
 	return true;
-}
-
-void SocketAcceptor::AcceptConnection(SocketConnection * connection, uv_handle_t * handle) {
-	connection->GetSocket()->Attach(handle);
-	connection->GetSocket()->SetNoDelay();
-	connection->GetSocket()->SetKeepAlive(60);
 }
 
 bool SocketAcceptor::ActivateConnection(SocketConnection * connection) {
@@ -82,36 +75,27 @@ bool SocketAcceptor::ActivateConnection(SocketConnection * connection) {
 	return connection->Open();
 }
 
-void SocketAcceptor::Accept() {
-	StreamSocket client;
-	if (!socket_.AcceptConnection(client)) {
-		return;
-	}
-	SocketConnection * connection = nullptr;
-	MakeConnection(connection);
-	AcceptConnection(connection, client.Detatch());
-	if (ActivateConnection(connection)) {
-		OnAccepted(connection);
-		connection->OnConnected();
-	}
-}
-
-void SocketAcceptor::CloseCb(uv_handle_t * handle) {
-	SocketAcceptor * acceptor = static_cast<SocketAcceptor *>(handle->data);
-	SocketImpl::FreeHandle(handle);
-	if (acceptor) {
-		acceptor->Release();
-	}
-}
-
-void SocketAcceptor::AcceptCb(uv_stream_t * server, i32 status) {
-	SocketAcceptor * acceptor = static_cast<SocketAcceptor *>(server->data);
-	if (acceptor) {
-		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "监听回调失败", uv_strerror(status));
-			acceptor->Close();
-		} else {
-			acceptor->Accept();
+void SocketAcceptor::AcceptCallback(i32 status) {
+	if (status < 0) {
+		Log(kLog, __FILE__, __LINE__, "AcceptCallback()", uv_strerror(status));
+		Close();
+	} else {
+		StreamSocket client;
+		if (socket_.AcceptSocket(client)) {
+			Log(kLog, __FILE__, __LINE__, "AcceptCallback() accept socket error");
+			return;
+		}
+		SocketConnection * connection = CreateConnection();
+		if (!connection) {
+			Log(kLog, __FILE__, __LINE__, "AcceptCallback() connection is null");
+			return;
+		}
+		StreamSocket * associate_socket = connection->GetSocket();
+		*associate_socket = client;
+		associate_socket->SetNoDelay();
+		associate_socket->SetKeepAlive(60);
+		if (ActivateConnection(connection)) {
+			connection->OnConnected();
 		}
 	}
 }

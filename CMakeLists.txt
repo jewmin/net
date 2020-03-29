@@ -16,6 +16,7 @@ IF(MSVC)
 ELSEIF(CMAKE_COMPILER_IS_GNUCXX)
 	SET(WINDOWS OFF)
 	SET(LINUX ON)
+	SET(VLD OFF)
 ENDIF()
 
 # 显示参数
@@ -109,8 +110,8 @@ SET(all_srcs
 	${Common}
 	${Address}
 	${Sockets}
-	${Reactor}
-	${Core}
+	# ${Reactor}
+	# ${Core}
 	# ${Interface}
 	# ${Timer}
 )

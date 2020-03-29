@@ -22,31 +22,13 @@
  * SOFTWARE.
  */
 
-#ifndef Net_Sockets_UvData_INCLUDED
-#define Net_Sockets_UvData_INCLUDED
-
-#include "Common/RefCountedObject.h"
+#ifndef Net_Reactor_ConnectState_INCLUDED
+#define Net_Reactor_ConnectState_INCLUDED
 
 namespace Net {
 
-class UvData : public RefCountedObject {
-public:
-	virtual ~UvData() {}
-
-	// 只能调用一次
-	virtual void Destroy() { Release(); }
-
-	// 套接字回调函数
-	virtual void CloseCallback() {}
-	virtual void AcceptCallback(i32 status) {}
-	virtual void ConnectCallback(i32 status, void * arg) {}
-	virtual void ShutdownCallback(i32 status, void * arg) {}
-	virtual void AllocCallback(uv_buf_t * buf) {}
-	virtual void ReadCallback(i32 read) {}
-	virtual void WrittenCallback(i32 status, void * arg) {}
-
-protected:
-	UvData() {}
+struct ConnectState {
+	enum eState { kConnecting, kConnected, kDisconnecting, kDisconnected };
 };
 
 }

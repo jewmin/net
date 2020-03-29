@@ -25,24 +25,25 @@
 #include "Reactor/EventReactor.h"
 #include "Reactor/EventHandler.h"
 #include "Common/Logger.h"
+#include "Common/Allocator.h"
 
 namespace Net {
 
-EventReactor::EventReactor() {
-	Log(kLog, __FILE__, __LINE__, "使用网络底层<libuv>");
-	loop_ = static_cast<uv_loop_t *>(Allocator::Get()->Allocate(sizeof(uv_loop_t)));
+EventReactor::EventReactor() : loop_(static_cast<uv_loop_t *>(jc_malloc(sizeof(uv_loop_t)))) {
+	Log(kLog, __FILE__, __LINE__, "<libuv>", uv_version_string());
 	uv_loop_init(loop_);
+	loop_->data = this;
 }
 
 EventReactor::~EventReactor() {
 	while (!handlers_.empty()) {
 		RemoveEventHandler(handlers_.front());
 	}
-	while (Dispatch()) {
-		Dispatch(UV_RUN_ONCE);
+	while (Poll()) {
+		Poll(UV_RUN_ONCE);
 	}
 	uv_loop_close(loop_);
-	Allocator::Get()->DeAllocate(loop_, sizeof(uv_loop_t));
+	jc_free(loop_);
 }
 
 bool EventReactor::AddEventHandler(EventHandler * handler) {

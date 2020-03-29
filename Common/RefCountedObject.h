@@ -53,12 +53,14 @@ private:
 
 class RefCountedObject : public NetObject {
 public:
-	RefCountedObject() {}
 	virtual ~RefCountedObject() {}
 
 	void Duplicate() const;
 	void Release();
 	i32 ReferenceCount() const;
+
+protected:
+	RefCountedObject() {}
 
 private:
 	RefCountedObject(RefCountedObject &&) = delete;

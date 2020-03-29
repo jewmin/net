@@ -26,17 +26,16 @@
 #define Net_Reactor_EventHandler_INCLUDED
 
 #include "Reactor/EventReactor.h"
-#include "Common/RefCountedObject.h"
+#include "Sockets/UvData.h"
 
 namespace Net {
 
-class EventHandler : public RefCountedObject {
+class EventHandler : public UvData {
 	friend class EventReactor;
 
 public:
 	virtual ~EventHandler();
 
-	virtual void Destroy() = 0;
 	EventReactor * GetReactor() const;
 	void SetReactor(EventReactor * reactor);
 

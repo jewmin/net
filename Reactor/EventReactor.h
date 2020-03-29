@@ -37,8 +37,8 @@ public:
 
 	bool AddEventHandler(EventHandler * handler);
 	bool RemoveEventHandler(EventHandler * handler);
-	bool Dispatch(uv_run_mode mode = UV_RUN_NOWAIT);
-	uv_loop_t * GetEventLoop() const;
+	bool Poll(uv_run_mode mode = UV_RUN_NOWAIT);
+	uv_loop_t * GetUvLoop() const;
 
 private:
 	EventReactor(EventReactor &&) = delete;
@@ -51,11 +51,11 @@ private:
 	std::list<EventHandler *> handlers_;
 };
 
-inline bool EventReactor::Dispatch(uv_run_mode mode) {
+inline bool EventReactor::Poll(uv_run_mode mode) {
 	return uv_run(loop_, mode) > 0;
 }
 
-inline uv_loop_t * EventReactor::GetEventLoop() const {
+inline uv_loop_t * EventReactor::GetUvLoop() const {
 	return loop_;
 }
 
