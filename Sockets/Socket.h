@@ -37,18 +37,18 @@ public:
 	virtual ~Socket();
 	
 	void Open(uv_loop_t * loop);
-	void Close(uv_close_cb cb = SocketImpl::FreeHandle);
+	void Close();
+
 	void SetSendBufferSize(i32 size);
 	i32 GetSendBufferSize() const;
-	void SetReceiveBufferSize(i32 size);
-	i32 GetReceiveBufferSize() const;
+	void SetRecvBufferSize(i32 size);
+	i32 GetRecvBufferSize() const;
 	SocketAddress LocalAddress();
 	SocketAddress RemoteAddress();
 	void SetNoDelay();
 	void SetKeepAlive(i32 interval);
-	void Attach(uv_handle_t * handle);
-	uv_handle_t * Detatch();
-	uv_handle_t * GetHandle();
+
+	void SetUvData(UvData * data);
 	SocketImpl * Impl() const;
 
 	bool operator==(const Socket & rhs) const;
@@ -69,8 +69,8 @@ inline void Socket::Open(uv_loop_t * loop) {
 	impl_->Open(loop);
 }
 
-inline void Socket::Close(uv_close_cb cb) {
-	impl_->Close(cb);
+inline void Socket::Close() {
+	impl_->Close();
 }
 
 inline void Socket::SetSendBufferSize(i32 size) {
@@ -81,12 +81,12 @@ inline i32 Socket::GetSendBufferSize() const {
 	return impl_->GetSendBufferSize();
 }
 
-inline void Socket::SetReceiveBufferSize(i32 size) {
-	impl_->SetReceiveBufferSize(size);
+inline void Socket::SetRecvBufferSize(i32 size) {
+	impl_->SetRecvBufferSize(size);
 }
 
-inline i32 Socket::GetReceiveBufferSize() const {
-	return impl_->GetReceiveBufferSize();
+inline i32 Socket::GetRecvBufferSize() const {
+	return impl_->GetRecvBufferSize();
 }
 
 inline SocketAddress Socket::LocalAddress() {
@@ -105,16 +105,8 @@ inline void Socket::SetKeepAlive(i32 interval) {
 	impl_->SetKeepAlive(interval);
 }
 
-inline void Socket::Attach(uv_handle_t * handle) {
-	impl_->Attach(handle);
-}
-
-inline uv_handle_t * Socket::Detatch() {
-	return impl_->Detatch();
-}
-
-inline uv_handle_t * Socket::GetHandle() {
-	return impl_->GetHandle();
+inline void Socket::SetUvData(UvData * data) {
+	impl_->SetUvData(data);
 }
 
 inline SocketImpl * Socket::Impl() const {

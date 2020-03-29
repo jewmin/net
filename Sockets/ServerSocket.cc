@@ -32,7 +32,7 @@ ServerSocket::ServerSocket() : Socket(new ServerSocketImpl()) {
 
 ServerSocket::ServerSocket(const Socket & rhs) : Socket(rhs) {
 	if (!dynamic_cast<ServerSocketImpl *>(Impl())) {
-		Log(kCrash, __FILE__, __LINE__, "Cannot assign incompatible socket");
+		Log(kCrash, __FILE__, __LINE__, "socket impl is not ServerSocketImpl");
 	}
 }
 
@@ -40,7 +40,7 @@ ServerSocket & ServerSocket::operator=(const Socket & rhs) {
 	if (dynamic_cast<ServerSocketImpl *>(rhs.Impl())) {
 		Socket::operator=(rhs);
 	} else {
-		Log(kCrash, __FILE__, __LINE__, "Cannot assign incompatible socket");
+		Log(kCrash, __FILE__, __LINE__, "socket impl is not ServerSocketImpl");
 	}
 	return *this;
 }
@@ -48,8 +48,8 @@ ServerSocket & ServerSocket::operator=(const Socket & rhs) {
 ServerSocket::~ServerSocket() {
 }
 
-bool ServerSocket::AcceptConnection(StreamSocket & socket, SocketAddress & client_address) {
-	SocketImpl * client = Impl()->AcceptConnection(client_address);
+bool ServerSocket::AcceptSocket(StreamSocket & socket, SocketAddress & client_address) {
+	SocketImpl * client = Impl()->AcceptSocket(client_address);
 	if (client) {
 		socket = StreamSocket(client);
 		return true;
@@ -57,9 +57,9 @@ bool ServerSocket::AcceptConnection(StreamSocket & socket, SocketAddress & clien
 	return false;
 }
 
-bool ServerSocket::AcceptConnection(StreamSocket & socket) {
+bool ServerSocket::AcceptSocket(StreamSocket & socket) {
 	SocketAddress client_address;
-	return AcceptConnection(socket, client_address);
+	return AcceptSocket(socket, client_address);
 }
 
 }

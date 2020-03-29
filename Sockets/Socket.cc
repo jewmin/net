@@ -39,12 +39,14 @@ Socket::Socket(const Socket & rhs) : impl_(rhs.impl_) {
 
 Socket & Socket::operator=(const Socket & rhs) {
 	if (this != &rhs) {
-		if (impl_) {
-			impl_->Release();
-		}
-		impl_ = rhs.impl_;
-		if (impl_) {
-			impl_->Duplicate();
+		if (impl_ != rhs.impl_) {
+			if (impl_) {
+				impl_->Release();
+			}
+			impl_ = rhs.impl_;
+			if (impl_) {
+				impl_->Duplicate();
+			}
 		}
 	}
 	return *this;

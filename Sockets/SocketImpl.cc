@@ -23,8 +23,8 @@
  */
 
 #include "Sockets/SocketImpl.h"
-#include "Sockets/StreamSocketImpl.h"
 #include "Common/Allocator.h"
+#include "Sockets/StreamSocketImpl.h"
 
 namespace Net {
 
@@ -96,7 +96,7 @@ i32 SocketImpl::Connect(const SocketAddress & address, void * arg) {
 	return status;
 }
 
-SocketImpl * SocketImpl::AcceptConnection(SocketAddress & client_address) {
+SocketImpl * SocketImpl::AcceptSocket(SocketAddress & client_address) {
 	if (handle_ && UV_TCP == handle_->type) {
 		SocketImpl * client = new StreamSocketImpl();
 		client->Open(handle_->loop);
@@ -113,14 +113,14 @@ SocketImpl * SocketImpl::AcceptConnection(SocketAddress & client_address) {
 }
 
 i32 SocketImpl::Shutdown(void * arg) {
-	i32 status = ShutdownSend(arg);
+	i32 status = ShutdownRead();
 	if (0 == status) {
-		status = ShutdownReceive();
+		status = ShutdownWrite(arg);
 	}
 	return status;
 }
 
-i32 SocketImpl::ShutdownSend(void * arg) {
+i32 SocketImpl::ShutdownWrite(void * arg) {
 	i32 status = UV_UNKNOWN;
 	if (handle_ && UV_TCP == handle_->type) {
 		uv_shutdown_t * req = static_cast<uv_shutdown_t *>(jc_malloc(sizeof(uv_shutdown_t)));
@@ -135,7 +135,7 @@ i32 SocketImpl::ShutdownSend(void * arg) {
 	return status;
 }
 
-i32 SocketImpl::ShutdownReceive() {
+i32 SocketImpl::ShutdownRead() {
 	i32 status = UV_UNKNOWN;
 	if (handle_ && UV_TCP == handle_->type) {
 		status = uv_read_stop(reinterpret_cast<uv_stream_t *>(handle_));
@@ -157,7 +157,7 @@ i32 SocketImpl::Established() {
 	return status;
 }
 
-i32 SocketImpl::Send(const i8 * data, i32 len, void * arg) {
+i32 SocketImpl::Write(const i8 * data, i32 len, void * arg) {
 	if (!handle_ || UV_TCP != handle_->type) {
 		return UV_EPROTONOSUPPORT;
 	}
@@ -186,7 +186,7 @@ void SocketImpl::SetSendBufferSize(i32 size) {
 	}
 }
 
-i32 SocketImpl::GetSendBufferSize() {
+i32 SocketImpl::GetSendBufferSize() const {
 	i32 size = 0;
 	if (handle_) {
 		i32 status = uv_send_buffer_size(handle_, &size);
@@ -197,7 +197,7 @@ i32 SocketImpl::GetSendBufferSize() {
 	return size;
 }
 
-void SocketImpl::SetReceiveBufferSize(i32 size) {
+void SocketImpl::SetRecvBufferSize(i32 size) {
 	if (handle_) {
 		i32 status = uv_recv_buffer_size(handle_, &size);
 		if (status < 0) {
@@ -206,7 +206,7 @@ void SocketImpl::SetReceiveBufferSize(i32 size) {
 	}
 }
 
-i32 SocketImpl::GetReceiveBufferSize() {
+i32 SocketImpl::GetRecvBufferSize() const {
 	i32 size = 0;
 	if (handle_) {
 		i32 status = uv_recv_buffer_size(handle_, &size);
@@ -271,13 +271,14 @@ void SocketImpl::SetUvData(UvData * data) {
 	if (!handle_) {
 		Log(kCrash, __FILE__, __LINE__, "SetUvData() handle_ is nullptr");
 	}
-	void * old_data = handle_->data;
-	handle_->data = data;
-	if (data) {
-		data->Duplicate();
-	}
-	if (old_data) {
-		static_cast<UvData *>(old_data)->Release();
+	if (handle_->data != data) {
+		if (handle_->data) {
+			static_cast<UvData *>(handle_->data)->Release();
+		}
+		handle_->data = data;
+		if (data) {
+			data->Duplicate();
+		}
 	}
 }
 

@@ -26,7 +26,7 @@
 
 namespace Net {
 
-ServerSocketImpl::ServerSocketImpl() : SocketImpl() {
+ServerSocketImpl::ServerSocketImpl() {
 }
 
 ServerSocketImpl::~ServerSocketImpl() {

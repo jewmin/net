@@ -39,12 +39,12 @@ public:
 	virtual ~StreamSocket();
 
 	i32 Bind(const SocketAddress & address, bool ipv6_only = false, bool reuse_address = false);
-	i32 Connect(const SocketAddress & address, uv_connect_t * req, uv_connect_cb cb);
-	void ShutdownReceive();
-	void ShutdownSend(uv_shutdown_t * req, uv_shutdown_cb cb);
-	void Shutdown(uv_shutdown_t * req, uv_shutdown_cb cb);
-	i32 Established(uv_alloc_cb alloc_cb, uv_read_cb read_cb);
-	i32 Send(const i8 * data, i32 len, uv_write_t * req, uv_write_cb cb);
+	i32 Connect(const SocketAddress & address, void * arg = nullptr);
+	i32 Shutdown(void * arg = nullptr);
+	i32 ShutdownWrite(void * arg = nullptr);
+	i32 ShutdownRead();
+	i32 Established();
+	i32 Write(const i8 * data, i32 len, void * arg = nullptr);
 
 protected:
 	explicit StreamSocket(SocketImpl * impl);
@@ -54,28 +54,28 @@ inline i32 StreamSocket::Bind(const SocketAddress & address, bool ipv6_only, boo
 	return Impl()->Bind(address, ipv6_only, reuse_address);
 }
 
-inline i32 StreamSocket::Connect(const SocketAddress & address, uv_connect_t * req, uv_connect_cb cb) {
-	return Impl()->Connect(address, req, cb);
+inline i32 StreamSocket::Connect(const SocketAddress & address, void * arg) {
+	return Impl()->Connect(address, arg);
 }
 
-inline void StreamSocket::ShutdownReceive() {
-	Impl()->ShutdownReceive();
+inline i32 StreamSocket::Shutdown(void * arg) {
+	return Impl()->Shutdown(arg);
 }
 
-inline void StreamSocket::ShutdownSend(uv_shutdown_t * req, uv_shutdown_cb cb) {
-	Impl()->ShutdownSend(req, cb);
+inline i32 StreamSocket::ShutdownWrite(void * arg) {
+	return Impl()->ShutdownWrite(arg);
 }
 
-inline void StreamSocket::Shutdown(uv_shutdown_t * req, uv_shutdown_cb cb) {
-	Impl()->Shutdown(req, cb);
+inline i32 StreamSocket::ShutdownRead() {
+	return Impl()->ShutdownRead();
 }
 
-inline i32 StreamSocket::Established(uv_alloc_cb alloc_cb, uv_read_cb read_cb) {
-	return Impl()->Established(alloc_cb, read_cb);
+inline i32 StreamSocket::Established() {
+	return Impl()->Established();
 }
 
-inline i32 StreamSocket::Send(const i8 * data, i32 len, uv_write_t * req, uv_write_cb cb) {
-	return Impl()->Send(data, len, req, cb);
+inline i32 StreamSocket::Write(const i8 * data, i32 len, void * arg) {
+	return Impl()->Write(data, len, arg);
 }
 
 }

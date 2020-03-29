@@ -41,17 +41,17 @@ public:
 	virtual i32 Bind(const SocketAddress & address, bool ipv6_only = false, bool reuse_address = false);
 	virtual i32 Listen(i32 backlog = 128);
 	virtual i32 Connect(const SocketAddress & address, void * arg = nullptr);
-	virtual SocketImpl * AcceptConnection(SocketAddress & client_address);
+	virtual SocketImpl * AcceptSocket(SocketAddress & client_address);
 	virtual i32 Shutdown(void * arg = nullptr);
-	virtual i32 ShutdownSend(void * arg = nullptr);
-	virtual i32 ShutdownReceive();
+	virtual i32 ShutdownWrite(void * arg = nullptr);
+	virtual i32 ShutdownRead();
 	virtual i32 Established();
-	virtual i32 Send(const i8 * data, i32 len, void * arg = nullptr);
+	virtual i32 Write(const i8 * data, i32 len, void * arg = nullptr);
 
 	virtual void SetSendBufferSize(i32 size);
-	virtual i32 GetSendBufferSize();
-	virtual void SetReceiveBufferSize(i32 size);
-	virtual i32 GetReceiveBufferSize();
+	virtual i32 GetSendBufferSize() const;
+	virtual void SetRecvBufferSize(i32 size);
+	virtual i32 GetRecvBufferSize() const;
 	virtual SocketAddress LocalAddress();
 	virtual SocketAddress RemoteAddress();
 	virtual void SetNoDelay();

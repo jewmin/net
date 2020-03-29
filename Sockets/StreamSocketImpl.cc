@@ -26,7 +26,7 @@
 
 namespace Net {
 
-StreamSocketImpl::StreamSocketImpl() : SocketImpl() {
+StreamSocketImpl::StreamSocketImpl() {
 }
 
 StreamSocketImpl::~StreamSocketImpl() {

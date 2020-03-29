@@ -38,17 +38,17 @@ public:
 	virtual ~ServerSocket();
 
 	i32 Bind(const SocketAddress & address, bool ipv6_only = false, bool reuse_address = false);
-	i32 Listen(i32 backlog, uv_connection_cb cb);
-	bool AcceptConnection(StreamSocket & socket, SocketAddress & client_address);
-	bool AcceptConnection(StreamSocket & socket);
+	i32 Listen(i32 backlog = 128);
+	bool AcceptSocket(StreamSocket & socket, SocketAddress & client_address);
+	bool AcceptSocket(StreamSocket & socket);
 };
 
 inline i32 ServerSocket::Bind(const SocketAddress & address, bool ipv6_only, bool reuse_address) {
 	return Impl()->Bind(address, ipv6_only, reuse_address);
 }
 
-inline i32 ServerSocket::Listen(i32 backlog, uv_connection_cb cb) {
-	return Impl()->Listen(backlog, cb);
+inline i32 ServerSocket::Listen(i32 backlog) {
+	return Impl()->Listen(backlog);
 }
 
 }
