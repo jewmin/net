@@ -52,7 +52,7 @@ public:
 	std::string ToString() const;
 	socklen_t Length() const;
 	const void * Addr() const;
-	AddressFamily::Family Family() const;
+	AddressFamily::eFamily Family() const;
 	i32 AF() const;
 	u32 Scope() const;
 	bool operator==(const IPAddress & rhs) const;
@@ -61,8 +61,8 @@ public:
 	static IPAddress Parse(const std::string & ip);
 	static bool TryParse(const std::string & ip, IPAddress & result);
 
-	static const AddressFamily::Family IPv4 = AddressFamily::IPv4;
-	static const AddressFamily::Family IPv6 = AddressFamily::IPv6;
+	static const AddressFamily::eFamily IPv4 = AddressFamily::IPv4;
+	static const AddressFamily::eFamily IPv6 = AddressFamily::IPv6;
 
 private:
 	IPAddressImpl * Impl() const;
@@ -93,7 +93,7 @@ inline const void * IPAddress::Addr() const {
 	return Impl()->Addr();
 }
 
-inline AddressFamily::Family IPAddress::Family() const {
+inline AddressFamily::eFamily IPAddress::Family() const {
 	return Impl()->Family();
 }
 
