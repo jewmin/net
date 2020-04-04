@@ -44,7 +44,7 @@ i8 * StraightBuffer::GetReserveBlock(i32 want_size, i32 & actually_size) {
 	}
 
 	if (offset_ > 0) {
-		memmove(buffer_, buffer_ + offset_, size_);
+		std::memmove(buffer_, buffer_ + offset_, size_);
 		offset_ = 0;
 	}
 

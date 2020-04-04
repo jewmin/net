@@ -46,7 +46,7 @@ public:
 		i32 actually_size = 0;
 		i8 * block = GetReserveBlock(data_len, actually_size);
 		if (block && actually_size > 0) {
-			memcpy(block, data, actually_size);
+			std::memcpy(block, data, actually_size);
 			Commit(actually_size);
 			return actually_size;
 		}
@@ -60,7 +60,7 @@ public:
 			if (actually_size < data_len) {
 				data_len = actually_size;
 			}
-			memcpy(data, block, data_len);
+			std::memcpy(data, block, data_len);
 			DeCommit(data_len);
 			return data_len;
 		}
