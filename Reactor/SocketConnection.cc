@@ -187,7 +187,7 @@ i32 SocketConnection::Write(const i8 * data, i32 len) {
 	}
 
 	std::memcpy(block, data, actually_size);
-	i32 status = socket_.Write(block, actually_size, reinterpret_cast<void *>(actually_size));
+	i32 status = socket_.Write(block, actually_size, reinterpret_cast<void *>(static_cast<i64>(actually_size)));
 	if (0 == status) {
 		io_->out_buffer_->Commit(actually_size);
 	}
@@ -238,7 +238,7 @@ void SocketConnection::WrittenCallback(i32 status, void * arg) {
 	if (status < 0) {
 		Error(status);
 	} else {
-		io_->out_buffer_->DeCommit(reinterpret_cast<i32>(arg));
+		io_->out_buffer_->DeCommit(static_cast<i32>(reinterpret_cast<i64>(arg)));
 		if (ConnectState::kConnected == connect_state_ || ConnectState::kDisconnecting == connect_state_) {
 			OnSomeDataSent();
 		}

@@ -200,7 +200,7 @@ i32 SocketImpl::GetSendBufferSize() const {
 i32 SocketImpl::GetWriteQueueSize() const {
 	i32 size = 0;
 	if (handle_ && UV_TCP == handle_->type) {
-		size = uv_stream_get_write_queue_size(reinterpret_cast<uv_stream_t * >(handle_));
+		size = static_cast<i32>(uv_stream_get_write_queue_size(reinterpret_cast<uv_stream_t * >(handle_)));
 	}
 	return size;
 }
@@ -349,7 +349,7 @@ void SocketImpl::alloc_cb(uv_handle_t * handle, size_t suggested_size, uv_buf_t 
 void SocketImpl::read_cb(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf) {
 	UvData * data = static_cast<UvData *>(stream->data);
 	if (data) {
-		data->ReadCallback(nread);
+		data->ReadCallback(static_cast<i32>(nread));
 	} else {
 		Log(kLog, __FILE__, __LINE__, "read_cb() stream->data is nullptr");
 	}

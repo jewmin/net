@@ -28,13 +28,18 @@ MESSAGE(STATUS "LINUX:" ${LINUX})
 # 添加源文件
 SET(Common
 	${CMAKE_CURRENT_LIST_DIR}/Net.h
+	${CMAKE_CURRENT_LIST_DIR}/Common/Logger.h
+	${CMAKE_CURRENT_LIST_DIR}/Common/Logger.cc
 	${CMAKE_CURRENT_LIST_DIR}/Common/Allocator.h
 	${CMAKE_CURRENT_LIST_DIR}/Common/Allocator.cc
 	${CMAKE_CURRENT_LIST_DIR}/Common/NetObject.h
 	${CMAKE_CURRENT_LIST_DIR}/Common/NetObject.cc
-	${CMAKE_CURRENT_LIST_DIR}/Common/Logger.h
-	${CMAKE_CURRENT_LIST_DIR}/Common/Logger.cc
 	${CMAKE_CURRENT_LIST_DIR}/Common/RefCountedObject.h
+	${CMAKE_CURRENT_LIST_DIR}/Common/IOBuffer.h
+	${CMAKE_CURRENT_LIST_DIR}/Common/BipBuffer.h
+	${CMAKE_CURRENT_LIST_DIR}/Common/BipBuffer.cc
+	${CMAKE_CURRENT_LIST_DIR}/Common/StraightBuffer.h
+	${CMAKE_CURRENT_LIST_DIR}/Common/StraightBuffer.cc
 	# ${CMAKE_CURRENT_LIST_DIR}/ObjectMgr.h
 	# ${CMAKE_CURRENT_LIST_DIR}/Packet.hpp
 	# ${CMAKE_CURRENT_LIST_DIR}/PacketReader.hpp
@@ -52,6 +57,7 @@ SET(Address
 	${CMAKE_CURRENT_LIST_DIR}/Address/SocketAddressImpl.cc
 )
 SET(Sockets
+	${CMAKE_CURRENT_LIST_DIR}/Sockets/UvData.h
 	${CMAKE_CURRENT_LIST_DIR}/Sockets/ServerSocket.h
 	${CMAKE_CURRENT_LIST_DIR}/Sockets/ServerSocket.cc
 	${CMAKE_CURRENT_LIST_DIR}/Sockets/ServerSocketImpl.h
@@ -66,6 +72,7 @@ SET(Sockets
 	${CMAKE_CURRENT_LIST_DIR}/Sockets/StreamSocketImpl.cc
 )
 SET(Reactor
+	${CMAKE_CURRENT_LIST_DIR}/Reactor/ConnectState.h
 	${CMAKE_CURRENT_LIST_DIR}/Reactor/EventHandler.h
 	${CMAKE_CURRENT_LIST_DIR}/Reactor/EventHandler.cc
 	${CMAKE_CURRENT_LIST_DIR}/Reactor/EventReactor.h
@@ -110,7 +117,7 @@ SET(all_srcs
 	${Common}
 	${Address}
 	${Sockets}
-	# ${Reactor}
+	${Reactor}
 	# ${Core}
 	# ${Interface}
 	# ${Timer}
@@ -121,7 +128,7 @@ SET(all_srcs
 SOURCE_GROUP(Common FILES ${Common})
 SOURCE_GROUP(Address FILES ${Address})
 SOURCE_GROUP(Sockets FILES ${Sockets})
-# SOURCE_GROUP(Reactor FILES ${Reactor})
+SOURCE_GROUP(Reactor FILES ${Reactor})
 # SOURCE_GROUP(Core FILES ${Core})
 # SOURCE_GROUP(Interface FILES ${Interface})
 # SOURCE_GROUP(Timer FILES ${Timer})
