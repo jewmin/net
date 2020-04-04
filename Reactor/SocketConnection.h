@@ -28,10 +28,21 @@
 #include "Reactor/EventHandler.h"
 #include "Reactor/ConnectState.h"
 #include "Sockets/StreamSocket.h"
+#include "Common/IOBuffer.h"
 
 namespace Net {
 
 class SocketConnection : public EventHandler {
+	class SocketIO : public NetObject {
+	public:
+		SocketIO(i32 max_out_buffer_size, i32 max_in_buffer_size);
+		virtual ~SocketIO();
+		IOBuffer * in_buffer_;
+		IOBuffer * out_buffer_;
+
+		static const i32 kReadMax = 4096;
+	};
+
 public:
 	SocketConnection(i32 max_out_buffer_size, i32 max_in_buffer_size);
 	virtual ~SocketConnection();
@@ -48,11 +59,10 @@ public:
 	virtual void OnSomeDataSent();
 	virtual void OnError(i32 reason);
 
-	// i32 Write(const i8 * data, i32 len);
-	// i32 Read(i8 * data, i32 len);
-	// i8 * GetRecvData() const;
-	// i32 GetRecvDataSize() const;
-	// void PopRecvData(i32 size);
+	i32 Write(const i8 * data, i32 len);
+	i32 Read(i8 * data, i32 len);
+	i8 * GetRecvData(i32 & size) const;
+	void PopRecvData(i32 size);
 
 	ConnectState::eState GetConnectState() const;
 	void SetConnectState(ConnectState::eState state);
@@ -76,6 +86,7 @@ private:
 	void HandleClose4Error(i32 reason);
 
 private:
+	SocketIO * io_;
 	StreamSocket socket_;
 	ConnectState::eState connect_state_;
 	i32 max_out_buffer_size_;
@@ -94,6 +105,20 @@ inline void SocketConnection::SetConnectState(ConnectState::eState state) {
 
 inline StreamSocket * SocketConnection::GetSocket() {
 	return &socket_;
+}
+
+inline i8 * SocketConnection::GetRecvData(i32 & size) const {
+	if (!io_) {
+		Log(kCrash, __FILE__, __LINE__, "GetRecvData() io_ is nullptr");
+	}
+	return io_->in_buffer_->GetContiguousBlock(size);
+}
+
+inline void SocketConnection::PopRecvData(i32 size) {
+	if (!io_) {
+		Log(kCrash, __FILE__, __LINE__, "PopRecvData() io_ is nullptr");
+	}
+	io_->in_buffer_->DeCommit(size);
 }
 
 }

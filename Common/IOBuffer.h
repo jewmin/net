@@ -50,7 +50,7 @@ public:
 			Commit(actually_size);
 			return actually_size;
 		}
-		return -1;
+		return UV_ENOBUFS;
 	}
 
 	i32 Read(i8 * data, i32 data_len) {
@@ -64,7 +64,7 @@ public:
 			DeCommit(data_len);
 			return data_len;
 		}
-		return -1;
+		return UV_ENOBUFS;
 	}
 
 	virtual i8 * GetReserveBlock(i32 want_size, i32 & actually_size) = 0;
