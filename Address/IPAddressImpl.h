@@ -37,7 +37,7 @@ public:
 	virtual std::string ToString() const = 0;
 	virtual socklen_t Length() const = 0;
 	virtual const void * Addr() const = 0;
-	virtual AddressFamily::Family Family() const = 0;
+	virtual AddressFamily::eFamily Family() const = 0;
 	virtual i32 AF() const = 0;
 	virtual u32 Scope() const = 0;
 
@@ -62,7 +62,7 @@ public:
 	std::string ToString() const override;
 	socklen_t Length() const override;
 	const void * Addr() const override;
-	AddressFamily::Family Family() const override;
+	AddressFamily::eFamily Family() const override;
 	i32 AF() const override;
 	u32 Scope() const override;
 	bool operator==(const IPv4AddressImpl & rhs) const;
@@ -85,7 +85,7 @@ public:
 	std::string ToString() const override;
 	socklen_t Length() const override;
 	const void * Addr() const override;
-	AddressFamily::Family Family() const override;
+	AddressFamily::eFamily Family() const override;
 	i32 AF() const override;
 	u32 Scope() const override;
 	bool operator==(const IPv6AddressImpl & rhs) const;
@@ -110,7 +110,7 @@ inline const void * IPv4AddressImpl::Addr() const {
 	return &addr_;
 }
 
-inline AddressFamily::Family IPv4AddressImpl::Family() const {
+inline AddressFamily::eFamily IPv4AddressImpl::Family() const {
 	return AddressFamily::IPv4;
 }
 
@@ -134,7 +134,7 @@ inline const void * IPv6AddressImpl::Addr() const {
 	return &addr_;
 }
 
-inline AddressFamily::Family IPv6AddressImpl::Family() const {
+inline AddressFamily::eFamily IPv6AddressImpl::Family() const {
 	return AddressFamily::IPv6;
 }
 

@@ -197,6 +197,14 @@ i32 SocketImpl::GetSendBufferSize() const {
 	return size;
 }
 
+i32 SocketImpl::GetWriteQueueSize() const {
+	i32 size = 0;
+	if (handle_ && UV_TCP == handle_->type) {
+		size = uv_stream_get_write_queue_size(reinterpret_cast<uv_stream_t * >(handle_));
+	}
+	return size;
+}
+
 void SocketImpl::SetRecvBufferSize(i32 size) {
 	if (handle_) {
 		i32 status = uv_recv_buffer_size(handle_, &size);

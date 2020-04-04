@@ -38,7 +38,7 @@ public:
 	virtual socklen_t Length() const = 0;
 	virtual const struct sockaddr * Addr() const = 0;
 	virtual i32 AF() const = 0;
-	virtual AddressFamily::Family Family() const = 0;
+	virtual AddressFamily::eFamily Family() const = 0;
 	virtual std::string ToString() const = 0;
 
 protected:
@@ -62,7 +62,7 @@ public:
 	socklen_t Length() const override;
 	const struct sockaddr * Addr() const override;
 	i32 AF() const override;
-	AddressFamily::Family Family() const override;
+	AddressFamily::eFamily Family() const override;
 	std::string ToString() const override;
 	
 private:
@@ -80,7 +80,7 @@ public:
 	socklen_t Length() const override;
 	const struct sockaddr * Addr() const override;
 	i32 AF() const override;
-	AddressFamily::Family Family() const override;
+	AddressFamily::eFamily Family() const override;
 	std::string ToString() const override;
 
 private:
@@ -111,7 +111,7 @@ inline i32 IPv4SocketAddressImpl::AF() const {
 	return addr_.sin_family;
 }
 
-inline AddressFamily::Family IPv4SocketAddressImpl::Family() const {
+inline AddressFamily::eFamily IPv4SocketAddressImpl::Family() const {
 	return AddressFamily::IPv4;
 }
 
@@ -139,7 +139,7 @@ inline i32 IPv6SocketAddressImpl::AF() const {
 	return addr_.sin6_family;
 }
 
-inline AddressFamily::Family IPv6SocketAddressImpl::Family() const {
+inline AddressFamily::eFamily IPv6SocketAddressImpl::Family() const {
 	return AddressFamily::IPv6;
 }
 

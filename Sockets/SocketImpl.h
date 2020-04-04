@@ -50,6 +50,7 @@ public:
 
 	virtual void SetSendBufferSize(i32 size);
 	virtual i32 GetSendBufferSize() const;
+	virtual i32 GetWriteQueueSize() const;
 	virtual void SetRecvBufferSize(i32 size);
 	virtual i32 GetRecvBufferSize() const;
 	virtual SocketAddress LocalAddress();

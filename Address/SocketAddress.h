@@ -44,7 +44,7 @@ public:
 	socklen_t Length() const;
 	const struct sockaddr * Addr() const;
 	i32 AF() const;
-	AddressFamily::Family Family() const;
+	AddressFamily::eFamily Family() const;
 	std::string ToString() const;
 	bool operator==(const SocketAddress & rhs) const;
 	bool operator!=(const SocketAddress & rhs) const;
@@ -88,7 +88,7 @@ inline i32 SocketAddress::AF() const {
 	return Impl()->AF();
 }
 
-inline AddressFamily::Family SocketAddress::Family() const {
+inline AddressFamily::eFamily SocketAddress::Family() const {
 	return Impl()->Family();
 }
 

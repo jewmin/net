@@ -27,8 +27,8 @@
 
 namespace Net {
 
-const AddressFamily::Family IPAddress::IPv4;
-const AddressFamily::Family IPAddress::IPv6;
+const AddressFamily::eFamily IPAddress::IPv4;
+const AddressFamily::eFamily IPAddress::IPv6;
 
 IPAddress::IPAddress() {
 	NewIPv4();

@@ -44,8 +44,8 @@ void SocketConnector::Context::ConnectCallback(i32 status, void * arg) {
 	if (status < 0) {
 		if (connection_->GetConnectState() == ConnectState::kConnecting) {
 			connection_->SetConnectState(ConnectState::kDisconnected);
-			associate_socket->Close();
 			connection_->OnConnectFailed(status);
+			associate_socket->Close();
 		}
 	} else {
 		associate_socket->SetNoDelay();
@@ -85,7 +85,7 @@ bool SocketConnector::UnRegisterFromReactor() {
 
 bool SocketConnector::ActivateConnection(SocketConnection * connection) {
 	connection->SetReactor(GetReactor());
-	return connection->Open();
+	return connection->Establish();
 }
 
 }

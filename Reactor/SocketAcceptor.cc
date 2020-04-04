@@ -72,7 +72,7 @@ bool SocketAcceptor::UnRegisterFromReactor() {
 
 bool SocketAcceptor::ActivateConnection(SocketConnection * connection) {
 	connection->SetReactor(GetReactor());
-	return connection->Open();
+	return connection->Establish();
 }
 
 void SocketAcceptor::AcceptCallback(i32 status) {

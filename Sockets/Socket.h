@@ -41,6 +41,7 @@ public:
 
 	void SetSendBufferSize(i32 size);
 	i32 GetSendBufferSize() const;
+	i32 GetWriteQueueSize() const;
 	void SetRecvBufferSize(i32 size);
 	i32 GetRecvBufferSize() const;
 	SocketAddress LocalAddress();
@@ -79,6 +80,10 @@ inline void Socket::SetSendBufferSize(i32 size) {
 
 inline i32 Socket::GetSendBufferSize() const {
 	return impl_->GetSendBufferSize();
+}
+
+inline i32 Socket::GetWriteQueueSize() const {
+	return impl_->GetWriteQueueSize();
 }
 
 inline void Socket::SetRecvBufferSize(i32 size) {

@@ -42,7 +42,7 @@ public:
 	virtual void ConnectCallback(i32 status, void * arg) {}
 	virtual void ShutdownCallback(i32 status, void * arg) {}
 	virtual void AllocCallback(uv_buf_t * buf) {}
-	virtual void ReadCallback(i32 read) {}
+	virtual void ReadCallback(i32 status) {}
 	virtual void WrittenCallback(i32 status, void * arg) {}
 
 protected:
