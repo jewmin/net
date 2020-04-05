@@ -31,9 +31,15 @@ Socket::Socket() : impl_(new StreamSocketImpl()) {
 }
 
 Socket::Socket(SocketImpl * impl) : impl_(impl) {
+	if (!impl_) {
+		Log(kCrash, __FILE__, __LINE__, "impl_ is nullptr");
+	}
 }
 
 Socket::Socket(const Socket & rhs) : impl_(rhs.impl_) {
+	if (!impl_) {
+		Log(kCrash, __FILE__, __LINE__, "impl_ is nullptr");
+	}
 	impl_->Duplicate();
 }
 
