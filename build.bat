@@ -3,6 +3,7 @@
 cd %~dp0
 
 set config=Debug
+set tag=OFF
 
 :next-arg
 if "%1"=="" goto args-done
@@ -18,20 +19,19 @@ call %MSBuild%VsMSBuildCmd.bat
 
 if "%config%"=="Release" goto build-release
 
-mkdir build\debug
-cd build\debug
-cmake ../.. -G "Visual Studio 15 2017 Win64" -DRELEASE=OFF
+set tag=OFF
 
 goto build-run
 
 :build-release
 
-mkdir build\release
-cd build\release
-cmake ../.. -G "Visual Studio 15 2017 Win64" -DRELEASE=ON
+set tag=ON
 
 :build-run
-msbuild libnet.sln /t:Build /p:Configuration=%config% /p:Platform=x64 /clp:NoSummary;NoItemAndPropertyList;Verbosity=minimal /nologo
+mkdir build/%config%
+cd build/%config%
+cmake ../.. -G "Visual Studio 15 2017 Win64" -DRELEASE=%tag%
+msbuild libnet.sln /t:Build /p:Configuration=%config% /p:Platform=x64 /clp:NoSummary;NoItemAndPropertyList;Verbosity=minimal /nologo /m
 cd ../..
 
 :exit

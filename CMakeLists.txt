@@ -214,5 +214,5 @@ ELSEIF(LINUX)
 ENDIF()
 
 # 添加单元测试项目、压测项目
-# ADD_SUBDIRECTORY(TestSuite)
+ADD_SUBDIRECTORY(TestSuite)
 # ADD_SUBDIRECTORY(Test)
