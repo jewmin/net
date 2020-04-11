@@ -40,7 +40,7 @@ SET(Common
 	${CMAKE_CURRENT_LIST_DIR}/Common/BipBuffer.cc
 	${CMAKE_CURRENT_LIST_DIR}/Common/StraightBuffer.h
 	${CMAKE_CURRENT_LIST_DIR}/Common/StraightBuffer.cc
-	# ${CMAKE_CURRENT_LIST_DIR}/ObjectMgr.h
+	${CMAKE_CURRENT_LIST_DIR}/Common/ObjectMgr.h
 	# ${CMAKE_CURRENT_LIST_DIR}/Packet.hpp
 	# ${CMAKE_CURRENT_LIST_DIR}/PacketReader.hpp
 	# ${CMAKE_CURRENT_LIST_DIR}/SharedPtr.h
