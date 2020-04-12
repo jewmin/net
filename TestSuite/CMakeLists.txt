@@ -13,7 +13,7 @@ SET(test_srcs
 	${CMAKE_CURRENT_LIST_DIR}/RefCountedObjectTestSuite.cc
 	${CMAKE_CURRENT_LIST_DIR}/IOBufferTestSuite.cc
 	${CMAKE_CURRENT_LIST_DIR}/NetObjectTestSuite.cc
-	# ${CMAKE_CURRENT_LIST_DIR}/ObjectMgrTestSuite.cc
+	${CMAKE_CURRENT_LIST_DIR}/ObjectMgrTestSuite.cc
 	# ${CMAKE_CURRENT_LIST_DIR}/IPAddressTestSuite.cc
 	# ${CMAKE_CURRENT_LIST_DIR}/SocketAddressTestSuite.cc
 	# ${CMAKE_CURRENT_LIST_DIR}/SocketTestSuite.cc

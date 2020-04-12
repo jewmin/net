@@ -41,7 +41,7 @@ public:
 	OBJECT * GetObj(i64 id);
 	i64 AddNewObj(OBJECT * object);
 	OBJECT * RemoveObj(i64 id);
-	void VisitObj(void(*VisitFunc)(void * object, void * ud), void * ud);
+	void VisitObj(void(*VisitFunc)(OBJECT * object, void * ud), void * ud);
 
 protected:
 	u8 FFS(u64 x);
@@ -60,6 +60,9 @@ private:
 
 template<class OBJECT>
 ObjectMgr<OBJECT>::ObjectMgr(u32 object_max_count) : object_bits_(nullptr), kObjectBitsMaxSize(object_max_count >> kBitShift) {
+	if (0 == kObjectBitsMaxSize) {
+		Log(kCrash, __FILE__, __LINE__, "ObjectMgr() kObjectBitsMaxSize is zero");
+	}
 }
 
 template<class OBJECT>
@@ -71,7 +74,7 @@ ObjectMgr<OBJECT>::~ObjectMgr() {
 
 template<class OBJECT>
 u32 ObjectMgr<OBJECT>::GetObjCount() {
-	return objects_.size();
+	return static_cast<u32>(objects_.size());
 }
 
 template<class OBJECT>
@@ -132,8 +135,9 @@ i64 ObjectMgr<OBJECT>::AddNewObj(OBJECT * object) {
 		if (0 != object_bits_[i]) {
 			bit = FFS(object_bits_[i] ^ kMaxValue);
 		}
-		object_bits_[i] |= 1 << bit;
+		object_bits_[i] |= static_cast<u64>(1) << bit;
 		id = (i << kBitShift) + bit;
+		break;
 	}
 
 	if (id >= 0) {
@@ -154,17 +158,17 @@ OBJECT * ObjectMgr<OBJECT>::RemoveObj(i64 id) {
 	OBJECT * object = GetObj(id);
 	if (object) {
 		objects_.erase(id);
-		u32 idx = id >> kBitShift;
-		u64 mask = 1 << (id & kBitMask);
+		u32 idx = static_cast<u32>(id >> kBitShift);
+		u64 mask = static_cast<u64>(1) << (id & kBitMask);
 		object_bits_[idx] &= ~mask;
 	}
 	return object;
 }
 
 template<class OBJECT>
-void ObjectMgr<OBJECT>::VisitObj(void(*VisitFunc)(void * object, void * ud), void * ud) {
+void ObjectMgr<OBJECT>::VisitObj(void(*VisitFunc)(OBJECT * object, void * ud), void * ud) {
 	for (auto & it : objects_) {
-		VisitFunc(it->second, ud);
+		VisitFunc(it.second, ud);
 	}
 }
 
