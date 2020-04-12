@@ -33,7 +33,7 @@ BipBuffer::~BipBuffer() {
 }
 
 i8 * BipBuffer::GetReserveBlock(i32 want_size, i32 & actually_size) {
-	if (offset_b_ > 0) {
+	if (size_b_ > 0) {
 		i32 free_space = GetBFreeSpace();
 		if (free_space <= 0) {
 			actually_size = 0;
@@ -66,10 +66,11 @@ i8 * BipBuffer::GetReserveBlock(i32 want_size, i32 & actually_size) {
 		return buffer_ + offset_reserve_;
 	}
 
-	if (offset_a_ <= 0) {
-		actually_size = 0;
-		return nullptr;
-	}
+	// 不可能存在，除非 free_space < 0
+	// if (offset_a_ <= 0) {
+	// 	actually_size = 0;
+	// 	return nullptr;
+	// }
 
 	if (offset_a_ < want_size) {
 		want_size = offset_a_;

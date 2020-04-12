@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "Common/RefCountedObject.h"
+#include "Common/Allocator.h"
 
 class MockRefCountedObject : public Net::RefCountedObject {
 public:
@@ -38,5 +39,15 @@ TEST(RefCountedObjectTestSuite, ref_ptr) {
 	EXPECT_EQ(o->ReferenceCount(), 2);
 	o->Release();
 	EXPECT_EQ(o->ReferenceCount(), 1);
+	o->Release();
+}
+
+TEST(RefCountedObjectTestSuite, del) {
+	MockRefCountedObject * o = (MockRefCountedObject *)jc_malloc(sizeof(*o));
+	new(o)MockRefCountedObject();
+	EXPECT_EQ(o->ReferenceCount(), 1);
+	o->Duplicate();
+	EXPECT_EQ(o->ReferenceCount(), 2);
+	o->Release();
 	o->Release();
 }

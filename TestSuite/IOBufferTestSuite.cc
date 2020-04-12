@@ -7,7 +7,11 @@ public:
 	MockIOBuffer() : s(0) {}
 	virtual ~MockIOBuffer() {}
 	virtual i8 * GetReserveBlock(i32 want_size, i32 & actually_size) override {
-		actually_size = buffer_length_ - s;
+		if (want_size > buffer_length_ - s) {
+			actually_size = buffer_length_ - s;
+		} else {
+			actually_size = want_size;
+		}
 		return buffer_ + s;
 	}
 	virtual i8 * GetContiguousBlock(i32 & size) override {
@@ -18,8 +22,12 @@ public:
 		s += size;
 	}
 	virtual void DeCommit(i32 size) override {
-		s -= size;
-		if (s < 0) { s = 0; }
+		if (s > size) {
+			s -= size;
+			std::memmove(buffer_, buffer_ + size, s);
+		} else {
+			s = 0;
+		}
 	}
 	virtual i32 GetCommitedSize() const override {
 		return s;
@@ -91,6 +99,9 @@ TEST(IOBufferTestSuite, straight) {
 	std::memcpy(block, buf, size);
 	io.Commit(0);
 	//1 --------------------
+	block = io.GetContiguousBlock(size);
+	EXPECT_TRUE(block == nullptr);
+	EXPECT_EQ(size, 0);
 
 	block = io.GetReserveBlock(sizeof(buf), size);
 	EXPECT_FALSE(block == nullptr);
@@ -189,6 +200,9 @@ TEST(IOBufferTestSuite, bip) {
 	std::memcpy(block, buf, size);
 	io.Commit(0);
 	//1 --------------------
+	block = io.GetContiguousBlock(size);
+	EXPECT_TRUE(block == nullptr);
+	EXPECT_EQ(size, 0);
 
 	block = io.GetReserveBlock(sizeof(buf), size);
 	EXPECT_FALSE(block == nullptr);
@@ -345,7 +359,7 @@ TEST(IOBufferTestSuite, bip) {
 	EXPECT_LT(size, sizeof(buf));
 	std::memcpy(block, buf, size);
 	io.Commit(sizeof(buf));
-	//15 1234561234561234569-
+	//16 1234561234561234569-
 	block = io.GetContiguousBlock(size);
 	std::memcpy(rbuf, block, size);
 	rbuf[size] = 0;
@@ -353,7 +367,7 @@ TEST(IOBufferTestSuite, bip) {
 
 	io.DeCommit(20);
 	EXPECT_GT(io.GetCommitedSize(), 0);
-	//16 12345612------------
+	//17 12345612------------
 	block = io.GetContiguousBlock(size);
 	std::memcpy(rbuf, block, size);
 	rbuf[size] = 0;
@@ -361,7 +375,7 @@ TEST(IOBufferTestSuite, bip) {
 
 	io.DeCommit(7);
 	EXPECT_GT(io.GetCommitedSize(), 0);
-	//17 -------2------------
+	//18 -------2------------
 	block = io.GetContiguousBlock(size);
 	std::memcpy(rbuf, block, size);
 	rbuf[size] = 0;
@@ -372,7 +386,7 @@ TEST(IOBufferTestSuite, bip) {
 	EXPECT_EQ(size, 7);
 	std::memcpy(block, "1234567", size);
 	io.Commit(7);
-	//17 -------21234567-----
+	//19 -------21234567-----
 	block = io.GetContiguousBlock(size);
 	std::memcpy(rbuf, block, size);
 	rbuf[size] = 0;
@@ -383,21 +397,55 @@ TEST(IOBufferTestSuite, bip) {
 	EXPECT_EQ(size, 7);
 	std::memcpy(block, "1234567", size);
 	io.Commit(7);
-	//18 123456721234567-----
+	//20 123456721234567-----
 	block = io.GetContiguousBlock(size);
 	std::memcpy(rbuf, block, size);
 	rbuf[size] = 0;
 	EXPECT_STREQ(rbuf, "21234567");
 
+	block = io.GetReserveBlock(7, size);
+	EXPECT_TRUE(block == nullptr);
+	EXPECT_EQ(size, 0);
+
 	io.DeCommit(20);
 	EXPECT_GT(io.GetCommitedSize(), 0);
-	//19 12345612------------
+	//21 1234567-------------
 	block = io.GetContiguousBlock(size);
 	std::memcpy(rbuf, block, size);
 	rbuf[size] = 0;
-	EXPECT_STREQ(rbuf, "12345612");
+	EXPECT_STREQ(rbuf, "1234567");
+
+	block = io.GetReserveBlock(7, size);
+	EXPECT_FALSE(block == nullptr);
+	EXPECT_EQ(size, 7);
+	std::memcpy(block, "1234567", size);
+	io.Commit(7);
+	//22 12345671234567------
+	block = io.GetContiguousBlock(size);
+	std::memcpy(rbuf, block, size);
+	rbuf[size] = 0;
+	EXPECT_STREQ(rbuf, "12345671234567");
+
+	io.DeCommit(7);
+	EXPECT_GT(io.GetCommitedSize(), 0);
+	//23 -------1234567------
+
+	block = io.GetReserveBlock(8, size);
+	EXPECT_FALSE(block == nullptr);
+	EXPECT_LT(size, 8);
+	std::memcpy(block, "12345678", size);
+	io.Commit(8);
+	//24 12345671234567------
+	block = io.GetContiguousBlock(size);
+	std::memcpy(rbuf, block, size);
+	rbuf[size] = 0;
+	EXPECT_STREQ(rbuf, "1234567");
+
+	io.DeCommit(20);
+	EXPECT_GT(io.GetCommitedSize(), 0);
+	//25 1234567-------------
 
 	io.DeCommit(20);
 	EXPECT_EQ(io.GetCommitedSize(), 0);
-	//20 --------------------
+	//26 --------------------
 }

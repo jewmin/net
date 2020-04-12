@@ -2,7 +2,7 @@
 #include "Common/Logger.h"
 
 void LoggerTestSuite_ReplaceLog(const i8 * msg, i32 length) {
-	static char buf[200];
+	static char buf[201];
 	std::memcpy(buf, msg, length);
 	buf[length] = 0;
 	std::printf("LoggerTestSuite_Log: %s", buf);
@@ -58,7 +58,7 @@ TEST_F(LoggerTestSuite, item) {
 }
 
 TEST_F(LoggerTestSuite, log) {
-	Net::Log(Net::kLog, __FILE__, __LINE__, "这是一条调试日志", (void *)123, (void *)0x123);
+	Net::Log(Net::kLog, __FILE__, __LINE__, "这是一条调试日志", (void *)123, (void *)0xabcdef);
 	Net::Log(Net::kLog, __FILE__, __LINE__, "这是一条信息日志", (int)123456789, (long)9999999999999, (long long)888888888888888);
 	Net::Log(Net::kLog, __FILE__, __LINE__, "这是一条警告日志", (int)-123456789, (long)-9999999999999, (long long)-888888888888888);
 	Net::Log(Net::kLog, __FILE__, __LINE__, "这是一条详细日志", (unsigned int)123456789, (unsigned long)9999999999999, (unsigned long long)888888888888888);
@@ -74,6 +74,9 @@ TEST_F(LoggerTestSuite, out_buffer) {
 	buf[sizeof(buf) - 2] = '\n';
 	buf[sizeof(buf) - 1] = 0;
 	Net::Log(Net::kLog, __FILE__, __LINE__, buf);
+	EXPECT_EQ(true, jc_replace_logger(LoggerTestSuite_WriteMessage));
+	Net::Log(Net::kLog, __FILE__, __LINE__, buf);
+	Net::Log(Net::kLog, __FILE__, __LINE__, buf, "error");
 }
 
 TEST_F(LoggerTestSuite, crash) {

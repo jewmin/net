@@ -27,7 +27,6 @@ MESSAGE(STATUS "LINUX:" ${LINUX})
 
 # 添加源文件
 SET(Common
-	${CMAKE_CURRENT_LIST_DIR}/Net.h
 	${CMAKE_CURRENT_LIST_DIR}/Common/Logger.h
 	${CMAKE_CURRENT_LIST_DIR}/Common/Logger.cc
 	${CMAKE_CURRENT_LIST_DIR}/Common/Allocator.h
@@ -111,6 +110,7 @@ SET(Timer
 )
 
 SET(all_srcs
+	${CMAKE_CURRENT_LIST_DIR}/Net.h
 	${Common}
 	${Address}
 	${Sockets}
