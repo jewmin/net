@@ -174,6 +174,25 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/3rd/libuv/include)
 # 第三方类库
 LINK_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/3rd/libuv/lib)
 
+# uv
+SET(UV_DLL_FILE_DEBUG
+	${CMAKE_CURRENT_LIST_DIR}/3rd/libuv/lib/Debug/libuv.dll
+)
+SET(UV_DLL_FILE_RELEASE
+	${CMAKE_CURRENT_LIST_DIR}/3rd/libuv/lib/Release/libuv.dll
+)
+
+# vld
+IF(VLD)
+	SET(VLD_LIB vld)
+	SET(VLD_DLL_FILE
+		${CMAKE_CURRENT_LIST_DIR}/3rd/vld/lib/vld_x64.dll
+		${CMAKE_CURRENT_LIST_DIR}/3rd/vld/lib/dbghelp.dll
+		${CMAKE_CURRENT_LIST_DIR}/3rd/vld/lib/Microsoft.DTfW.DHL.manifest
+		${CMAKE_CURRENT_LIST_DIR}/3rd/vld/lib/vld.ini
+	)
+ENDIF()
+
 # 生成静态库、动态库
 IF(WINDOWS)
 	ADD_LIBRARY(libnet-static STATIC ${all_srcs})

@@ -14,8 +14,8 @@ SET(test_srcs
 	${CMAKE_CURRENT_LIST_DIR}/IOBufferTestSuite.cc
 	${CMAKE_CURRENT_LIST_DIR}/NetObjectTestSuite.cc
 	${CMAKE_CURRENT_LIST_DIR}/ObjectMgrTestSuite.cc
-	# ${CMAKE_CURRENT_LIST_DIR}/IPAddressTestSuite.cc
-	# ${CMAKE_CURRENT_LIST_DIR}/SocketAddressTestSuite.cc
+	${CMAKE_CURRENT_LIST_DIR}/IPAddressTestSuite.cc
+	${CMAKE_CURRENT_LIST_DIR}/SocketAddressTestSuite.cc
 	# ${CMAKE_CURRENT_LIST_DIR}/SocketTestSuite.cc
 	# ${CMAKE_CURRENT_LIST_DIR}/ReactorTestSuite.cc
 )
@@ -39,23 +39,16 @@ IF(VLD)
 	ADD_DEFINITIONS(-DUSE_VLD)
 	INCLUDE_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/../3rd/vld/include)
 	LINK_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/../3rd/vld/lib)
-	SET(VLD_LIB vld)
-	SET(VLD_DLL_FILE
-		${CMAKE_CURRENT_LIST_DIR}/../3rd/vld/lib/vld_x64.dll
-		${CMAKE_CURRENT_LIST_DIR}/../3rd/vld/lib/dbghelp.dll
-		${CMAKE_CURRENT_LIST_DIR}/../3rd/vld/lib/Microsoft.DTfW.DHL.manifest
-		${CMAKE_CURRENT_LIST_DIR}/../3rd/vld/lib/vld.ini
-	)
 ENDIF()
 
 # 生成可执行文件
 ADD_EXECUTABLE(${PROJECT_NAME} ${test_srcs})
 IF(WINDOWS)
-	TARGET_LINK_LIBRARIES(${PROJECT_NAME} libnet-static ${VLD_LIB} ws2_32 iphlpapi psapi userenv debug gtestd debug gmockd optimized gtest optimized gmock)
+	TARGET_LINK_LIBRARIES(${PROJECT_NAME} libnet-static ${VLD_LIB} ws2_32 iphlpapi psapi userenv libuv debug gtestd debug gmockd optimized gtest optimized gmock)
 	IF(RELEASE)
-		ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VLD_DLL_FILE} ${GTEST_DLL_FILE_RELEASE} ${OUTPUT_DIRECTORY_RELEASE})
+		ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VLD_DLL_FILE} ${GTEST_DLL_FILE_RELEASE} ${UV_DLL_FILE_RELEASE} ${OUTPUT_DIRECTORY_RELEASE})
 	ELSE()
-		ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VLD_DLL_FILE} ${GTEST_DLL_FILE_DEBUG} ${OUTPUT_DIRECTORY_DEBUG})
+		ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${VLD_DLL_FILE} ${GTEST_DLL_FILE_DEBUG} ${UV_DLL_FILE_DEBUG} ${OUTPUT_DIRECTORY_DEBUG})
 	ENDIF()
 ELSEIF(LINUX)
 	TARGET_LINK_LIBRARIES(${PROJECT_NAME} net-static uv debug gtestd debug gmockd optimized gtest optimized gmock)

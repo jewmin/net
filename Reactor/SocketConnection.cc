@@ -57,7 +57,7 @@ bool SocketConnection::RegisterToReactor() {
 		return false;
 	}
 	if (io_) {
-		Log(kCrash, __FILE__, __LINE__, "RegisterToReactor() io_ is not nullptr");
+		Log(kCrash, __FILE__, __LINE__, "RegisterToReactor() io_ != nullptr");
 	}
 	io_ = new SocketIO(max_out_buffer_size_, max_in_buffer_size_);
 	socket_.SetUvData(this);
@@ -74,7 +74,7 @@ bool SocketConnection::UnRegisterFromReactor() {
 		delete io_;
 		io_ = nullptr;
 	} else {
-		Log(kLog, __FILE__, __LINE__, "UnRegisterFromReactor() io_ is nullptr");
+		Log(kLog, __FILE__, __LINE__, "UnRegisterFromReactor() io_ == nullptr");
 	}
 	socket_.ShutdownRead();
 	socket_.Close();
@@ -196,7 +196,7 @@ i32 SocketConnection::Write(const i8 * data, i32 len) {
 
 i32 SocketConnection::Read(i8 * data, i32 len) {
 	if (!io_) {
-		Log(kCrash, __FILE__, __LINE__, "Read() io_ is nullptr");
+		Log(kCrash, __FILE__, __LINE__, "Read() io_ == nullptr");
 	}
 	return io_->in_buffer_->Read(data, len);
 }

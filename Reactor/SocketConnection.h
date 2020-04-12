@@ -109,14 +109,14 @@ inline StreamSocket * SocketConnection::GetSocket() {
 
 inline i8 * SocketConnection::GetRecvData(i32 & size) const {
 	if (!io_) {
-		Log(kCrash, __FILE__, __LINE__, "GetRecvData() io_ is nullptr");
+		Log(kCrash, __FILE__, __LINE__, "GetRecvData() io_ == nullptr");
 	}
 	return io_->in_buffer_->GetContiguousBlock(size);
 }
 
 inline void SocketConnection::PopRecvData(i32 size) {
 	if (!io_) {
-		Log(kCrash, __FILE__, __LINE__, "PopRecvData() io_ is nullptr");
+		Log(kCrash, __FILE__, __LINE__, "PopRecvData() io_ == nullptr");
 	}
 	io_->in_buffer_->DeCommit(size);
 }

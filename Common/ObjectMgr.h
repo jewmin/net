@@ -61,7 +61,7 @@ private:
 template<class OBJECT>
 ObjectMgr<OBJECT>::ObjectMgr(u32 object_max_count) : object_bits_(nullptr), kObjectBitsMaxSize(object_max_count >> kBitShift) {
 	if (0 == kObjectBitsMaxSize) {
-		Log(kCrash, __FILE__, __LINE__, "ObjectMgr() kObjectBitsMaxSize is zero");
+		Log(kCrash, __FILE__, __LINE__, "ObjectMgr() kObjectBitsMaxSize == 0");
 	}
 }
 
@@ -119,7 +119,7 @@ inline u8 ObjectMgr<OBJECT>::FFS(u64 x) {
 template<class OBJECT>
 i64 ObjectMgr<OBJECT>::AddNewObj(OBJECT * object) {
 	if (!object) {
-		Log(kCrash, __FILE__, __LINE__, "AddNewObj() object is nullptr");
+		Log(kCrash, __FILE__, __LINE__, "AddNewObj() object == nullptr");
 	}
 
 	if (!object_bits_) {
@@ -142,7 +142,7 @@ i64 ObjectMgr<OBJECT>::AddNewObj(OBJECT * object) {
 
 	if (id >= 0) {
 		if (GetObj(id)) {
-			Log(kCrash, __FILE__, __LINE__, "AddNewObj() id already exists", id);
+			Log(kCrash, __FILE__, __LINE__, "AddNewObj() id [", id, "] already exists");
 		}
 		objects_.insert({id, object});
 	}
@@ -152,7 +152,7 @@ i64 ObjectMgr<OBJECT>::AddNewObj(OBJECT * object) {
 template<class OBJECT>
 OBJECT * ObjectMgr<OBJECT>::RemoveObj(i64 id) {
 	if (id < 0) {
-		Log(kCrash, __FILE__, __LINE__, "RemoveObj() id must be >= 0", id);
+		Log(kCrash, __FILE__, __LINE__, "RemoveObj() id [", id, "] < 0");
 	}
 
 	OBJECT * object = GetObj(id);

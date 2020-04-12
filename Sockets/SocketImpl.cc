@@ -277,7 +277,7 @@ void SocketImpl::SetKeepAlive(i32 interval) {
 
 void SocketImpl::SetUvData(UvData * data) {
 	if (!handle_) {
-		Log(kCrash, __FILE__, __LINE__, "SetUvData() handle_ is nullptr");
+		Log(kCrash, __FILE__, __LINE__, "SetUvData() handle_ == nullptr");
 	}
 	if (handle_->data != data) {
 		if (handle_->data) {
@@ -303,7 +303,7 @@ void SocketImpl::close_cb(uv_handle_t * handle) {
 	if (UV_TCP == handle->type) {
 		jc_free(handle);
 	} else {
-		Log(kCrash, __FILE__, __LINE__, "close_cb() free specified handle error", uv_handle_type_name(handle->type));
+		Log(kCrash, __FILE__, __LINE__, "close_cb() free specified handle [", uv_handle_type_name(handle->type), "] error");
 	}
 }
 
@@ -312,7 +312,7 @@ void SocketImpl::connection_cb(uv_stream_t * server, int status) {
 	if (data) {
 		data->AcceptCallback(status);
 	} else {
-		Log(kLog, __FILE__, __LINE__, "connection_cb() server->data is nullptr");
+		Log(kLog, __FILE__, __LINE__, "connection_cb() server->data == nullptr");
 	}
 }
 
@@ -322,7 +322,7 @@ void SocketImpl::connect_cb(uv_connect_t * req, int status) {
 		data->ConnectCallback(status, req->data);
 		data->Release();
 	} else {
-		Log(kLog, __FILE__, __LINE__, "connect_cb() req->handle->data is nullptr");
+		Log(kLog, __FILE__, __LINE__, "connect_cb() req->handle->data == nullptr");
 	}
 	jc_free(req);
 }
@@ -332,7 +332,7 @@ void SocketImpl::shutdown_cb(uv_shutdown_t * req, int status) {
 	if (data) {
 		data->ShutdownCallback(status, req->data);
 	} else {
-		Log(kLog, __FILE__, __LINE__, "shutdown_cb() req->handle->data is nullptr");
+		Log(kLog, __FILE__, __LINE__, "shutdown_cb() req->handle->data == nullptr");
 	}
 	jc_free(req);
 }
@@ -342,7 +342,7 @@ void SocketImpl::alloc_cb(uv_handle_t * handle, size_t suggested_size, uv_buf_t 
 	if (data) {
 		data->AllocCallback(buf);
 	} else {
-		Log(kLog, __FILE__, __LINE__, "alloc_cb() handle->data is nullptr");
+		Log(kLog, __FILE__, __LINE__, "alloc_cb() handle->data == nullptr");
 	}
 }
 
@@ -351,7 +351,7 @@ void SocketImpl::read_cb(uv_stream_t * stream, ssize_t nread, const uv_buf_t * b
 	if (data) {
 		data->ReadCallback(static_cast<i32>(nread));
 	} else {
-		Log(kLog, __FILE__, __LINE__, "read_cb() stream->data is nullptr");
+		Log(kLog, __FILE__, __LINE__, "read_cb() stream->data == nullptr");
 	}
 }
 
@@ -360,7 +360,7 @@ void SocketImpl::write_cb(uv_write_t * req, int status) {
 	if (data) {
 		data->WrittenCallback(status, req->data);
 	} else {
-		Log(kLog, __FILE__, __LINE__, "write_cb() req->handle->data is nullptr");
+		Log(kLog, __FILE__, __LINE__, "write_cb() req->handle->data == nullptr");
 	}
 	jc_free(req);
 }

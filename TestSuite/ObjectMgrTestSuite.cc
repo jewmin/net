@@ -95,6 +95,9 @@ TEST(ObjectMgrTestSuite, visit) {
 	int sum = 0;
 	mgr1.VisitObj(Func, (void *)&sum);
 	EXPECT_EQ(sum, 5050);
+	for (int i = 0; i < 100; ++i) {
+		delete mgr1.RemoveObj(i);
+	}
 }
 
 TEST(ObjectMgrTestSuite, crash) {

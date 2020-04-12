@@ -87,7 +87,7 @@ void SocketAcceptor::AcceptCallback(i32 status) {
 		}
 		SocketConnection * connection = CreateConnection();
 		if (!connection) {
-			Log(kLog, __FILE__, __LINE__, "AcceptCallback() connection is null");
+			Log(kLog, __FILE__, __LINE__, "AcceptCallback() connection == null");
 			return;
 		}
 		StreamSocket * associate_socket = connection->GetSocket();
