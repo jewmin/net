@@ -22,24 +22,40 @@
  * SOFTWARE.
  */
 
-#include "Core/SocketAcceptorImpl.h"
-#include "Core/SocketWrapper.h"
+#ifndef Net_Core_Server_INCLUDED
+#define Net_Core_Server_INCLUDED
+
+#include "Core/ConnectionMgr.h"
+#include "Reactor/EventReactor.h"
+#include "Reactor/SocketAcceptor.h"
 
 namespace Net {
 
-SocketAcceptorImpl::SocketAcceptorImpl(EventReactor * reactor, SocketServer * server, i32 max_out_buffer_size, i32 max_in_buffer_size)
-	: SocketAcceptor(reactor), server_(server), max_out_buffer_size_(max_out_buffer_size), max_in_buffer_size_(max_in_buffer_size) {
+class Server : public ConnectionMgr {
+	class Acceptor : public SocketAcceptor {
+	public:
+		Acceptor(EventReactor * reactor, Server * server);
+		virtual ~Acceptor();
+
+	protected:
+		virtual SocketConnection * CreateConnection() override;
+
+	private:
+		Server * server_;
+	};
+
+public:
+	Server(const std::string & name, EventReactor * reactor, i32 max_out_buffer_size, i32 max_in_buffer_size, u32 object_max_count);
+	virtual ~Server();
+
+	virtual bool Listen(const std::string & address, i32 port, i32 backlog = 128, bool ipv6_only = false);
+
+private:
+	SocketAcceptor * acceptor_;
+	i32 max_out_buffer_size_;
+	i32 max_in_buffer_size_;
+};
+
 }
 
-SocketAcceptorImpl::~SocketAcceptorImpl() {
-}
-
-void SocketAcceptorImpl::MakeConnection(SocketConnection * & connection) {
-	SocketWrapper * wrapper = new SocketWrapper(server_, max_out_buffer_size_, max_in_buffer_size_);
-	connection = wrapper->GetConnection();
-}
-
-void SocketAcceptorImpl::OnAccepted(SocketConnection * connection) {
-}
-
-}
+#endif

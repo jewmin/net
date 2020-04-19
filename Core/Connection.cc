@@ -22,58 +22,57 @@
  * SOFTWARE.
  */
 
-#include "Core/SocketConnectionImpl.h"
+#include "Core/Connection.h"
+#include "Core/ConnectionMgr.h"
+#include "Common/Logger.h"
 
 namespace Net {
 
-SocketConnectionImpl::SocketConnectionImpl(INotification * notification, i32 max_out_buffer_size, i32 max_in_buffer_size)
-	: SocketConnection(max_out_buffer_size, max_in_buffer_size), notification_(notification) {
-	if (!notification_) {
-		Log(kCrash, __FILE__, __LINE__, "notification is nullptr!");
-	}
+Connection::Connection(ConnectionMgr * mgr, i32 max_out_buffer_size, i32 max_in_buffer_size)
+	: SocketConnection(max_out_buffer_size, max_in_buffer_size), mgr_(mgr), connection_id_(-1), is_register2mgr_(false) {
 }
 
-SocketConnectionImpl::~SocketConnectionImpl() {
+Connection::~Connection() {
 }
 
-void SocketConnectionImpl::Destroy() {
-	notification_ = nullptr;
+void Connection::Destroy() {
+	mgr_ = nullptr;
 	SocketConnection::Destroy();
 }
 
-void SocketConnectionImpl::OnConnected() {
-	if (notification_) {
-		notification_->OnConnected();
+void Connection::OnConnected() {
+	if (mgr_) {
+		mgr_->OnConnected(this);
 	}
 }
 
-void SocketConnectionImpl::OnConnectFailed(int reason) {
-	if (notification_) {
-		notification_->OnConnectFailed(reason);
+void Connection::OnConnectFailed(i32 reason) {
+	if (mgr_) {
+		mgr_->OnConnectFailed(this, reason);
 	}
 }
 
-void SocketConnectionImpl::OnDisconnected(bool is_remote) {
-	if (notification_) {
-		notification_->OnDisconnected(is_remote);
+void Connection::OnDisconnected(bool is_remote) {
+	if (mgr_) {
+		mgr_->OnDisconnected(this, is_remote);
 	}
 }
 
-void SocketConnectionImpl::OnNewDataReceived() {
-	if (notification_) {
-		notification_->OnNewDataReceived();
+void Connection::OnNewDataReceived() {
+	if (mgr_) {
+		mgr_->OnNewDataReceived(this);
 	}
 }
 
-void SocketConnectionImpl::OnSomeDataSent() {
-	if (notification_) {
-		notification_->OnSomeDataSent();
+void Connection::OnSomeDataSent() {
+	if (mgr_) {
+		mgr_->OnSomeDataSent(this);
 	}
 }
 
-void SocketConnectionImpl::OnError(int reason) {
-	if (notification_) {
-		notification_->OnError(reason);
+void Connection::OnError(i32 reason) {
+	if (UV_ECANCELED != reason) {
+		Log(kLog, __FILE__, __LINE__, "connection error:", connection_id_, uv_err_name(reason), uv_strerror(reason));
 	}
 }
 

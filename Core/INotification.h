@@ -26,17 +26,18 @@
 #define Net_Core_INotification_INCLUDED
 
 #include "Common/NetObject.h"
+#include "Core/Connection.h"
 
 namespace Net {
 
 class INotification : public NetObject {
 public:
-	virtual void OnConnected() = 0;
-	virtual void OnConnectFailed(i32 reason) = 0;
-	virtual void OnDisconnected(bool is_remote) = 0;
-	virtual void OnNewDataReceived() = 0;
-	virtual void OnSomeDataSent() = 0;
-	virtual void OnError(i32 reason) = 0;
+	virtual i32 OnConnected(Connection * connection) = 0;
+	virtual i32 OnConnectFailed(Connection * connection, i32 reason) = 0;
+	virtual i32 OnDisconnected(Connection * connection, bool is_remote) = 0;
+	virtual i32 OnNewDataReceived(Connection * connection) = 0;
+	virtual i32 OnSomeDataSent(Connection * connection) = 0;
+	virtual i32 OnUpdate(Connection * connection) = 0;
 };
 
 }

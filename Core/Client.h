@@ -22,44 +22,29 @@
  * SOFTWARE.
  */
 
-#include "Core/SocketClient.h"
-#include "Common/Logger.h"
+#ifndef Net_Core_Client_INCLUDED
+#define Net_Core_Client_INCLUDED
+
+#include "Core/ConnectionMgr.h"
+#include "Reactor/EventReactor.h"
+#include "Reactor/SocketConnector.h"
 
 namespace Net {
 
-SocketClient::SocketClient(const std::string & name, EventReactor * reactor, SocketConnector * connector, i32 max_out_buffer_size, i32 max_in_buffer_size)
-	: SocketWrapperMgr(name), reactor_(reactor), connector_(connector), max_out_buffer_size_(max_out_buffer_size), max_in_buffer_size_(max_in_buffer_size) {
-	if (connector_) {
-		connector_->Duplicate();
-	}
-}
+class Client : public ConnectionMgr {
+public:
+	Client(const std::string & name, EventReactor * reactor, SocketConnector * connector, i32 max_out_buffer_size, i32 max_in_buffer_size, u32 object_max_count);
+	virtual ~Client();
 
-SocketClient::~SocketClient() {
-	Terminate();
-}
+	virtual bool Connect(const std::string & address, i32 port);
 
-bool SocketClient::Connect(const std::string & address, i32 port, u32 & id) {
-	id = 0;
-	if (!connector_) {
-		connector_ = new SocketConnector(reactor_);
-	}
-	SocketWrapper * wrapper = new SocketWrapper(this, max_out_buffer_size_, max_in_buffer_size_);
-	id = Register(wrapper);
-	SocketAddress sa(IPAddress(address), static_cast<u16>(port));
-	i32 status = connector_->Connect(wrapper->GetConnection(), sa);
-	if (status < 0) {
-		Log(kLog, __FILE__, __LINE__, "建立连接失败", GetName().c_str(), sa.ToString().c_str());
-		return false;
-	}
-	return true;
-}
-
-bool SocketClient::Terminate() {
-	if (connector_) {
-		connector_->Destroy();
-		connector_ = nullptr;
-	}
-	return true;
-}
+private:
+	EventReactor * reactor_;
+	SocketConnector * connector_;
+	i32 max_out_buffer_size_;
+	i32 max_in_buffer_size_;
+};
 
 }
+
+#endif

@@ -22,29 +22,30 @@
  * SOFTWARE.
  */
 
-#ifndef Net_Core_SocketAcceptorImpl_INCLUDED
-#define Net_Core_SocketAcceptorImpl_INCLUDED
-
-#include "Core/SocketServer.h"
-#include "Reactor/SocketAcceptor.h"
+#include "Core/Client.h"
 
 namespace Net {
 
-class SocketAcceptorImpl : public SocketAcceptor {
-public:
-	SocketAcceptorImpl(EventReactor * reactor, SocketServer * server, i32 max_out_buffer_size, i32 max_in_buffer_size);
-	virtual ~SocketAcceptorImpl();
-
-protected:
-	virtual void MakeConnection(SocketConnection * & connection);
-	virtual void OnAccepted(SocketConnection * connection);
-
-private:
-	SocketServer * server_;
-	i32 max_out_buffer_size_;
-	i32 max_in_buffer_size_;
-};
-
+Client::Client(const std::string & name, EventReactor * reactor, SocketConnector * connector, i32 max_out_buffer_size, i32 max_in_buffer_size, u32 object_max_count)
+	: ConnectionMgr(name, object_max_count), reactor_(reactor), connector_(connector)
+	, max_out_buffer_size_(max_out_buffer_size), max_in_buffer_size_(max_in_buffer_size) {
+	if (connector_) {
+		connector_->Duplicate();
+	}
 }
 
-#endif
+Client::~Client() {
+	if (connector_) {
+		connector_->Release();
+	}
+}
+
+bool Client::Connect(const std::string & address, i32 port) {
+	if (!connector_) {
+		connector_ = new SocketConnector(reactor_);
+	}
+	Connection * connection = new Connection(this, max_out_buffer_size_, max_in_buffer_size_);
+	return connector_->Connect(connection, SocketAddress(IPAddress(address), static_cast<u16>(port)));
+}
+
+}

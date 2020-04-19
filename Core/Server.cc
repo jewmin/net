@@ -22,23 +22,35 @@
  * SOFTWARE.
  */
 
-#ifndef Net_Core_IEvent_INCLUDED
-#define Net_Core_IEvent_INCLUDED
-
-#include "Core/SocketWrapper.h"
+#include "Core/Server.h"
+#include "Core/Connection.h"
 
 namespace Net {
 
-class IEvent {
-public:
-	virtual i32 OnConnected(SocketWrapper * wrapper) = 0;
-	virtual i32 OnConnectFailed(SocketWrapper * wrapper, i32 reason) = 0;
-	virtual i32 OnDisconnected(SocketWrapper * wrapper, bool is_remote) = 0;
-	virtual i32 OnNewDataReceived(SocketWrapper * wrapper) = 0;
-	virtual i32 OnSomeDataSent(SocketWrapper * wrapper) = 0;
-	// virtual i32 OnTick(SocketWrapper * wrapper) = 0;
-};
-
+Server::Acceptor::Acceptor(EventReactor * reactor, Server * server)
+	: SocketAcceptor(reactor), server_(server) {
 }
 
-#endif
+Server::Acceptor::~Acceptor() {
+}
+
+SocketConnection * Server::Acceptor::CreateConnection() {
+	return new Connection(server_, server_->max_out_buffer_size_, server_->max_in_buffer_size_);
+}
+
+Server::Server(const std::string & name, EventReactor * reactor, i32 max_out_buffer_size, i32 max_in_buffer_size, u32 object_max_count)
+	: ConnectionMgr(name, object_max_count), acceptor_(new Acceptor(reactor, this))
+	, max_out_buffer_size_(max_out_buffer_size), max_in_buffer_size_(max_in_buffer_size) {
+}
+
+Server::~Server() {
+	if (acceptor_) {
+		acceptor_->Destroy();
+	}
+}
+
+bool Server::Listen(const std::string & address, i32 port, i32 backlog, bool ipv6_only) {
+	return acceptor_->Open(SocketAddress(IPAddress(address), static_cast<u16>(port)), backlog, ipv6_only);
+}
+
+}
