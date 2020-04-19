@@ -98,6 +98,7 @@ void SocketAcceptor::AcceptCallback(i32 status) {
 			connection->OnConnected();
 		} else {
 			Log(kLog, __FILE__, __LINE__, "AcceptCallback() ActivateConnection error");
+			connection->OnConnectFailed(UV_ECANCELED);
 		}
 	}
 }

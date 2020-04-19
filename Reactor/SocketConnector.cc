@@ -24,6 +24,7 @@
 
 #include "Reactor/SocketConnector.h"
 #include "Reactor/ConnectState.h"
+#include "Common/Logger.h"
 
 namespace Net {
 
@@ -54,6 +55,7 @@ void SocketConnector::Context::ConnectCallback(i32 status, void * arg) {
 			connection_->OnConnected();
 		} else {
 			Log(kLog, __FILE__, __LINE__, "ConnectCallback() ActivateConnection error");
+			connection_->OnConnectFailed(UV_ECANCELED);
 		}
 	}
 }
