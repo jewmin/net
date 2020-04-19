@@ -35,7 +35,7 @@ class SocketConnector : public EventHandler {
 	public:
 		Context(SocketConnector * connector, SocketConnection * connection);
 		virtual ~Context();
-		void ConnectCallback(i32 status, void * arg) override;
+		virtual void ConnectCallback(i32 status, void * arg) override;
 		SocketConnector * connector_;
 		SocketConnection * connection_;
 	};
@@ -47,8 +47,8 @@ public:
 	i32 Connect(SocketConnection * connection, const SocketAddress & address);
 
 protected:
-	bool RegisterToReactor() override;
-	bool UnRegisterFromReactor() override;
+	virtual bool RegisterToReactor() override;
+	virtual bool UnRegisterFromReactor() override;
 
 private:
 	bool ActivateConnection(SocketConnection * connection);

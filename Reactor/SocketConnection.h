@@ -49,15 +49,7 @@ public:
 
 	bool Establish();
 	void Shutdown(bool now);
-	void Destroy() override;
-
-	// 通知应用层
-	virtual void OnConnected();
-	virtual void OnConnectFailed(i32 reason);
-	virtual void OnDisconnected(bool is_remote);
-	virtual void OnNewDataReceived();
-	virtual void OnSomeDataSent();
-	virtual void OnError(i32 reason);
+	virtual void Destroy() override;
 
 	i32 Write(const i8 * data, i32 len);
 	i32 Read(i8 * data, i32 len);
@@ -68,16 +60,24 @@ public:
 	void SetConnectState(ConnectState::eState state);
 	StreamSocket * GetSocket();
 
+	// 通知应用层
+	virtual void OnConnected();
+	virtual void OnConnectFailed(i32 reason);
+	virtual void OnDisconnected(bool is_remote);
+	virtual void OnNewDataReceived();
+	virtual void OnSomeDataSent();
+	virtual void OnError(i32 reason);
+
 protected:
-	bool RegisterToReactor() override;
-	bool UnRegisterFromReactor() override;
+	virtual bool RegisterToReactor() override;
+	virtual bool UnRegisterFromReactor() override;
 
 private:
-	void CloseCallback() override;
-	void ShutdownCallback(i32 status, void * arg) override;
-	void AllocCallback(uv_buf_t * buf) override;
-	void ReadCallback(i32 status) override;
-	void WrittenCallback(i32 status, void * arg) override;
+	virtual void CloseCallback() override;
+	virtual void ShutdownCallback(i32 status, void * arg) override;
+	virtual void AllocCallback(uv_buf_t * buf) override;
+	virtual void ReadCallback(i32 status) override;
+	virtual void WrittenCallback(i32 status, void * arg) override;
 
 	void ShutdownImmediately();
 	void CallOnDisconnected(bool is_remote);

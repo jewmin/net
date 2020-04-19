@@ -57,13 +57,13 @@ public:
 	explicit IPv4SocketAddressImpl(const struct sockaddr_in * addr);
 	virtual ~IPv4SocketAddressImpl();
 
-	IPAddress Host() const override;
-	u16 Port() const override;
-	socklen_t Length() const override;
-	const struct sockaddr * Addr() const override;
-	i32 AF() const override;
-	AddressFamily::eFamily Family() const override;
-	std::string ToString() const override;
+	virtual IPAddress Host() const override;
+	virtual u16 Port() const override;
+	virtual socklen_t Length() const override;
+	virtual const struct sockaddr * Addr() const override;
+	virtual i32 AF() const override;
+	virtual AddressFamily::eFamily Family() const override;
+	virtual std::string ToString() const override;
 	
 private:
 	struct sockaddr_in addr_;
@@ -75,13 +75,13 @@ public:
 	explicit IPv6SocketAddressImpl(const struct sockaddr_in6 * addr);
 	virtual ~IPv6SocketAddressImpl();
 
-	IPAddress Host() const override;
-	u16 Port() const override;
-	socklen_t Length() const override;
-	const struct sockaddr * Addr() const override;
-	i32 AF() const override;
-	AddressFamily::eFamily Family() const override;
-	std::string ToString() const override;
+	virtual IPAddress Host() const override;
+	virtual u16 Port() const override;
+	virtual socklen_t Length() const override;
+	virtual const struct sockaddr * Addr() const override;
+	virtual i32 AF() const override;
+	virtual AddressFamily::eFamily Family() const override;
+	virtual std::string ToString() const override;
 
 private:
 	struct sockaddr_in6 addr_;

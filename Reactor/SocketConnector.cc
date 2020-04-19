@@ -52,6 +52,8 @@ void SocketConnector::Context::ConnectCallback(i32 status, void * arg) {
 		associate_socket->SetKeepAlive(60);
 		if (connector_->ActivateConnection(connection_)) {
 			connection_->OnConnected();
+		} else {
+			Log(kLog, __FILE__, __LINE__, "ConnectCallback() ActivateConnection error");
 		}
 	}
 }

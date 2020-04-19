@@ -34,11 +34,11 @@ public:
 	BipBuffer();
 	virtual ~BipBuffer();
 
-	i8 * GetReserveBlock(i32 want_size, i32 & actually_size) override;
-	i8 * GetContiguousBlock(i32 & size) override;
-	void Commit(i32 size) override;
-	void DeCommit(i32 size) override;
-	i32 GetCommitedSize() const override;
+	virtual i8 * GetReserveBlock(i32 want_size, i32 & actually_size) override;
+	virtual i8 * GetContiguousBlock(i32 & size) override;
+	virtual void Commit(i32 size) override;
+	virtual void DeCommit(i32 size) override;
+	virtual i32 GetCommitedSize() const override;
 
 protected:
 	i32 GetSpaceAfterA() const;

@@ -96,6 +96,8 @@ void SocketAcceptor::AcceptCallback(i32 status) {
 		associate_socket->SetKeepAlive(60);
 		if (ActivateConnection(connection)) {
 			connection->OnConnected();
+		} else {
+			Log(kLog, __FILE__, __LINE__, "AcceptCallback() ActivateConnection error");
 		}
 	}
 }
