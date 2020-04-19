@@ -44,7 +44,7 @@ public:
 	explicit SocketConnector(EventReactor * reactor);
 	virtual ~SocketConnector();
 
-	i32 Connect(SocketConnection * connection, const SocketAddress & address);
+	bool Connect(SocketConnection * connection, const SocketAddress & address);
 
 protected:
 	virtual bool RegisterToReactor() override;

@@ -81,20 +81,15 @@ SET(Reactor
 	${CMAKE_CURRENT_LIST_DIR}/Reactor/SocketConnector.cc
 )
 SET(Core
-	${CMAKE_CURRENT_LIST_DIR}/Core/IEvent.h
 	${CMAKE_CURRENT_LIST_DIR}/Core/INotification.h
-	${CMAKE_CURRENT_LIST_DIR}/Core/SocketAcceptorImpl.h
-	${CMAKE_CURRENT_LIST_DIR}/Core/SocketAcceptorImpl.cc
-	${CMAKE_CURRENT_LIST_DIR}/Core/SocketClient.h
-	${CMAKE_CURRENT_LIST_DIR}/Core/SocketClient.cc
-	${CMAKE_CURRENT_LIST_DIR}/Core/SocketConnectionImpl.h
-	${CMAKE_CURRENT_LIST_DIR}/Core/SocketConnectionImpl.cc
-	${CMAKE_CURRENT_LIST_DIR}/Core/SocketServer.h
-	${CMAKE_CURRENT_LIST_DIR}/Core/SocketServer.cc
-	${CMAKE_CURRENT_LIST_DIR}/Core/SocketWrapper.h
-	${CMAKE_CURRENT_LIST_DIR}/Core/SocketWrapper.cc
-	${CMAKE_CURRENT_LIST_DIR}/Core/SocketWrapperMgr.h
-	${CMAKE_CURRENT_LIST_DIR}/Core/SocketWrapperMgr.cc
+	${CMAKE_CURRENT_LIST_DIR}/Core/Client.h
+	${CMAKE_CURRENT_LIST_DIR}/Core/Client.cc
+	${CMAKE_CURRENT_LIST_DIR}/Core/Connection.h
+	${CMAKE_CURRENT_LIST_DIR}/Core/Connection.cc
+	${CMAKE_CURRENT_LIST_DIR}/Core/Server.h
+	${CMAKE_CURRENT_LIST_DIR}/Core/Server.cc
+	${CMAKE_CURRENT_LIST_DIR}/Core/ConnectionMgr.h
+	${CMAKE_CURRENT_LIST_DIR}/Core/ConnectionMgr.cc
 )
 SET(Interface
 	${CMAKE_CURRENT_LIST_DIR}/Interface/ApplicationContext.h
@@ -115,7 +110,7 @@ SET(all_srcs
 	${Address}
 	${Sockets}
 	${Reactor}
-	# ${Core}
+	${Core}
 	# ${Interface}
 	# ${Timer}
 )
@@ -126,7 +121,7 @@ SOURCE_GROUP(Common FILES ${Common})
 SOURCE_GROUP(Address FILES ${Address})
 SOURCE_GROUP(Sockets FILES ${Sockets})
 SOURCE_GROUP(Reactor FILES ${Reactor})
-# SOURCE_GROUP(Core FILES ${Core})
+SOURCE_GROUP(Core FILES ${Core})
 # SOURCE_GROUP(Interface FILES ${Interface})
 # SOURCE_GROUP(Timer FILES ${Timer})
 

@@ -76,7 +76,7 @@ inline u32 ConnectionMgr::GetConnectionCount() const {
 	return object_mgr_->GetObjCount();
 }
 
-Connection * ConnectionMgr::GetConnection(i64 id) {
+inline Connection * ConnectionMgr::GetConnection(i64 id) {
 	return object_mgr_->GetObj(id);
 }
 
