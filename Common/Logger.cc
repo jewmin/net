@@ -98,6 +98,9 @@ bool Logger::Add(const LogItem & item) {
 
 bool Logger::AddStr(const i8 * str, i32 num) {
 	if (end_ - p_ < num) {
+		num = static_cast<i32>(end_ - p_);
+	}
+	if (num <= 0) {
 		return false;
 	} else {
 		std::memcpy(p_, str, num);

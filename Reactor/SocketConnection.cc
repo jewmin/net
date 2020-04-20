@@ -25,11 +25,22 @@
 #include "Reactor/SocketConnection.h"
 #include "Common/Logger.h"
 #include "Common/Allocator.h"
+#include "Common/BipBuffer.h"
+#include "Common/StraightBuffer.h"
 
 namespace Net {
 
+SocketConnection::SocketIO::SocketIO(i32 max_out_buffer_size, i32 max_in_buffer_size)
+	: in_buffer_(new StraightBuffer()), out_buffer_(new BipBuffer()) {
+	in_buffer_->Allocate(max_in_buffer_size);
+	out_buffer_->Allocate(max_out_buffer_size);
+}
+
+SocketConnection::SocketIO::~SocketIO() {
+}
+
 SocketConnection::SocketConnection(i32 max_out_buffer_size, i32 max_in_buffer_size)
-	: EventHandler(nullptr), connect_state_(ConnectState::kDisconnected)
+	: EventHandler(nullptr), io_(nullptr), connect_state_(ConnectState::kDisconnected)
 	, max_out_buffer_size_(max_out_buffer_size), max_in_buffer_size_(max_in_buffer_size)
 	, shutdown_(false), called_on_disconnected_(false) {
 }
@@ -45,8 +56,10 @@ bool SocketConnection::RegisterToReactor() {
 	if (socket_.Established() < 0) {
 		return false;
 	}
-	// TODO: 初始化循环队列
-	// in_buffer_ = uv_buf_init(static_cast<i8 *>(jc_malloc(max_in_buffer_size_)), 0);
+	if (io_) {
+		Log(kCrash, __FILE__, __LINE__, "RegisterToReactor() io_ != nullptr");
+	}
+	io_ = new SocketIO(max_out_buffer_size_, max_in_buffer_size_);
 	socket_.SetUvData(this);
 	connect_state_ = ConnectState::kConnected;
 	return true;
@@ -57,11 +70,12 @@ bool SocketConnection::UnRegisterFromReactor() {
 		return false;
 	}
 	connect_state_ = ConnectState::kDisconnected;
-	// TODO: 释放循环队列
-	// if (in_buffer_.base) {
-	// 	jc_free(in_buffer_.base);
-	// 	in_buffer_ = uv_buf_init(nullptr, 0);
-	// }
+	if (io_) {
+		delete io_;
+		io_ = nullptr;
+	} else {
+		Log(kLog, __FILE__, __LINE__, "UnRegisterFromReactor() io_ == nullptr");
+	}
 	socket_.ShutdownRead();
 	socket_.Close();
 	return true;
@@ -78,7 +92,7 @@ void SocketConnection::Shutdown(bool now) {
 	} else if (ConnectState::kConnected == connect_state_) {
 		shutdown_ = true;
 		connect_state_ = ConnectState::kDisconnecting;
-		if (socket_.GetWriteQueueSize() > 0 && !now) {
+		if (io_->out_buffer_->GetCommitedSize() > 0 && !now) {
 			socket_.ShutdownWrite();
 		} else {
 			ShutdownImmediately();
@@ -142,18 +156,12 @@ void SocketConnection::HandleClose4EOF(i32 reason) {
 		connect_state_ = ConnectState::kDisconnecting;
 		if (shutdown_) {
 			socket_.ShutdownRead();
-		} else if (socket_.GetWriteQueueSize() > 0) {
+		} else if (io_->out_buffer_->GetCommitedSize() > 0) {
 			shutdown_ = true;
 			socket_.Shutdown();
-		}
 		} else {
-			if (GetOutBufferUsedSize() > 0) {
-				shutdown_ = true;
-				socket_.Shutdown(shutdown_req_, ShutdownCb);
-			} else {
-				ShutdownImmediately();
-				CallOnDisconnected(true);
-			}
+			ShutdownImmediately();
+			CallOnDisconnected(true);
 		}
 	}
 }
@@ -170,56 +178,27 @@ i32 SocketConnection::Write(const i8 * data, i32 len) {
 	if (ConnectState::kConnected != connect_state_) {
 		return UV_ENOTCONN;
 	}
-	if (max_out_buffer_size_ > 0 && GetOutBufferUsedSize() > max_out_buffer_size_) {
-		Log(kLog, __FILE__, __LINE__, "当前写缓冲区 数据大小/需要写入大小/上限", GetOutBufferUsedSize(), len, max_out_buffer_size_);
+
+	i32 actually_size = 0;
+	i8 * block = io_->out_buffer_->GetReserveBlock(len, actually_size);
+	if (!block || actually_size < len) {
+		Log(kLog, __FILE__, __LINE__, "Write() buffer status used/need/max", io_->out_buffer_->GetCommitedSize(), len, max_out_buffer_size_);
 		return UV_ENOBUFS;
 	}
-	uv_write_t * req = static_cast<uv_write_t *>(Allocator::Get()->Allocate(sizeof(uv_write_t)));
-	i32 status = socket_.Send(data, len, req, WriteCb);
-	if (status < 0) {
-		Allocator::Get()->DeAllocate(req, sizeof(uv_write_t));
+
+	std::memcpy(block, data, actually_size);
+	i32 status = socket_.Write(block, actually_size, reinterpret_cast<void *>(static_cast<i64>(actually_size)));
+	if (0 == status) {
+		io_->out_buffer_->Commit(actually_size);
 	}
 	return status;
 }
 
 i32 SocketConnection::Read(i8 * data, i32 len) {
-	if (!data || len <= 0 || !in_buffer_.base) {
-		return UV_ENOBUFS;
+	if (!io_) {
+		Log(kCrash, __FILE__, __LINE__, "Read() io_ == nullptr");
 	}
-	if (static_cast<i32>(in_buffer_.len) < len) {
-		len = in_buffer_.len;
-	}
-	if (len > 0) {
-		std::memcpy(data, in_buffer_.base, len);
-		in_buffer_.len -= len;
-		if (in_buffer_.len > 0) {
-			std::memcpy(in_buffer_.base, in_buffer_.base + len, in_buffer_.len);
-		}
-	}
-	return len;
-}
-
-i8 * SocketConnection::GetRecvData() const {
-	return in_buffer_.base;
-}
-
-i32 SocketConnection::GetRecvDataSize() const {
-	return in_buffer_.len;
-}
-
-void SocketConnection::PopRecvData(i32 size) {
-	if (ConnectState::kConnected != connect_state_ && ConnectState::kDisconnecting != connect_state_) {
-		Log(kLog, __FILE__, __LINE__, "---在连接状态为非 kConnected /kDisconnecting 上调用了 PopRecvData(i32)!---");
-	} else if (!in_buffer_.base) {
-		Log(kCrash, __FILE__, __LINE__, "未初始化接收缓冲区");
-	} else if (static_cast<i32>(in_buffer_.len) < size) {
-		Log(kCrash, __FILE__, __LINE__, "接收缓冲区大小小于size");
-	} else if (size > 0) {
-		in_buffer_.len -= size;
-		if (in_buffer_.len > 0) {
-			std::memmove(in_buffer_.base, in_buffer_.base + size, in_buffer_.len);
-		}
-	}
+	return io_->in_buffer_->Read(data, len);
 }
 
 //*********************************************************************
@@ -237,20 +216,19 @@ void SocketConnection::ShutdownCallback(i32 status, void * arg) {
 }
 
 void SocketConnection::AllocCallback(uv_buf_t * buf) {
-	// TODO：循环队列赋值
-	// uv_buf_t * buffer = &connection->in_buffer_;
-	// if (buffer->base) {
-	// 	*buf = uv_buf_init(buffer->base + buffer->len, connection->max_in_buffer_size_ - buffer->len);
-	// }
+	i32 actually_size = 0;
+	i8 * block = io_->in_buffer_->GetReserveBlock(SocketIO::kReadMax, actually_size);
+	if (block && actually_size > 0) {
+		*buf = uv_buf_init(block, actually_size);
+	}
 }
 
 void SocketConnection::ReadCallback(i32 status) {
 	if (status < 0) {
-		// Error(status);
-	} else if (status > 0) {
-		// TODO: 循环队列移动
-		// connection->in_buffer_.len += static_cast<i32>(status);
-		if (ConnectState::kConnected == connect_state_) {
+		Error(status);
+	} else {
+		io_->in_buffer_->Commit(status);
+		if (ConnectState::kConnected == connect_state_ || ConnectState::kDisconnecting == connect_state_) {
 			OnNewDataReceived();
 		}
 	}
@@ -258,10 +236,12 @@ void SocketConnection::ReadCallback(i32 status) {
 
 void SocketConnection::WrittenCallback(i32 status, void * arg) {
 	if (status < 0) {
-		// Error(status);
-	} else if (ConnectState::kConnected == connect_state_) {
-		// TODO: 循环队列移动
-		OnSomeDataSent();
+		Error(status);
+	} else {
+		io_->out_buffer_->DeCommit(static_cast<i32>(reinterpret_cast<i64>(arg)));
+		if (ConnectState::kConnected == connect_state_ || ConnectState::kDisconnecting == connect_state_) {
+			OnSomeDataSent();
+		}
 	}
 }
 

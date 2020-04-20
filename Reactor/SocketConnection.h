@@ -28,17 +28,37 @@
 #include "Reactor/EventHandler.h"
 #include "Reactor/ConnectState.h"
 #include "Sockets/StreamSocket.h"
+#include "Common/IOBuffer.h"
 
 namespace Net {
 
 class SocketConnection : public EventHandler {
+	class SocketIO : public NetObject {
+	public:
+		SocketIO(i32 max_out_buffer_size, i32 max_in_buffer_size);
+		virtual ~SocketIO();
+		IOBuffer * in_buffer_;
+		IOBuffer * out_buffer_;
+
+		static const i32 kReadMax = 4096;
+	};
+
 public:
 	SocketConnection(i32 max_out_buffer_size, i32 max_in_buffer_size);
 	virtual ~SocketConnection();
 
 	bool Establish();
 	void Shutdown(bool now);
-	void Destroy() override;
+	virtual void Destroy() override;
+
+	i32 Write(const i8 * data, i32 len);
+	i32 Read(i8 * data, i32 len);
+	i8 * GetRecvData(i32 & size) const;
+	void PopRecvData(i32 size);
+
+	ConnectState::eState GetConnectState() const;
+	void SetConnectState(ConnectState::eState state);
+	StreamSocket * GetSocket();
 
 	// 通知应用层
 	virtual void OnConnected();
@@ -48,26 +68,16 @@ public:
 	virtual void OnSomeDataSent();
 	virtual void OnError(i32 reason);
 
-	// i32 Write(const i8 * data, i32 len);
-	// i32 Read(i8 * data, i32 len);
-	// i8 * GetRecvData() const;
-	// i32 GetRecvDataSize() const;
-	// void PopRecvData(i32 size);
-
-	ConnectState::eState GetConnectState() const;
-	void SetConnectState(ConnectState::eState state);
-	StreamSocket * GetSocket();
-
 protected:
-	bool RegisterToReactor() override;
-	bool UnRegisterFromReactor() override;
+	virtual bool RegisterToReactor() override;
+	virtual bool UnRegisterFromReactor() override;
 
 private:
-	void CloseCallback() override;
-	void ShutdownCallback(i32 status, void * arg) override;
-	void AllocCallback(uv_buf_t * buf) override;
-	void ReadCallback(i32 status) override;
-	void WrittenCallback(i32 status, void * arg) override;
+	virtual void CloseCallback() override;
+	virtual void ShutdownCallback(i32 status, void * arg) override;
+	virtual void AllocCallback(uv_buf_t * buf) override;
+	virtual void ReadCallback(i32 status) override;
+	virtual void WrittenCallback(i32 status, void * arg) override;
 
 	void ShutdownImmediately();
 	void CallOnDisconnected(bool is_remote);
@@ -76,6 +86,7 @@ private:
 	void HandleClose4Error(i32 reason);
 
 private:
+	SocketIO * io_;
 	StreamSocket socket_;
 	ConnectState::eState connect_state_;
 	i32 max_out_buffer_size_;
@@ -94,6 +105,20 @@ inline void SocketConnection::SetConnectState(ConnectState::eState state) {
 
 inline StreamSocket * SocketConnection::GetSocket() {
 	return &socket_;
+}
+
+inline i8 * SocketConnection::GetRecvData(i32 & size) const {
+	if (!io_) {
+		Log(kCrash, __FILE__, __LINE__, "GetRecvData() io_ == nullptr");
+	}
+	return io_->in_buffer_->GetContiguousBlock(size);
+}
+
+inline void SocketConnection::PopRecvData(i32 size) {
+	if (!io_) {
+		Log(kCrash, __FILE__, __LINE__, "PopRecvData() io_ == nullptr");
+	}
+	io_->in_buffer_->DeCommit(size);
 }
 
 }

@@ -33,13 +33,13 @@ StreamSocket::StreamSocket() : Socket(new StreamSocketImpl()) {
 
 StreamSocket::StreamSocket(SocketImpl * impl) : Socket(impl) {
 	if (!dynamic_cast<StreamSocketImpl *>(Impl())) {
-		Log(kCrash, __FILE__, __LINE__, "socket impl is not StreamSocketImpl");
+		Log(kCrash, __FILE__, __LINE__, "socket impl != StreamSocketImpl");
 	}
 }
 
 StreamSocket::StreamSocket(const Socket & rhs) : Socket(rhs) {
 	if (!dynamic_cast<StreamSocketImpl *>(Impl())) {
-		Log(kCrash, __FILE__, __LINE__, "socket impl is not StreamSocketImpl");
+		Log(kCrash, __FILE__, __LINE__, "socket impl != StreamSocketImpl");
 	}
 }
 
@@ -47,7 +47,7 @@ StreamSocket & StreamSocket::operator=(const Socket & rhs) {
 	if (dynamic_cast<StreamSocketImpl *>(rhs.Impl())) {
 		Socket::operator=(rhs);
 	} else {
-		Log(kCrash, __FILE__, __LINE__, "socket impl is not StreamSocketImpl");
+		Log(kCrash, __FILE__, __LINE__, "socket impl != StreamSocketImpl");
 	}
 	return *this;
 }

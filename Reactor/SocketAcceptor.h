@@ -38,16 +38,16 @@ public:
 
 	bool Open(const SocketAddress & address, i32 backlog = 128, bool ipv6_only = false);
 	void Close();
-	void Destroy() override;
+	virtual void Destroy() override;
 
 protected:
 	explicit SocketAcceptor(EventReactor * reactor);
-	bool RegisterToReactor() override;
-	bool UnRegisterFromReactor() override;
+	virtual bool RegisterToReactor() override;
+	virtual bool UnRegisterFromReactor() override;
 	virtual SocketConnection * CreateConnection() = 0;
 
 private:
-	void AcceptCallback(i32 status) override;
+	virtual void AcceptCallback(i32 status) override;
 	bool ActivateConnection(SocketConnection * connection);
 
 private:

@@ -32,7 +32,7 @@ ServerSocket::ServerSocket() : Socket(new ServerSocketImpl()) {
 
 ServerSocket::ServerSocket(const Socket & rhs) : Socket(rhs) {
 	if (!dynamic_cast<ServerSocketImpl *>(Impl())) {
-		Log(kCrash, __FILE__, __LINE__, "socket impl is not ServerSocketImpl");
+		Log(kCrash, __FILE__, __LINE__, "socket impl != ServerSocketImpl");
 	}
 }
 
@@ -40,7 +40,7 @@ ServerSocket & ServerSocket::operator=(const Socket & rhs) {
 	if (dynamic_cast<ServerSocketImpl *>(rhs.Impl())) {
 		Socket::operator=(rhs);
 	} else {
-		Log(kCrash, __FILE__, __LINE__, "socket impl is not ServerSocketImpl");
+		Log(kCrash, __FILE__, __LINE__, "socket impl != ServerSocketImpl");
 	}
 	return *this;
 }

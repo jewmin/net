@@ -24,6 +24,7 @@
 
 #include "Reactor/SocketConnector.h"
 #include "Reactor/ConnectState.h"
+#include "Common/Logger.h"
 
 namespace Net {
 
@@ -52,6 +53,9 @@ void SocketConnector::Context::ConnectCallback(i32 status, void * arg) {
 		associate_socket->SetKeepAlive(60);
 		if (connector_->ActivateConnection(connection_)) {
 			connection_->OnConnected();
+		} else {
+			Log(kLog, __FILE__, __LINE__, "ConnectCallback() ActivateConnection error");
+			connection_->OnConnectFailed(UV_ECANCELED);
 		}
 	}
 }
@@ -62,17 +66,18 @@ SocketConnector::SocketConnector(EventReactor * reactor) : EventHandler(reactor)
 SocketConnector::~SocketConnector() {
 }
 
-i32 SocketConnector::Connect(SocketConnection * connection, const SocketAddress & address) {
+bool SocketConnector::Connect(SocketConnection * connection, const SocketAddress & address) {
 	StreamSocket * associate_socket = connection->GetSocket();
 	associate_socket->Open(GetReactor()->GetUvLoop());
 	i32 status = associate_socket->Connect(address);
 	if (status < 0) {
 		connection->OnConnectFailed(status);
+		return false;
 	} else {
 		connection->SetConnectState(ConnectState::kConnecting);
 		associate_socket->SetUvData(new Context(this, connection));
+		return true;
 	}
-	return status;
 }
 
 bool SocketConnector::RegisterToReactor() {

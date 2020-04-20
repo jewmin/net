@@ -87,7 +87,7 @@ void SocketAcceptor::AcceptCallback(i32 status) {
 		}
 		SocketConnection * connection = CreateConnection();
 		if (!connection) {
-			Log(kLog, __FILE__, __LINE__, "AcceptCallback() connection is null");
+			Log(kLog, __FILE__, __LINE__, "AcceptCallback() connection == null");
 			return;
 		}
 		StreamSocket * associate_socket = connection->GetSocket();
@@ -96,6 +96,9 @@ void SocketAcceptor::AcceptCallback(i32 status) {
 		associate_socket->SetKeepAlive(60);
 		if (ActivateConnection(connection)) {
 			connection->OnConnected();
+		} else {
+			Log(kLog, __FILE__, __LINE__, "AcceptCallback() ActivateConnection error");
+			connection->OnConnectFailed(UV_ECANCELED);
 		}
 	}
 }
