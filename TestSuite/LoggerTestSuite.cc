@@ -9,7 +9,7 @@ void LoggerTestSuite_ReplaceLog(const i8 * msg, i32 length) {
 }
 
 void LoggerTestSuite_WriteMessage(const i8 * msg, i32 length) {
-	write(STDERR_FILENO, msg, length);
+	write(STDOUT_FILENO, msg, length);
 }
 
 void LoggerTestSuite_DefaultAbort() {

@@ -25,7 +25,7 @@
 #include "Common/Logger.h"
 
 void WriteMessage(const i8 * msg, i32 length) {
-	write(STDERR_FILENO, msg, length);
+	write(STDOUT_FILENO, msg, length);
 }
 
 void DefaultAbort() {

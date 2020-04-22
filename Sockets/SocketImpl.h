@@ -77,7 +77,7 @@ private:
 	SocketImpl & operator=(SocketImpl &&) = delete;
 	SocketImpl & operator=(const SocketImpl &) = delete;
 
-private:
+protected:
 	uv_handle_t * handle_;
 };
 

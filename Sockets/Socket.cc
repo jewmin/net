@@ -37,9 +37,9 @@ Socket::Socket(SocketImpl * impl) : impl_(impl) {
 }
 
 Socket::Socket(const Socket & rhs) : impl_(rhs.impl_) {
-	if (!impl_) {
-		Log(kCrash, __FILE__, __LINE__, "impl_ == nullptr");
-	}
+	// if (!impl_) {
+	// 	Log(kCrash, __FILE__, __LINE__, "impl_ == nullptr");
+	// }
 	impl_->Duplicate();
 }
 

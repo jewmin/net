@@ -139,9 +139,9 @@ i32 SocketImpl::ShutdownRead() {
 	i32 status = UV_UNKNOWN;
 	if (handle_ && UV_TCP == handle_->type) {
 		status = uv_read_stop(reinterpret_cast<uv_stream_t *>(handle_));
-		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "uv_read_stop()", uv_strerror(status));
-		}
+		// if (status < 0) {
+		// 	Log(kLog, __FILE__, __LINE__, "uv_read_stop()", uv_strerror(status));
+		// }
 	}
 	return status;
 }

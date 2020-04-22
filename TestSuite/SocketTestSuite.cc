@@ -6,108 +6,65 @@
 #include "Sockets/StreamSocketImpl.h"
 #include "Common/Allocator.h"
 
-class MockSocketImpl : public Net::SocketImpl {
+void PrintRefCount(Net::UvData * data, const char * extra_msg) {
+	std::printf("%p refcount = %d, %s\n", data, data->ReferenceCount(), extra_msg);
+}
+
+class SocketTestSuiteMockCopySocket : public Net::Socket {
 public:
-	MockSocketImpl() : Net::SocketImpl() {}
-	virtual ~MockSocketImpl() {}
+	SocketTestSuiteMockCopySocket(Net::SocketImpl * impl) : Net::Socket(impl) {}
+	virtual ~SocketTestSuiteMockCopySocket() {}
 };
 
-class MockSocket : public Net::Socket {
+class SocketTestSuiteMockSocketImpl : public Net::SocketImpl {
 public:
-	MockSocket() : Net::Socket(new MockSocketImpl()) {}
-	virtual ~MockSocket() {}
+	SocketTestSuiteMockSocketImpl() : Net::SocketImpl() {}
+	virtual ~SocketTestSuiteMockSocketImpl() {}
+	uv_tcp_t * GetTcp() const { return reinterpret_cast<uv_tcp_t *>(handle_); }
 };
 
-class MockStreamSocket : public Net::StreamSocket {
+class SocketTestSuiteMockSocket : public Net::Socket {
 public:
-	MockStreamSocket(Net::SocketImpl * impl) : Net::StreamSocket(impl) {}
-	virtual ~MockStreamSocket() {}
+	SocketTestSuiteMockSocket() : Net::Socket(new SocketTestSuiteMockSocketImpl()) {}
+	virtual ~SocketTestSuiteMockSocket() {}
 };
 
-class MockUvData : public Net::UvData {
+class SocketTestSuiteMockStreamSocket : public Net::StreamSocket {
 public:
-	MockUvData() {
-		rb = uv_buf_init((char *)jc_malloc(1024), 1024);
-		wb = uv_buf_init((char *)jc_malloc(128), 128);
-	}
-	virtual ~MockUvData() {
-		jc_free(rb.base);
-		jc_free(wb.base);
-	}
-	void AcceptCallback(i32 status) override {
-		if (status == 0 && ss.AcceptSocket(s)) {
-			s.SetNoDelay();
-			std::printf("accept success: %s\n", s.RemoteAddress().ToString().c_str());
-			s.SetSendBufferSize(256);
-			s.SetRecvBufferSize(256);
-			s.Established();
-			s.SetUvData(this);
-		} else {
-			s.Close();
-			ss.Close();
-		}
-	}
-	void ConnectCallback(i32 status, void * arg) override {
-		if (status == 0) {
-			s.SetKeepAlive(60);
-			std::printf("connect success: %s %d %d\n", s.LocalAddress().ToString().c_str(), s.GetSendBufferSize(), s.GetRecvBufferSize());
-			wb.len = sizeof("this is a test message\0");
-			std::memcpy(wb.base, "this is a test message\0", wb.len);
-			s.Write(wb.base, wb.len);
-			std::printf("write queue: %d\n", s.GetWriteQueueSize());
-			s.SetUvData(this);
-		} else {
-			s.Close();
-			ss.Close();
-		}
-	}
-	void ShutdownCallback(i32 status, void * arg) override {
-		s.Close();
-	}
-	void AllocCallback(uv_buf_t * buf) override {
-		buf->base = rb.base;
-		buf->len = rb.len;
-	}
-	void ReadCallback(i32 status) override {
-		if (status > 0) {
-			if (status >= rb.len) { status = rb.len - 1; }
-			rb.base[status] = 0;
-			std::printf("%s\n", rb.base);
-		}
-		s.ShutdownRead();
-		s.ShutdownWrite();
-		ss.Close();
-	}
-	void WrittenCallback(i32 status, void * arg) override {
-		s.Shutdown();
-	}
-	Net::ServerSocket ss;
-	Net::StreamSocket s;
-	uv_buf_t rb;
-	uv_buf_t wb;
+	SocketTestSuiteMockStreamSocket(Net::SocketImpl * impl) : Net::StreamSocket(impl) {}
+	virtual ~SocketTestSuiteMockStreamSocket() {}
+};
+
+class SocketTestSuiteMockServerSocketImpl : public Net::ServerSocketImpl {
+public:
+	SocketTestSuiteMockServerSocketImpl() {}
+	virtual ~SocketTestSuiteMockServerSocketImpl() {}
+	uv_tcp_t * GetTcp() const { return reinterpret_cast<uv_tcp_t *>(handle_); }
 };
 
 TEST(SocketTestSuite, Construct) {
 	Net::Socket s1;
 	Net::Socket s2(s1);
 	Net::Socket s3;
-	MockSocket s4;
+	SocketTestSuiteMockSocket s4;
 	s3 = s1;
 
-	Net::ServerSocket ss1;
+	SocketTestSuiteMockCopySocket ss1(new Net::ServerSocketImpl());
 	Net::ServerSocket ss2(ss1);
-	Net::ServerSocket ss3;
+	Net::ServerSocket ss3, ss4(ss3);
 	ss3 = ss1;
+	ss4 = ss3;
 
-	Net::StreamSocket cs1;
+	SocketTestSuiteMockCopySocket cs1(new Net::StreamSocketImpl());
 	Net::StreamSocket cs2(cs1);
-	Net::StreamSocket cs3;
+	Net::StreamSocket cs3, cs4(cs3);
 	cs3 = cs1;
-	MockStreamSocket cs4(new Net::StreamSocketImpl());
+	cs4 = cs3;
+	SocketTestSuiteMockStreamSocket cs5(new Net::StreamSocketImpl());
 }
 
 TEST(SocketTestSuite, ConstructCatch) {
-	MockSocket ms;
+	SocketTestSuiteMockSocket ms;
 	try {
 		Net::ServerSocket s1(ms);
 	} catch (std::exception & e) {
@@ -135,7 +92,20 @@ TEST(SocketTestSuite, ConstructCatch) {
 	}
 
 	try {
-		MockStreamSocket s5(new Net::ServerSocketImpl());
+		SocketTestSuiteMockStreamSocket s5(new Net::ServerSocketImpl());
+	} catch (std::exception & e) {
+		printf("SocketTestSuite - Catch: %s\n", e.what());
+	}
+
+	try {
+		SocketTestSuiteMockCopySocket s6(nullptr);
+	} catch (std::exception & e) {
+		printf("SocketTestSuite - Catch: %s\n", e.what());
+	}
+
+	try {
+		Net::StreamSocket s7;
+		s7.SetUvData(nullptr);
 	} catch (std::exception & e) {
 		printf("SocketTestSuite - Catch: %s\n", e.what());
 	}
@@ -151,10 +121,10 @@ TEST(SocketTestSuite, Equal) {
 	}
 
 	{
-		MockStreamSocket s1(o), ss1(o);
-		MockStreamSocket s2(o + 1), ss2(o + 1);
-		MockStreamSocket s3(o + 2), ss3(o + 2);
-		MockStreamSocket s4(o + 3), ss4(o + 3);
+		SocketTestSuiteMockStreamSocket s1(o), ss1(o);
+		SocketTestSuiteMockStreamSocket s2(o + 1), ss2(o + 1);
+		SocketTestSuiteMockStreamSocket s3(o + 2), ss3(o + 2);
+		SocketTestSuiteMockStreamSocket s4(o + 3), ss4(o + 3);
 		EXPECT_EQ(s1, ss1);
 		EXPECT_EQ(s2, ss2);
 		EXPECT_EQ(s3, ss3);
@@ -173,9 +143,9 @@ TEST(SocketTestSuite, Equal) {
 		EXPECT_GE(s3, ss1);
 		EXPECT_GE(s4, ss1);
 
+		EXPECT_LT(s1, ss4);
 		EXPECT_LT(s2, ss4);
 		EXPECT_LT(s3, ss4);
-		EXPECT_LT(s4, ss4);
 
 		EXPECT_LE(s1, ss4);
 		EXPECT_LE(s2, ss4);
@@ -189,122 +159,304 @@ TEST(SocketTestSuite, Equal) {
 	jc_free(o);
 }
 
-TEST(SocketTestSuite, Operation) {
-	uv_loop_t loop;
-	uv_loop_init(&loop);
-	MockUvData * server_data = new MockUvData();
-	MockUvData * client_data = new MockUvData();
-	server_data->ss.Open(&loop);
-	server_data->ss.Bind(Net::SocketAddress(Net::IPAddress("0.0.0.0"), 6789));
-	server_data->ss.Listen();
-	server_data->ss.SetUvData(server_data);
+class SocketTestSuiteMockMockUvData : public Net::UvData {
+public:
+	SocketTestSuiteMockMockUvData() {
+		rb = uv_buf_init((char *)jc_malloc(1024), 1024);
+		wb = uv_buf_init((char *)jc_malloc(128), 128);
+	}
+	virtual ~SocketTestSuiteMockMockUvData() {
+		server.Close();
+		client.Close();
+		jc_free(rb.base);
+		jc_free(wb.base);
+	}
+	void CloseCallback() override {
+		PrintRefCount(this, "closed");
+	}
+	void AcceptCallback(i32 status) override {
+		if (status == 0 && server.AcceptSocket(client)) {
+			client.SetNoDelay();
+			std::printf("accept success: %s\n", client.RemoteAddress().ToString().c_str());
+			client.SetSendBufferSize(256);
+			client.SetRecvBufferSize(256);
+			client.Established();
+			client.SetUvData(this);
+		} else {
+			client.Close();
+			server.Close();
+		}
+	}
+	void ConnectCallback(i32 status, void * arg) override {
+		if (status == 0) {
+			client.SetKeepAlive(60);
+			std::printf("connect success: %s %d %d\n", client.LocalAddress().ToString().c_str(), client.GetSendBufferSize(), client.GetRecvBufferSize());
+			wb.len = sizeof("this is a test message\0");
+			std::memcpy(wb.base, "this is a test message\0", wb.len);
+			client.Write(wb.base, wb.len);
+			std::printf("write queue: %d\n", client.GetWriteQueueSize());
+			Duplicate();
+		} else {
+			client.Close();
+			server.Close();
+		}
+	}
+	void ShutdownCallback(i32 status, void * arg) override {
+		client.Close();
+	}
+	void AllocCallback(uv_buf_t * buf) override {
+		buf->base = rb.base;
+		buf->len = rb.len;
+	}
+	void ReadCallback(i32 status) override {
+		if (status > 0) {
+			if (status >= static_cast<i32>(rb.len)) { status = rb.len - 1; }
+			rb.base[status] = 0;
+			std::printf("%s\n", rb.base);
+		}
+		client.ShutdownRead();
+		client.ShutdownWrite();
+		server.Close();
+	}
+	void WrittenCallback(i32 status, void * arg) override {
+		client.Shutdown();
+		server.Close();
+	}
+	Net::ServerSocket server;
+	Net::StreamSocket client;
+	uv_buf_t rb;
+	uv_buf_t wb;
+};
 
-	client_data->s.Open(&loop);
-	client_data->s.Connect(Net::SocketAddress(Net::IPAddress("127.0.0.1"), 6789));
-	client_data->s.SetUvData(client_data);
+class SocketTestSuiteCallback : public Net::UvData {
+public:
+	virtual ~SocketTestSuiteCallback() {
+		server.Close();
+		client.Close();
+	}
+	virtual void AcceptCallback(i32 status) {
+		server.AcceptSocket(client);
+		client.Established();
+	}
+	virtual void ConnectCallback(i32 status, void * arg) {
+		Duplicate();
+		client.SetUvData(nullptr);
+		static char buf[32];
+		std::memset(buf, 0, sizeof(buf));
+		std::memcpy(buf, "this is a test message", sizeof("this is a test message"));
+		client.Write(buf, sizeof(buf));
+		client.Shutdown();
+	}
+	virtual void ShutdownCallback(i32 status, void * arg) {}
+	virtual void AllocCallback(uv_buf_t * buf) {}
+	virtual void ReadCallback(i32 status) {}
+	virtual void WrittenCallback(i32 status, void * arg) {}
 
-	uv_run(&loop, UV_RUN_DEFAULT);
+	Net::ServerSocket server;
+	Net::StreamSocket client;
+};
+
+class SocketTestSuiteTest : public testing::Test {
+protected:
+	virtual void SetUp() {
+		uv_loop_init(&loop_);
+	}
+
+	virtual void TearDown() {
+		uv_run(&loop_, UV_RUN_DEFAULT);
+		uv_loop_close(&loop_);
+	}
+
+	uv_loop_t * GetLoop() { return &loop_; }
+
+private:
+	uv_loop_t loop_;
+};
+
+TEST_F(SocketTestSuiteTest, Operation) {
+	SocketTestSuiteMockMockUvData * server_data = new SocketTestSuiteMockMockUvData();
+	SocketTestSuiteMockMockUvData * client_data = new SocketTestSuiteMockMockUvData();
+	PrintRefCount(server_data, "new server");
+	PrintRefCount(client_data, "new client");
+	server_data->server.Open(GetLoop());
+	server_data->server.Bind(Net::SocketAddress(Net::IPAddress("0.0.0.0"), 6789));
+	server_data->server.Listen();
+	server_data->server.SetUvData(server_data);
+
+	client_data->client.Open(GetLoop());
+	client_data->client.Bind(Net::SocketAddress(Net::IPAddress("127.0.0.1"), 9999));
+	client_data->client.Connect(Net::SocketAddress(Net::IPAddress("127.0.0.1"), 6789));
+	client_data->client.SetUvData(client_data);
+
+	PrintRefCount(server_data, "before run");
+	PrintRefCount(client_data, "before run");
+	uv_run(GetLoop(), UV_RUN_DEFAULT);
+	PrintRefCount(server_data, "after run");
+	PrintRefCount(client_data, "after run");
+
 	client_data->Destroy();
 	server_data->Destroy();
-	uv_loop_close(&loop);
 }
 
-TEST(SocketTestSuite, Impl) {
-// 	uv_loop_t loop;
-// 	uv_loop_init(&loop);
-// 	MockSocketImpl * impl = new MockSocketImpl();
+TEST_F(SocketTestSuiteTest, Callback) {
+	Net::ServerSocket server;
+	Net::StreamSocket client;
+	server.Open(GetLoop());
+	server.Bind(Net::SocketAddress(Net::IPAddress("0.0.0.0"), 6789));
+	server.Listen();
+	client.Open(GetLoop());
+	client.Connect(Net::SocketAddress(Net::IPAddress("127.0.0.1"), 6789));
 
-// 	try {
-// 		impl->Open(&loop);
-// 		impl->Attach(nullptr);
-// 	} catch (std::exception & e) {
-// 		printf("SocketTestSuite - ImplCatch: %s\n", e.what());
-// 	}
+	SocketTestSuiteCallback * server_data = new SocketTestSuiteCallback();
+	SocketTestSuiteCallback * client_data = new SocketTestSuiteCallback();
+	server_data->server.Open(GetLoop());
+	server_data->server.Bind(Net::SocketAddress(Net::IPAddress("0.0.0.0"), 7890));
+	server_data->server.Listen();
+	server_data->server.SetUvData(server_data);
 
-// 	impl->Established(nullptr, nullptr);
-// 	impl->LocalAddress();
-// 	impl->RemoteAddress();
-// 	impl->GetSendBufferSize();
-// 	impl->GetReceiveBufferSize();
-// 	impl->SetSendBufferSize(10);
-// 	impl->SetReceiveBufferSize(10);
-// 	impl->Send(nullptr, 0, nullptr, nullptr);
-// 	uv_write_t * w_req = new uv_write_t();
-// 	impl->Send("hello", sizeof("hello"), w_req, nullptr);
-// 	delete w_req;
-// 	uv_shutdown_t * req = new uv_shutdown_t();
-// 	impl->ShutdownSend(req, nullptr);
-// 	delete req;
-// 	impl->Close();
-// 	impl->Send(nullptr, 0, nullptr, nullptr);
+	client_data->client.Open(GetLoop());
+	client_data->client.Connect(Net::SocketAddress(Net::IPAddress("127.0.0.1"), 7890));
+	client_data->client.SetUvData(client_data);
 
-// 	impl->Release();
-// 	uv_run(&loop, UV_RUN_DEFAULT);
-// 	uv_loop_close(&loop);
-// }
+	int count = 3;
+	while (count-- > 0) {
+		uv_run(GetLoop(), UV_RUN_NOWAIT);
+	}
 
-// TEST(SocketTestSuite, AcceptError) {
-// 	uv_loop_t loop;
-// 	uv_loop_init(&loop);
-// 	ServerSocket socket;
-// 	socket.Open(&loop);
-// 	StreamSocket client;
-// 	EXPECT_EQ(socket.AcceptConnection(client), false);
-// 	socket.Close();
-// 	uv_run(&loop, UV_RUN_DEFAULT);
-// 	uv_loop_close(&loop);
+	server.Close();
+	client.Close();
+	server_data->server.Close();
+	server_data->Destroy();
+	client_data->Destroy();
 }
 
-// void SocketTestSuite_connect_cb(uv_connect_t* req, int status) {
-// 	delete req;
-// }
+class SocketTestSuiteImplTest : public SocketTestSuiteTest {
+protected:
+	virtual void SetUp() {
+		SocketTestSuiteTest::SetUp();
+		impl.Open(GetLoop());
+	}
 
-// void SocketTestSuite_listen_cb(uv_stream_t* server, int status) {
-	
-// }
+	virtual void TearDown() {
+		impl.Close();
+		SocketTestSuiteTest::TearDown();
+	}
 
-// TEST(SocketTestSuite, ConnectError) {
-// 	uv_loop_t loop;
-// 	uv_loop_init(&loop);
-// 	StreamSocket client;
-// 	client.Open(&loop);
-// 	uv_connect_t * req1 = new uv_connect_t();
-// 	uv_connect_t * req2 = new uv_connect_t();
-// 	client.Connect(SocketAddress(IPAddress("127.0.0.1"), 6789), req1, SocketTestSuite_connect_cb);
-// 	client.Connect(SocketAddress(IPAddress("127.0.0.1"), 6789), req2, SocketTestSuite_connect_cb);
-// 	delete req2;
-// 	client.Close();
-// 	uv_run(&loop, UV_RUN_DEFAULT);
-// 	uv_loop_close(&loop);
-// }
+	SocketTestSuiteMockSocketImpl * GetImpl() { return &impl; }
 
-// TEST(SocketTestSuite, handleError) {
-// 	uv_loop_t loop;
-// 	uv_loop_init(&loop);
-// 	MockSocketImpl * impl = new MockSocketImpl();
-// 	impl->Open(&loop);
-// 	uv_tcp_t * handle = reinterpret_cast<uv_tcp_t *>(impl->GetHandle());
-// #ifdef _WIN32
-// 	handle->socket = 10000;
-// #else
-// 	handle->io_watcher.fd = 10000;
-// #endif
-// 	impl->ShutdownReceive();
-// 	impl->SetNoDelay();
-// 	impl->SetKeepAlive(60);
-// 	impl->Listen(128, nullptr);
-// 	impl->Release();
-// 	uv_run(&loop, UV_RUN_DEFAULT);
-// 	uv_loop_close(&loop);
-// }
+private:
+	SocketTestSuiteMockSocketImpl impl;
+};
 
-// TEST(SocketTestSuite, FreeCatch) {
-// 	uv_udp_t * handle = new uv_udp_t();
-// 	try {
-// 		handle->type = UV_UDP;
-// 		SocketImpl::FreeHandle(reinterpret_cast<uv_handle_t *>(handle));
-// 	} catch (std::exception & e) {
-// 		printf("SocketTestSuite - FreeCatch: %s\n", e.what());
-// 	}
-// 	delete handle;
-// }
+TEST_F(SocketTestSuiteImplTest, Bind) {
+	EXPECT_LT(GetImpl()->Bind(Net::SocketAddress(Net::IPAddress("0.0.0.0"), 6789), true, true), 0);
+}
+
+TEST_F(SocketTestSuiteImplTest, Listen) {
+	uv_tcp_t * tcp = GetImpl()->GetTcp();
+	tcp->delayed_error = UV_ECANCELED;
+	EXPECT_EQ(GetImpl()->Listen(), UV_ECANCELED);
+}
+
+TEST_F(SocketTestSuiteImplTest, Connect) {
+	uv_tcp_t * tcp = GetImpl()->GetTcp();
+	tcp->delayed_error = UV_ECANCELED;
+	GetImpl()->Connect(Net::SocketAddress(Net::IPAddress("127.0.0.1"), 6789));
+	GetImpl()->Connect(Net::SocketAddress(Net::IPAddress("127.0.0.1"), 6789));
+}
+
+TEST_F(SocketTestSuiteImplTest, Shutdown) {
+	EXPECT_EQ(GetImpl()->ShutdownRead(), 0);
+	EXPECT_LT(GetImpl()->ShutdownWrite(), 0);
+}
+
+TEST_F(SocketTestSuiteImplTest, Established) {
+	EXPECT_LT(GetImpl()->Established(), 0);
+}
+
+TEST_F(SocketTestSuiteImplTest, BufferSize) {
+	GetImpl()->SetSendBufferSize(-1);
+	GetImpl()->SetRecvBufferSize(-1);
+	uv_tcp_t * tcp = GetImpl()->GetTcp();
+	tcp->type = UV_TTY;
+	EXPECT_EQ(GetImpl()->GetSendBufferSize(), 0);
+	EXPECT_EQ(GetImpl()->GetRecvBufferSize(), 0);
+	tcp->type = UV_TCP;
+}
+
+TEST_F(SocketTestSuiteImplTest, Address) {
+	EXPECT_EQ(GetImpl()->LocalAddress(), Net::SocketAddress());
+	EXPECT_EQ(GetImpl()->RemoteAddress(), Net::SocketAddress());
+}
+
+TEST_F(SocketTestSuiteImplTest, Write) {
+	Net::StreamSocket s;
+	EXPECT_EQ(s.Write("123", sizeof("123")), UV_EPROTONOSUPPORT);
+	EXPECT_EQ(GetImpl()->Write(nullptr, 100), UV_ENOBUFS);
+	EXPECT_EQ(GetImpl()->Write("123", 0), UV_ENOBUFS);
+	EXPECT_LT(GetImpl()->Write("123", sizeof("123")), 0);
+}
+
+#ifdef _WIN32
+TEST_F(SocketTestSuiteImplTest, Misc) {
+	uv_tcp_t * tcp = GetImpl()->GetTcp();
+	tcp->socket = 0;
+	GetImpl()->SetNoDelay();
+	GetImpl()->SetKeepAlive(60);
+}
+#else
+TEST_F(SocketTestSuiteImplTest, Misc) {
+	uv_tcp_t * tcp = GetImpl()->GetTcp();
+	tcp->io_watcher.fd = 0;
+	GetImpl()->SetNoDelay();
+	GetImpl()->SetKeepAlive(60);
+}
+#endif
+
+class SocketTestSuiteError : public Net::UvData {
+public:
+	SocketTestSuiteError() {
+		impl_ = new SocketTestSuiteMockServerSocketImpl();
+		SocketTestSuiteMockCopySocket socket(impl_);
+		socket_ = socket;
+	}
+	virtual ~SocketTestSuiteError() {
+		jc_free(tcp_);
+	}
+	virtual void CloseCallback() {
+		tcp_->type = UV_UDP;
+	}
+	virtual void AcceptCallback(i32 status) {
+		tcp_ = impl_->GetTcp();
+#ifdef _WIN32
+		uv_tcp_accept_t* req = tcp_->tcp.serv.pending_accepts;
+		req->accept_socket = -1;
+#else
+		tcp_->accepted_fd = -1;
+#endif
+		Net::StreamSocket client;
+		socket_.AcceptSocket(client);
+		socket_.Close();
+	}
+	uv_tcp_t * tcp_;
+	SocketTestSuiteMockServerSocketImpl * impl_;
+	Net::ServerSocket socket_;
+};
+
+TEST_F(SocketTestSuiteTest, CloseCatch) {
+	Net::StreamSocket client;
+	SocketTestSuiteError * data = new SocketTestSuiteError();
+	data->socket_.Open(GetLoop());
+	data->socket_.Bind(Net::SocketAddress(Net::IPAddress("127.0.0.1"), 6789));
+	data->socket_.Listen();
+	data->socket_.SetUvData(data);
+	client.Open(GetLoop());
+	client.Connect(Net::SocketAddress(Net::IPAddress("127.0.0.1"), 6789));
+	try {
+		uv_run(GetLoop(), UV_RUN_DEFAULT);
+	} catch (std::exception & e) {
+		std::printf("SocketTestSuiteTest - CloseCatch: %s\n", e.what());
+	}
+	client.Close();
+	data->Destroy();
+}
