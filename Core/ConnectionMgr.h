@@ -34,6 +34,7 @@ namespace Net {
 
 class ConnectionMgr : public NetObject {
 public:
+	virtual ~ConnectionMgr();
 	void ShutDownAllConnections();
 	void ShutDownOneConnection(i64 id);
 	virtual void Update();
@@ -51,7 +52,6 @@ public:
 
 protected:
 	ConnectionMgr(const std::string & name, u32 object_max_count);
-	virtual ~ConnectionMgr();
 
 	virtual i64 Register(Connection * connection);
 	virtual void UnRegister(Connection * connection);

@@ -83,8 +83,7 @@ void ConnectionMgr::ShutDownOneConnection(i64 id) {
 }
 
 void ConnectionMgr::OnConnected(Connection * connection) {
-	Register(connection);
-	if (notification_ && (notification_->OnConnected(connection) != 0)) {
+	if (Register(connection) >= 0 && notification_ && (notification_->OnConnected(connection) != 0)) {
 		connection->Shutdown(true);
 	}
 }
