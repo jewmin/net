@@ -45,9 +45,9 @@ protected:
 	virtual bool RegisterToReactor() override;
 	virtual bool UnRegisterFromReactor() override;
 	virtual SocketConnection * CreateConnection() = 0;
+	virtual void AcceptCallback(i32 status) override;
 
 private:
-	virtual void AcceptCallback(i32 status) override;
 	bool ActivateConnection(SocketConnection * connection);
 
 private:

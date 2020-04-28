@@ -49,6 +49,7 @@ public:
 
 	bool Establish();
 	void Shutdown(bool now);
+	void CallOnConnectFailed(i32 reason);
 	virtual void Destroy() override;
 
 	i32 Write(const i8 * data, i32 len);
@@ -58,7 +59,7 @@ public:
 
 	ConnectState::eState GetConnectState() const;
 	void SetConnectState(ConnectState::eState state);
-	StreamSocket * GetSocket();
+	virtual StreamSocket * GetSocket();
 
 	// 通知应用层
 	virtual void OnConnected();
@@ -71,6 +72,7 @@ public:
 protected:
 	virtual bool RegisterToReactor() override;
 	virtual bool UnRegisterFromReactor() override;
+	void Error(i32 reason);
 
 private:
 	virtual void CloseCallback() override;
@@ -81,7 +83,6 @@ private:
 
 	void ShutdownImmediately();
 	void CallOnDisconnected(bool is_remote);
-	void Error(i32 reason);
 	void HandleClose4EOF(i32 reason);
 	void HandleClose4Error(i32 reason);
 
@@ -92,6 +93,7 @@ private:
 	i32 max_out_buffer_size_;
 	i32 max_in_buffer_size_;
 	bool shutdown_;
+	bool called_on_connectfailed_;
 	bool called_on_disconnected_;
 };
 
@@ -101,10 +103,6 @@ inline ConnectState::eState SocketConnection::GetConnectState() const {
 
 inline void SocketConnection::SetConnectState(ConnectState::eState state) {
 	connect_state_ = state;
-}
-
-inline StreamSocket * SocketConnection::GetSocket() {
-	return &socket_;
 }
 
 inline i8 * SocketConnection::GetRecvData(i32 & size) const {

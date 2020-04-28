@@ -2,380 +2,425 @@
 #include "Reactor/EventReactor.h"
 #include "Reactor/SocketConnector.h"
 #include "Reactor/SocketAcceptor.h"
+#include "Sockets/StreamSocketImpl.h"
 
-using namespace Net;
+static i32 ReactorTestSuite_Call_Connected = 0;
+static i32 ReactorTestSuite_Call_ConnectFailed = 0;
+static i32 ReactorTestSuite_Call_Disconnected = 0;
+static i32 ReactorTestSuite_Call_NewDataReceived = 0;
+static i32 ReactorTestSuite_Call_SomeDataSent = 0;
+static i32 ReactorTestSuite_Call_Error = 0;
 
-class ConnectionImpl : public SocketConnection {
+class ReactorTestSuiteMockEventHandler : public Net::EventHandler {
 public:
-	ConnectionImpl() : SocketConnection(1024, 1024) {}
-	virtual ~ConnectionImpl() {}
+	ReactorTestSuiteMockEventHandler(Net::EventReactor * reactor) : Net::EventHandler(reactor) {}
+	virtual ~ReactorTestSuiteMockEventHandler() {}
+	virtual bool RegisterToReactor() { return true; }
+	virtual bool UnRegisterFromReactor() { return true; }
+};
+
+class ReactorTestSuiteMockEventHandler2 : public Net::EventHandler {
+public:
+	ReactorTestSuiteMockEventHandler2(Net::EventReactor * reactor) : Net::EventHandler(reactor) {}
+	virtual ~ReactorTestSuiteMockEventHandler2() {}
+	virtual bool RegisterToReactor() { Connect(); return true; }
+	virtual bool UnRegisterFromReactor() { delete this; return true; }
+	void Connect() {
+		socket_.Open(GetReactor()->GetUvLoop());
+		socket_.Connect(Net::SocketAddress(Net::IPAddress("127.0.0.1"), 6789));
+	}
+	Net::StreamSocket socket_;
+};
+
+class ReactorTestSuiteMockConnection : public Net::SocketConnection {
+public:
+	ReactorTestSuiteMockConnection(i32 out_size = 1024, i32 in_size = 1024) : Net::SocketConnection(out_size, in_size) {}
+	virtual ~ReactorTestSuiteMockConnection() {}
+	virtual void OnConnected() { Net::SocketConnection::OnConnected(); ReactorTestSuite_Call_Connected++; }
+	virtual void OnConnectFailed(i32 reason) { Net::SocketConnection::OnConnectFailed(reason); ReactorTestSuite_Call_ConnectFailed++; }
+	virtual void OnDisconnected(bool is_remote) { Net::SocketConnection::OnDisconnected(is_remote); ReactorTestSuite_Call_Disconnected++; }
+	virtual void OnNewDataReceived() { Net::SocketConnection::OnNewDataReceived(); ReactorTestSuite_Call_NewDataReceived++; }
+	virtual void OnSomeDataSent() { Net::SocketConnection::OnSomeDataSent(); ReactorTestSuite_Call_SomeDataSent++; }
+	virtual void OnError(i32 reason) { std::printf("OnError: %s\n", uv_strerror(reason)); Net::SocketConnection::OnError(reason); ReactorTestSuite_Call_Error++; }
+};
+
+class ReactorTestSuiteMockStreamSocketImpl : public Net::StreamSocketImpl {
+public:
+	virtual i32 Connect(const Net::SocketAddress & address, void * arg = nullptr) {
+		return UV_ENOTSUP;
+	}
+};
+
+class ReactorTestSuiteMockStreamSocket : public Net::StreamSocket {
+public:
+	ReactorTestSuiteMockStreamSocket() : Net::StreamSocket(new ReactorTestSuiteMockStreamSocketImpl()) {}
+	virtual ~ReactorTestSuiteMockStreamSocket() {}
+};
+
+class ReactorTestSuiteMockConnection2 : public ReactorTestSuiteMockConnection {
+public:
+	virtual Net::StreamSocket * GetSocket() { return &socket_; }
+	ReactorTestSuiteMockStreamSocket socket_;
+};
+
+class ReactorTestSuiteMockConnection3 : public ReactorTestSuiteMockConnection {
+public:
 	virtual void OnConnected() {
-		printf("OnConnected MaxOutBufferSize=%d, MaxInBufferSize=%d\n", GetMaxOutBufferSize(), GetMaxInBufferSize());
-		if (Write("this is a test connection impl message", sizeof("this is a test connection impl message")) < 0) {
-			printf("Write error\n");
-			Shutdown(true);
+		ReactorTestSuiteMockConnection::OnConnected();
+		Write("123", 3);
+	}
+};
+
+class ReactorTestSuiteMockConnection4 : public ReactorTestSuiteMockConnection {
+public:
+	virtual void TestError(i32 reason) {
+		Error(reason);
+	}
+};
+
+class ReactorTestSuiteMockAcceptor : public Net::SocketAcceptor {
+public:
+	ReactorTestSuiteMockAcceptor(Net::EventReactor * reactor) : Net::SocketAcceptor(reactor), connection_(nullptr) {}
+	virtual ~ReactorTestSuiteMockAcceptor() {}
+	virtual void Destroy() {
+		if (connection_) {
+			connection_->Destroy();
+			connection_ = nullptr;
 		}
+		Net::SocketAcceptor::Destroy();
 	}
-	virtual void OnConnectFailed(int reason) {
-		printf("OnConnectFailed %d %s %s\n", reason, uv_err_name(reason), uv_strerror(reason));
-	}
-	virtual void OnDisconnect(bool isRemote) {
-		printf("OnDisconnect %d\n", isRemote);
-	}
-	virtual void OnDisconnected(bool isRemote) {
-		printf("OnDisconnected %d\n", isRemote);
-	}
-	virtual void OnNewDataReceived() {
-		printf("OnNewDataReceived\n");
-		int size = GetRecvDataSize();
-		if (size > 0) {
-			printf("%s\n", GetRecvData());
-			int left_size = size / 2;
-			PopRecvData(left_size);
-			PopRecvData(size - left_size);
+	virtual Net::SocketConnection * CreateConnection() {
+		if (connection_) {
+			connection_->Destroy();
 		}
-		Shutdown(false);
+		connection_ = new ReactorTestSuiteMockConnection();
+		return connection_;
 	}
-	virtual void OnSomeDataSent() {
-		printf("OnSomeDataSent\n");
-	}
+	Net::SocketConnection * connection_;
 };
 
-class AcceptorImpl : public SocketAcceptor {
+class ReactorTestSuiteMockAcceptor2 : public ReactorTestSuiteMockAcceptor {
 public:
-	AcceptorImpl(EventReactor * reactor) : SocketAcceptor(reactor) {}
-	virtual ~AcceptorImpl() {
-		while (!list_.empty()) {
-			list_.front()->Release();
-			list_.pop_front();
+	ReactorTestSuiteMockAcceptor2(Net::EventReactor * reactor) : ReactorTestSuiteMockAcceptor(reactor) {}
+	virtual ~ReactorTestSuiteMockAcceptor2() {}
+	void TestAcceptCallback(i32 status) { AcceptCallback(status); }
+	virtual Net::SocketConnection * CreateConnection() { return nullptr; }
+};
+
+class ReactorTestSuiteMockAcceptor3 : public ReactorTestSuiteMockAcceptor2 {
+public:
+	ReactorTestSuiteMockAcceptor3(Net::EventReactor * reactor) : ReactorTestSuiteMockAcceptor2(reactor) {}
+	virtual ~ReactorTestSuiteMockAcceptor3() {}
+	virtual Net::SocketConnection * CreateConnection() {
+		if (connection_) {
+			connection_->Destroy();
 		}
-	}
-	virtual void MakeConnection(SocketConnection * & connection) {
-		connection = new ConnectionImpl();
-		list_.push_back(connection);
-	}
-	virtual void OnAccepted(SocketConnection * connection) {
-		printf("OnAccepted %s\n", connection->GetSocket()->RemoteAddress().ToString().c_str());
-		Close();
-	}
-
-private:
-	std::list<SocketConnection *> list_;
-};
-
-class ConnectionImpl2 : public SocketConnection {
-public:
-	ConnectionImpl2() : SocketConnection(1024, 1024) {}
-	virtual ~ConnectionImpl2() {}
-	virtual void OnConnected() {
-		printf("OnConnected\n");
-		SetMaxOutBufferSize(256);
-		SetMaxInBufferSize(2048);
-		Write("this is a test connection impl message", sizeof("this is a test connection impl message"));
-		Shutdown(false);
-	}
-	virtual void OnDisconnect(bool isRemote) {
-		printf("OnDisconnect %d\n", isRemote);
-	}
-	virtual void OnDisconnected(bool isRemote) {
-		printf("OnDisconnected %d\n", isRemote);
-	}
-	virtual void OnNewDataReceived() {
-		printf("OnNewDataReceived\n");
+		connection_ = new ReactorTestSuiteMockConnection();
+		connection_->SetConnectState(Net::ConnectState::kDisconnecting);
+		return connection_;
 	}
 };
 
-class ConnectionImpl3 : public SocketConnection {
+class ReactorTestSuiteMockAcceptor4 : public ReactorTestSuiteMockAcceptor3 {
 public:
-	ConnectionImpl3() : SocketConnection(1024, 1024) {}
-	virtual ~ConnectionImpl3() {}
-	virtual void OnConnected() {
-		printf("OnConnected\n");
-		Write("this is a test connection impl message", sizeof("this is a test connection impl message"));
-	}
-	virtual void OnDisconnect(bool isRemote) {
-		printf("OnDisconnect %d\n", isRemote);
-	}
-	virtual void OnDisconnected(bool isRemote) {
-		printf("OnDisconnected %d\n", isRemote);
-	}
-	virtual void OnNewDataReceived() {
-		printf("OnNewDataReceived\n");
-		char buf[32];
-		int readed = Read(buf, sizeof(buf) - 1);
-		buf[readed] = 0;
-		printf("%s\n", buf);
-	}
-};
-
-class ConnectionImpl4 : public SocketConnection {
-public:
-	ConnectionImpl4() : SocketConnection(128, 128) {}
-	virtual ~ConnectionImpl4() {}
-	virtual void OnConnected() {
-		printf("OnConnected\n");
-		Write("this is a test connection impl message", sizeof("this is a test connection impl message"));
-		Write("this is a test connection impl message", sizeof("this is a test connection impl message"));
-		Write("this is a test connection impl message", sizeof("this is a test connection impl message"));
-		Write("this is a test connection impl message", sizeof("this is a test connection impl message"));
-	}
-	virtual void OnDisconnect(bool isRemote) {
-		printf("OnDisconnect %d\n", isRemote);
-	}
-	virtual void OnDisconnected(bool isRemote) {
-		printf("OnDisconnected %d\n", isRemote);
-	}
-	virtual void OnNewDataReceived() {
-		printf("OnNewDataReceived len=%d\n", GetRecvDataSize());
-	}
-};
-
-class AcceptorImpl4 : public SocketAcceptor {
-public:
-	AcceptorImpl4(EventReactor * reactor) : SocketAcceptor(reactor) {}
-	virtual ~AcceptorImpl4() {
-		while (!list_.empty()) {
-			list_.front()->Release();
-			list_.pop_front();
+	ReactorTestSuiteMockAcceptor4(Net::EventReactor * reactor) : ReactorTestSuiteMockAcceptor3(reactor) {}
+	virtual ~ReactorTestSuiteMockAcceptor4() {}
+	virtual Net::SocketConnection * CreateConnection() {
+		if (connection_) {
+			connection_->Destroy();
 		}
+		connection_ = new ReactorTestSuiteMockConnection3();
+		return connection_;
 	}
-	virtual void MakeConnection(SocketConnection * & connection) {
-		connection = new ConnectionImpl4();
-		list_.push_back(connection);
-	}
-	virtual void OnAccepted(SocketConnection * connection) {
-		printf("OnAccepted %s\n", connection->GetSocket()->RemoteAddress().ToString().c_str());
-		Close();
-	}
-
-private:
-	std::list<SocketConnection *> list_;
 };
 
-class ConnectionImpl5 : public SocketConnection {
+class ReactorTestSuiteMock : public Net::UvData {
 public:
-	ConnectionImpl5() : SocketConnection(128, 128), writed_(false) {}
-	virtual ~ConnectionImpl5() {}
-	virtual void OnConnected() {
-		char buf[65536] = {1};
-		Write(buf, sizeof(buf));
-	}
-	virtual void OnDisconnect(bool isRemote) {
-	}
-	virtual void OnDisconnected(bool isRemote) {
-	}
-	virtual void OnNewDataReceived() {
+	ReactorTestSuiteMock(Net::EventReactor * reactor, Net::SocketConnection * connection) : reactor_(reactor), connection_(connection) {}
+	virtual ~ReactorTestSuiteMock() {}
+	virtual void ConnectCallback(i32 status, void * arg) {
+		connection_->GetSocket()->SetUvData(connection_);
+		connection_->SetReactor(reactor_);
+		reactor_->AddEventHandler(connection_);
 		try {
-			PopRecvData(2000);
+			connection_->SetConnectState(Net::ConnectState::kConnecting);
+			connection_->GetSocket()->ShutdownRead();
+			reactor_->AddEventHandler(connection_);
 		} catch (std::exception & e) {
-			printf("OnNewDataReceived: %s\n", e.what());
+			std::printf("ReactorTestSuiteMock - Catch: %s\n", e.what());
 		}
-		Shutdown(false);
+		EXPECT_EQ(connection_->Write("123", 3), UV_ENOTCONN);
+		connection_->SetConnectState(Net::ConnectState::kConnected);
+		EXPECT_EQ(connection_->Write("123", 3), 3);
+		connection_->Shutdown(false);
 	}
-	virtual void OnSomeDataSent() {
-		if (!writed_) {
-			writed_ = true;
-			char buf[2048] = {2};
-			Write(buf, sizeof(buf));
-		}
-	}
-private:
-	bool writed_;
+	Net::EventReactor * reactor_;
+	Net::SocketConnection * connection_;
 };
 
-class AcceptorImpl5 : public SocketAcceptor {
+class ReactorTestSuiteTest : public testing::Test {
+protected:
+	virtual void SetUp() {
+		address_ = Net::SocketAddress(Net::IPAddress("127.0.0.1"), 6789);
+		ReactorTestSuite_Call_Connected = 0;
+		ReactorTestSuite_Call_ConnectFailed = 0;
+		ReactorTestSuite_Call_Disconnected = 0;
+		ReactorTestSuite_Call_NewDataReceived = 0;
+		ReactorTestSuite_Call_SomeDataSent = 0;
+		ReactorTestSuite_Call_Error = 0;
+	}
+	virtual void TearDown() {
+	}
+	void Run(i32 count) {
+		while (count-- > 0) {
+			reactor_.Poll();
+		}
+	}
+
 public:
-	AcceptorImpl5(EventReactor * reactor) : SocketAcceptor(reactor) {}
-	virtual ~AcceptorImpl5() {
-		while (!list_.empty()) {
-			list_.front()->Release();
-			list_.pop_front();
-		}
-	}
-	virtual void MakeConnection(SocketConnection * & connection) {
-		connection = new ConnectionImpl5();
-		list_.push_back(connection);
-	}
-	virtual void OnAccepted(SocketConnection * connection) {
-		printf("OnAccepted %s\n", connection->GetSocket()->RemoteAddress().ToString().c_str());
-		Close();
-	}
-
-private:
-	std::list<SocketConnection *> list_;
+	Net::EventReactor reactor_;
+	Net::SocketAddress address_;
 };
 
-TEST(ReactorTestSuite, use) {
-	EventReactor * pReactor = new EventReactor();
-	SocketAcceptor * pAcceptor = new AcceptorImpl(pReactor);
-	SocketConnector * pConnector = new SocketConnector(pReactor);
-	SocketConnection * pConnection = new ConnectionImpl();
-	pAcceptor->Open(SocketAddress(6789));
-	pConnector->Connect(pConnection, SocketAddress(IPAddress("127.0.0.1"), 6789));
-	
-	pReactor->Dispatch(UV_RUN_DEFAULT);
-	pConnection->Destroy();
-	pConnector->Destroy();
-	pAcceptor->Destroy();
-	delete pReactor;
+TEST_F(ReactorTestSuiteTest, EventHandler) {
+	ReactorTestSuiteMockEventHandler * handler = new ReactorTestSuiteMockEventHandler(&reactor_);
+	ReactorTestSuiteMockEventHandler2 * handler2 = new ReactorTestSuiteMockEventHandler2(&reactor_);
+	EXPECT_EQ(reactor_.AddEventHandler(handler), true);
+	EXPECT_EQ(reactor_.AddEventHandler(handler2), true);
+	EXPECT_EQ(reactor_.RemoveEventHandler(handler), true);
+	EXPECT_TRUE(handler->GetReactor() == &reactor_);
+	handler->SetReactor(nullptr);
+	handler->Destroy();
 }
 
-TEST(ReactorTestSuite, ConnectError) {
-	EventReactor * pReactor = new EventReactor();
-	SocketConnector * pConnector = new SocketConnector(pReactor);
-	SocketConnection * pConnection = new ConnectionImpl();
-	pConnector->Connect(pConnection, SocketAddress(IPAddress("0.0.0.0"), 6789));
-	pReactor->Dispatch(UV_RUN_DEFAULT);
-	pConnection->Destroy();
-	pConnector->Destroy();
-	delete pReactor;
+TEST_F(ReactorTestSuiteTest, Reactor) {
+	Net::SocketAcceptor * acceptor = new ReactorTestSuiteMockAcceptor(&reactor_);
+	Net::SocketConnection * connection = new ReactorTestSuiteMockConnection();
+	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
+	acceptor->Open(address_);
+	EXPECT_EQ(reactor_.AddEventHandler(connector), false);
+	EXPECT_EQ(reactor_.RemoveEventHandler(connector), false);
+	EXPECT_EQ(connector->Connect(connection, address_), true);
+	Run(3);
+	connector->Destroy();
+	acceptor->Destroy();
+	connection->Destroy();
+	reactor_.Poll(UV_RUN_DEFAULT);
+	EXPECT_EQ(ReactorTestSuite_Call_Connected, 2);
+	EXPECT_EQ(ReactorTestSuite_Call_ConnectFailed, 0);
+	EXPECT_EQ(ReactorTestSuite_Call_Disconnected, 2);
+	EXPECT_EQ(ReactorTestSuite_Call_NewDataReceived, 0);
+	EXPECT_EQ(ReactorTestSuite_Call_SomeDataSent, 0);
+	EXPECT_EQ(ReactorTestSuite_Call_Error, 0);
 }
 
-TEST(ReactorTestSuite, ConnectShutdown) {
-	EventReactor * pReactor = new EventReactor();
-	SocketConnector * pConnector = new SocketConnector(pReactor);
-	SocketConnection * pConnection = new ConnectionImpl();
-	pConnector->Connect(pConnection, SocketAddress(IPAddress("0.0.0.0"), 6789));
-	pConnection->Shutdown(true);
-	pReactor->Dispatch(UV_RUN_DEFAULT);
-	pConnection->Destroy();
-	pConnector->Destroy();
-	delete pReactor;
-}
-
-TEST(ReactorTestSuite, ClearHandler) {
-	EventReactor * pReactor = new EventReactor();
-	SocketAcceptor * pAcceptor = new AcceptorImpl(pReactor);
-	pAcceptor->Open(SocketAddress(6789));
-	delete pReactor;
-	pAcceptor->Destroy();
-}
-
-TEST(ReactorTestSuite, use2) {
-	EventReactor * pReactor = new EventReactor();
-	SocketAcceptor * pAcceptor = new AcceptorImpl(pReactor);
-	SocketConnector * pConnector = new SocketConnector(pReactor);
-	SocketConnection * pConnection = new ConnectionImpl2();
-	pAcceptor->Open(SocketAddress(6789));
-	pConnector->Connect(pConnection, SocketAddress(IPAddress("127.0.0.1"), 6789));
-
-	pReactor->Dispatch(UV_RUN_DEFAULT);
-	pConnection->Destroy();
-	pConnector->Destroy();
-	pAcceptor->Destroy();
-	delete pReactor;
-}
-
-TEST(ReactorTestSuite, use3) {
-	EventReactor * pReactor = new EventReactor();
-	SocketAcceptor * pAcceptor = new AcceptorImpl(pReactor);
-	SocketConnector * pConnector = new SocketConnector(pReactor);
-	SocketConnection * pConnection = new ConnectionImpl3();
-	pAcceptor->Open(SocketAddress(6789));
-	pConnector->Connect(pConnection, SocketAddress(IPAddress("127.0.0.1"), 6789));
-
-	pReactor->Dispatch(UV_RUN_DEFAULT);
-	pConnection->Destroy();
-	pConnector->Destroy();
-	pAcceptor->Destroy();
-	delete pReactor;
-}
-
-TEST(ReactorTestSuite, use4) {
-	EventReactor * pReactor = new EventReactor();
-	SocketAcceptor * pAcceptor = new AcceptorImpl4(pReactor);
-	SocketConnector * pConnector = new SocketConnector(pReactor);
-	SocketConnection * pConnection = new ConnectionImpl4();
-	pAcceptor->Open(SocketAddress(6789));
-	pConnector->Connect(pConnection, SocketAddress(IPAddress("127.0.0.1"), 6789));
-
-	pReactor->Dispatch(UV_RUN_DEFAULT);
-	pConnection->Destroy();
-	pConnector->Destroy();
-	pAcceptor->Destroy();
-	delete pReactor;
-}
-
-TEST(ReactorTestSuite, AccpetError) {
-	EventReactor reactor;
-	SocketAcceptor * acceptor = new AcceptorImpl(&reactor);
-	acceptor->Open(SocketAddress(6789));
-	acceptor->Open(SocketAddress(6789));
-	acceptor->Close();
-	reactor.Dispatch(UV_RUN_DEFAULT);
+TEST_F(ReactorTestSuiteTest, acceptor) {
+	Net::SocketAcceptor * acceptor = new ReactorTestSuiteMockAcceptor(&reactor_);
+	EXPECT_EQ(acceptor->Open(address_, 128, true), false);
+	EXPECT_EQ(acceptor->Open(address_), true);
+	EXPECT_EQ(acceptor->Open(address_), false);
 	acceptor->Destroy();
 }
 
-TEST(ReactorTestSuite, ConnectError2) {
-	EventReactor reactor;
-	SocketConnector * connector = new SocketConnector(&reactor);
-	SocketConnection * connection = new SocketConnection(1024, 1024);
-	connector->Connect(connection, SocketAddress(6789));
-	connector->Connect(connection, SocketAddress(6789));
+TEST_F(ReactorTestSuiteTest, acceptor_cb) {
+	ReactorTestSuiteMockAcceptor2 * acceptor = new ReactorTestSuiteMockAcceptor2(&reactor_);
+	acceptor->TestAcceptCallback(UV_ECANCELED);
+	acceptor->Destroy();
+}
+
+TEST_F(ReactorTestSuiteTest, acceptor_cb2) {
+	ReactorTestSuiteMockAcceptor2 * acceptor = new ReactorTestSuiteMockAcceptor2(&reactor_);
+	acceptor->TestAcceptCallback(0);
+	acceptor->Destroy();
+}
+
+TEST_F(ReactorTestSuiteTest, acceptor_cb3) {
+	ReactorTestSuiteMockAcceptor2 * acceptor = new ReactorTestSuiteMockAcceptor2(&reactor_);
+	Net::SocketConnection * connection = new ReactorTestSuiteMockConnection();
+	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
+	EXPECT_EQ(acceptor->Open(address_), true);
+	EXPECT_EQ(connector->Connect(connection, address_), true);
+	Run(3);
+	connector->Destroy();
 	connection->Destroy();
-	reactor.Dispatch(UV_RUN_DEFAULT);
+	acceptor->Destroy();
+	EXPECT_EQ(ReactorTestSuite_Call_Connected, 1);
+	EXPECT_EQ(ReactorTestSuite_Call_Disconnected, 1);
+}
+
+TEST_F(ReactorTestSuiteTest, acceptor_cb4) {
+	ReactorTestSuiteMockAcceptor3 * acceptor = new ReactorTestSuiteMockAcceptor3(&reactor_);
+	Net::SocketConnection * connection = new ReactorTestSuiteMockConnection();
+	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
+	EXPECT_EQ(acceptor->Open(address_), true);
+	EXPECT_EQ(connector->Connect(connection, address_), true);
+	Run(3);
+	connector->Destroy();
+	connection->Destroy();
+	acceptor->Destroy();
+	EXPECT_EQ(ReactorTestSuite_Call_Connected, 1);
+	EXPECT_EQ(ReactorTestSuite_Call_ConnectFailed, 1);
+	EXPECT_EQ(ReactorTestSuite_Call_Disconnected, 1);
+}
+
+TEST_F(ReactorTestSuiteTest, connector) {
+	Net::SocketConnection * connection = new ReactorTestSuiteMockConnection2();
+	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
+	EXPECT_EQ(connector->Connect(connection, address_), false);
+	EXPECT_EQ(connector->Connect(connection, address_), false);
+	connector->Destroy();
+	connection->Destroy();
+	EXPECT_EQ(ReactorTestSuite_Call_ConnectFailed, 1);
+}
+
+TEST_F(ReactorTestSuiteTest, connector_cb) {
+	Net::SocketConnection * connection = new ReactorTestSuiteMockConnection();
+	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
+	EXPECT_EQ(connector->Connect(connection, address_), true);
+	connection->Shutdown(false);
+	Run(3);
+	connector->Destroy();
+	connection->Destroy();
+	EXPECT_EQ(ReactorTestSuite_Call_ConnectFailed, 1);
+}
+
+TEST_F(ReactorTestSuiteTest, connector_cb2) {
+	Net::SocketConnection * connection = new ReactorTestSuiteMockConnection();
+	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
+	EXPECT_EQ(connector->Connect(connection, address_), true);
+	connection->GetSocket()->Close();
+	Run(3);
+	connector->Destroy();
+	connection->Destroy();
+	EXPECT_EQ(ReactorTestSuite_Call_ConnectFailed, 1);
+}
+
+TEST_F(ReactorTestSuiteTest, connector_cb3) {
+	Net::SocketAcceptor * acceptor = new ReactorTestSuiteMockAcceptor(&reactor_);
+	Net::SocketConnection * connection = new ReactorTestSuiteMockConnection();
+	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
+	EXPECT_EQ(acceptor->Open(address_), true);
+	EXPECT_EQ(connector->Connect(connection, address_), true);
+	connection->SetConnectState(Net::ConnectState::kConnected);
+	Run(3);
+	connection->SetConnectState(Net::ConnectState::kDisconnected);
+	connector->Destroy();
+	connection->Destroy();
+	acceptor->Destroy();
+	EXPECT_EQ(ReactorTestSuite_Call_ConnectFailed, 1);
+	EXPECT_EQ(ReactorTestSuite_Call_Connected, 1);
+	EXPECT_EQ(ReactorTestSuite_Call_Disconnected, 1);
+}
+
+TEST_F(ReactorTestSuiteTest, connection) {
+	Net::SocketConnection * connection = new ReactorTestSuiteMockConnection();
+	EXPECT_EQ(reactor_.AddEventHandler(connection), false);
+	EXPECT_EQ(reactor_.RemoveEventHandler(connection), false);
+	connection->Destroy();
+}
+
+TEST_F(ReactorTestSuiteTest, connection1) {
+	Net::SocketAcceptor * acceptor = new ReactorTestSuiteMockAcceptor(&reactor_);
+	Net::SocketConnection * connection = new ReactorTestSuiteMockConnection();
+	EXPECT_EQ(acceptor->Open(address_), true);
+	connection->GetSocket()->Open(reactor_.GetUvLoop());
+	connection->GetSocket()->Connect(address_);
+	connection->GetSocket()->SetUvData(new ReactorTestSuiteMock(&reactor_, connection));
+	Run(3);
+	connection->Destroy();
+	acceptor->Destroy();
+}
+
+TEST_F(ReactorTestSuiteTest, connection2) {
+	char buf[128] = { 0 };
+	i32 len = 0;
+	Net::SocketConnection * connection = new Net::SocketConnection(128, 128);
+	try {
+		connection->Read(buf, sizeof(buf));
+	} catch (std::exception &) {}
+	try {
+		connection->GetRecvData(len);
+	} catch (std::exception &) {}
+	try {
+		connection->PopRecvData(len);
+	} catch (std::exception &) {}
+	connection->Destroy();
+}
+
+TEST_F(ReactorTestSuiteTest, connection3) {
+	char buf[128] = { 0 };
+	i8 * block = nullptr;
+	i32 len = 0;
+	Net::SocketConnection * connection = new Net::SocketConnection(128, 128);
+	Net::SocketAcceptor * acceptor = new ReactorTestSuiteMockAcceptor4(&reactor_);
+	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
+	EXPECT_EQ(acceptor->Open(address_), true);
+	EXPECT_EQ(connector->Connect(connection, address_), true);
+	Run(3);
+	block = connection->GetRecvData(len);
+	EXPECT_FALSE(block == nullptr);
+	EXPECT_EQ(len, 3);
+	connection->PopRecvData(1);
+	len = connection->Read(buf, sizeof(buf));
+	buf[len] = 0;
+	EXPECT_EQ(len, 2);
+	EXPECT_STREQ(buf, "23");
+	acceptor->Destroy();
+	connector->Destroy();
+	connection->Destroy();
+}
+
+TEST_F(ReactorTestSuiteTest, connection4) {
+	Net::SocketAcceptor * acceptor = new ReactorTestSuiteMockAcceptor(&reactor_);
+	ReactorTestSuiteMockConnection4 * connection = new ReactorTestSuiteMockConnection4();
+	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
+	EXPECT_EQ(acceptor->Open(address_), true);
+	EXPECT_EQ(connector->Connect(connection, address_), true);
+	Run(3);
+	connection->TestError(UV_UNKNOWN);
+	connection->Destroy();
+	acceptor->Destroy();
 	connector->Destroy();
 }
 
-TEST(ReactorTestSuite, ConnectionError) {
-	EventReactor reactor;
-	SocketConnection * connection = new SocketConnection(1024, 1024);
-	connection->SetReactor(&reactor);
-	connection->Open();
-	connection->SetConnectState(SocketConnection::kConnected);
-	connection->Open();
-	connection->SetConnectState(SocketConnection::kDisconnected);
+TEST_F(ReactorTestSuiteTest, connection5) {
+	Net::SocketAcceptor * acceptor = new ReactorTestSuiteMockAcceptor(&reactor_);
+	ReactorTestSuiteMockConnection4 * connection = new ReactorTestSuiteMockConnection4();
+	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
+	EXPECT_EQ(acceptor->Open(address_), true);
+	EXPECT_EQ(connector->Connect(connection, address_), true);
+	Run(3);
+	connection->TestError(UV_EOF);
 	connection->Destroy();
+	acceptor->Destroy();
+	connector->Destroy();
 }
 
-TEST(ReactorTestSuite, WriteError) {
-	uv_loop_t loop;
-	uv_loop_init(&loop);
-	char buf[2048] = {1};
-	SocketConnection * connection = new SocketConnection(1024, 1024);
-	EXPECT_EQ(connection->Write(nullptr, 0), UV_ENOTCONN);
-	connection->SetConnectState(SocketConnection::kConnected);
-	connection->GetSocket()->Open(&loop);
-	connection->Write(buf, sizeof(buf));
-	connection->SetConnectState(SocketConnection::kDisconnected);
+TEST_F(ReactorTestSuiteTest, connection6) {
+	Net::SocketAcceptor * acceptor = new ReactorTestSuiteMockAcceptor(&reactor_);
+	ReactorTestSuiteMockConnection4 * connection = new ReactorTestSuiteMockConnection4();
+	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
+	EXPECT_EQ(acceptor->Open(address_), true);
+	EXPECT_EQ(connector->Connect(connection, address_), true);
+	Run(3);
+	EXPECT_EQ(connection->Write("123", 3), 3);
+	connection->Shutdown(false);
+	connection->TestError(UV_EOF);
 	connection->Destroy();
-	uv_run(&loop, UV_RUN_DEFAULT);
-	uv_loop_close(&loop);
+	acceptor->Destroy();
+	connector->Destroy();
 }
 
-TEST(ReactorTestSuite, ReadError) {
-	SocketConnection * connection = new SocketConnection(1024, 1024);
-	EXPECT_EQ(connection->Read(nullptr, 0), UV_ENOBUFS);
-	connection->PopRecvData(1);
-	try {
-		connection->SetConnectState(SocketConnection::kConnected);
-		connection->PopRecvData(1);
-	} catch (std::exception & e) {
-		printf("ReactorTestSuite - ReadError: %s\n", e.what());
-	}
-	connection->SetConnectState(SocketConnection::kDisconnected);
+TEST_F(ReactorTestSuiteTest, connection7) {
+	Net::SocketAcceptor * acceptor = new ReactorTestSuiteMockAcceptor(&reactor_);
+	ReactorTestSuiteMockConnection4 * connection = new ReactorTestSuiteMockConnection4();
+	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
+	EXPECT_EQ(acceptor->Open(address_), true);
+	EXPECT_EQ(connector->Connect(connection, address_), true);
+	Run(3);
+	EXPECT_EQ(connection->Write("123", 3), 3);
+	connection->TestError(UV_EOF);
 	connection->Destroy();
-}
-
-TEST(ReactorTestSuite, ReadError2) {
-	EventReactor * pReactor = new EventReactor();
-	SocketAcceptor * pAcceptor = new AcceptorImpl5(pReactor);
-	SocketConnector * pConnector = new SocketConnector(pReactor);
-	SocketConnection * pConnection = new ConnectionImpl5();
-	pAcceptor->Open(SocketAddress(6789));
-	pConnector->Connect(pConnection, SocketAddress(IPAddress("127.0.0.1"), 6789));
-
-	pReactor->Dispatch(UV_RUN_DEFAULT);
-	pConnection->Destroy();
-	pConnector->Destroy();
-	pAcceptor->Destroy();
-	delete pReactor;
-}
-
-TEST(ReactorTestSuite, ServerError) {
-	EventReactor * pReactor = new EventReactor();
-	SocketAcceptor * pAcceptor = new AcceptorImpl(pReactor);
-	pAcceptor->Open(SocketAddress(IPAddress("1.1.1.1"), 6789));
-	pAcceptor->Destroy();
-	delete pReactor;
+	acceptor->Destroy();
+	connector->Destroy();
 }

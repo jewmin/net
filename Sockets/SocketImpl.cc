@@ -276,10 +276,7 @@ void SocketImpl::SetKeepAlive(i32 interval) {
 }
 
 void SocketImpl::SetUvData(UvData * data) {
-	if (!handle_) {
-		Log(kCrash, __FILE__, __LINE__, "SetUvData() handle_ == nullptr");
-	}
-	if (handle_->data != data) {
+	if (handle_ && handle_->data != data) {
 		if (handle_->data) {
 			static_cast<UvData *>(handle_->data)->Release();
 		}

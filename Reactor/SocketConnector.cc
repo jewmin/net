@@ -45,7 +45,7 @@ void SocketConnector::Context::ConnectCallback(i32 status, void * arg) {
 	if (status < 0) {
 		if (connection_->GetConnectState() == ConnectState::kConnecting) {
 			connection_->SetConnectState(ConnectState::kDisconnected);
-			connection_->OnConnectFailed(status);
+			connection_->CallOnConnectFailed(status);
 			associate_socket->Close();
 		}
 	} else {
@@ -55,7 +55,7 @@ void SocketConnector::Context::ConnectCallback(i32 status, void * arg) {
 			connection_->OnConnected();
 		} else {
 			Log(kLog, __FILE__, __LINE__, "ConnectCallback() ActivateConnection error");
-			connection_->OnConnectFailed(UV_ECANCELED);
+			connection_->CallOnConnectFailed(UV_ECANCELED);
 		}
 	}
 }
@@ -71,7 +71,7 @@ bool SocketConnector::Connect(SocketConnection * connection, const SocketAddress
 	associate_socket->Open(GetReactor()->GetUvLoop());
 	i32 status = associate_socket->Connect(address);
 	if (status < 0) {
-		connection->OnConnectFailed(status);
+		connection->CallOnConnectFailed(status);
 		return false;
 	} else {
 		connection->SetConnectState(ConnectState::kConnecting);
