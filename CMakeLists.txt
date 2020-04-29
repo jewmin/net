@@ -2,12 +2,15 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.7.2)
 
 # 项目名
-PROJECT(libnet VERSION 4.0)
+PROJECT(libnet VERSION 4.1)
 # MESSAGE(${PROJECT_NAME} " " ${PROJECT_SOURCE_DIR} " " ${CMAKE_CURRENT_SOURCE_DIR} " " ${CMAKE_CURRENT_LIST_DIR} " " ${CMAKE_CURRENT_BINARY_DIR})
 
 # 开关
 OPTION(VLD "use Visual Leak Detector to check memory on windows" ON)
 OPTION(RELEASE "compile the release version" OFF)
+
+# 设置模块路径
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/3rd/vld)
 
 # 平台
 IF(MSVC)
@@ -27,85 +30,85 @@ MESSAGE(STATUS "LINUX:" ${LINUX})
 
 # 添加源文件
 SET(Common
-	${CMAKE_CURRENT_LIST_DIR}/Common/Logger.h
-	${CMAKE_CURRENT_LIST_DIR}/Common/Logger.cc
-	${CMAKE_CURRENT_LIST_DIR}/Common/Allocator.h
-	${CMAKE_CURRENT_LIST_DIR}/Common/Allocator.cc
-	${CMAKE_CURRENT_LIST_DIR}/Common/NetObject.h
-	${CMAKE_CURRENT_LIST_DIR}/Common/NetObject.cc
-	${CMAKE_CURRENT_LIST_DIR}/Common/RefCountedObject.h
-	${CMAKE_CURRENT_LIST_DIR}/Common/IOBuffer.h
-	${CMAKE_CURRENT_LIST_DIR}/Common/BipBuffer.h
-	${CMAKE_CURRENT_LIST_DIR}/Common/BipBuffer.cc
-	${CMAKE_CURRENT_LIST_DIR}/Common/StraightBuffer.h
-	${CMAKE_CURRENT_LIST_DIR}/Common/StraightBuffer.cc
-	${CMAKE_CURRENT_LIST_DIR}/Common/ObjectMgr.h
+	${PROJECT_SOURCE_DIR}/Common/Logger.h
+	${PROJECT_SOURCE_DIR}/Common/Logger.cc
+	${PROJECT_SOURCE_DIR}/Common/Allocator.h
+	${PROJECT_SOURCE_DIR}/Common/Allocator.cc
+	${PROJECT_SOURCE_DIR}/Common/NetObject.h
+	${PROJECT_SOURCE_DIR}/Common/NetObject.cc
+	${PROJECT_SOURCE_DIR}/Common/RefCountedObject.h
+	${PROJECT_SOURCE_DIR}/Common/IOBuffer.h
+	${PROJECT_SOURCE_DIR}/Common/BipBuffer.h
+	${PROJECT_SOURCE_DIR}/Common/BipBuffer.cc
+	${PROJECT_SOURCE_DIR}/Common/StraightBuffer.h
+	${PROJECT_SOURCE_DIR}/Common/StraightBuffer.cc
+	${PROJECT_SOURCE_DIR}/Common/ObjectMgr.h
 )
 SET(Address
-	${CMAKE_CURRENT_LIST_DIR}/Address/AddressFamily.h
-	${CMAKE_CURRENT_LIST_DIR}/Address/IPAddress.h
-	${CMAKE_CURRENT_LIST_DIR}/Address/IPAddress.cc
-	${CMAKE_CURRENT_LIST_DIR}/Address/IPAddressImpl.h
-	${CMAKE_CURRENT_LIST_DIR}/Address/IPAddressImpl.cc
-	${CMAKE_CURRENT_LIST_DIR}/Address/SocketAddress.h
-	${CMAKE_CURRENT_LIST_DIR}/Address/SocketAddress.cc
-	${CMAKE_CURRENT_LIST_DIR}/Address/SocketAddressImpl.h
-	${CMAKE_CURRENT_LIST_DIR}/Address/SocketAddressImpl.cc
+	${PROJECT_SOURCE_DIR}/Address/AddressFamily.h
+	${PROJECT_SOURCE_DIR}/Address/IPAddress.h
+	${PROJECT_SOURCE_DIR}/Address/IPAddress.cc
+	${PROJECT_SOURCE_DIR}/Address/IPAddressImpl.h
+	${PROJECT_SOURCE_DIR}/Address/IPAddressImpl.cc
+	${PROJECT_SOURCE_DIR}/Address/SocketAddress.h
+	${PROJECT_SOURCE_DIR}/Address/SocketAddress.cc
+	${PROJECT_SOURCE_DIR}/Address/SocketAddressImpl.h
+	${PROJECT_SOURCE_DIR}/Address/SocketAddressImpl.cc
 )
 SET(Sockets
-	${CMAKE_CURRENT_LIST_DIR}/Sockets/UvData.h
-	${CMAKE_CURRENT_LIST_DIR}/Sockets/ServerSocket.h
-	${CMAKE_CURRENT_LIST_DIR}/Sockets/ServerSocket.cc
-	${CMAKE_CURRENT_LIST_DIR}/Sockets/ServerSocketImpl.h
-	${CMAKE_CURRENT_LIST_DIR}/Sockets/ServerSocketImpl.cc
-	${CMAKE_CURRENT_LIST_DIR}/Sockets/Socket.h
-	${CMAKE_CURRENT_LIST_DIR}/Sockets/Socket.cc
-	${CMAKE_CURRENT_LIST_DIR}/Sockets/SocketImpl.h
-	${CMAKE_CURRENT_LIST_DIR}/Sockets/SocketImpl.cc
-	${CMAKE_CURRENT_LIST_DIR}/Sockets/StreamSocket.h
-	${CMAKE_CURRENT_LIST_DIR}/Sockets/StreamSocket.cc
-	${CMAKE_CURRENT_LIST_DIR}/Sockets/StreamSocketImpl.h
-	${CMAKE_CURRENT_LIST_DIR}/Sockets/StreamSocketImpl.cc
+	${PROJECT_SOURCE_DIR}/Sockets/UvData.h
+	${PROJECT_SOURCE_DIR}/Sockets/ServerSocket.h
+	${PROJECT_SOURCE_DIR}/Sockets/ServerSocket.cc
+	${PROJECT_SOURCE_DIR}/Sockets/ServerSocketImpl.h
+	${PROJECT_SOURCE_DIR}/Sockets/ServerSocketImpl.cc
+	${PROJECT_SOURCE_DIR}/Sockets/Socket.h
+	${PROJECT_SOURCE_DIR}/Sockets/Socket.cc
+	${PROJECT_SOURCE_DIR}/Sockets/SocketImpl.h
+	${PROJECT_SOURCE_DIR}/Sockets/SocketImpl.cc
+	${PROJECT_SOURCE_DIR}/Sockets/StreamSocket.h
+	${PROJECT_SOURCE_DIR}/Sockets/StreamSocket.cc
+	${PROJECT_SOURCE_DIR}/Sockets/StreamSocketImpl.h
+	${PROJECT_SOURCE_DIR}/Sockets/StreamSocketImpl.cc
 )
 SET(Reactor
-	${CMAKE_CURRENT_LIST_DIR}/Reactor/ConnectState.h
-	${CMAKE_CURRENT_LIST_DIR}/Reactor/EventHandler.h
-	${CMAKE_CURRENT_LIST_DIR}/Reactor/EventHandler.cc
-	${CMAKE_CURRENT_LIST_DIR}/Reactor/EventReactor.h
-	${CMAKE_CURRENT_LIST_DIR}/Reactor/EventReactor.cc
-	${CMAKE_CURRENT_LIST_DIR}/Reactor/SocketAcceptor.h
-	${CMAKE_CURRENT_LIST_DIR}/Reactor/SocketAcceptor.cc
-	${CMAKE_CURRENT_LIST_DIR}/Reactor/SocketConnection.h
-	${CMAKE_CURRENT_LIST_DIR}/Reactor/SocketConnection.cc
-	${CMAKE_CURRENT_LIST_DIR}/Reactor/SocketConnector.h
-	${CMAKE_CURRENT_LIST_DIR}/Reactor/SocketConnector.cc
+	${PROJECT_SOURCE_DIR}/Reactor/ConnectState.h
+	${PROJECT_SOURCE_DIR}/Reactor/EventHandler.h
+	${PROJECT_SOURCE_DIR}/Reactor/EventHandler.cc
+	${PROJECT_SOURCE_DIR}/Reactor/EventReactor.h
+	${PROJECT_SOURCE_DIR}/Reactor/EventReactor.cc
+	${PROJECT_SOURCE_DIR}/Reactor/SocketAcceptor.h
+	${PROJECT_SOURCE_DIR}/Reactor/SocketAcceptor.cc
+	${PROJECT_SOURCE_DIR}/Reactor/SocketConnection.h
+	${PROJECT_SOURCE_DIR}/Reactor/SocketConnection.cc
+	${PROJECT_SOURCE_DIR}/Reactor/SocketConnector.h
+	${PROJECT_SOURCE_DIR}/Reactor/SocketConnector.cc
 )
 SET(Core
-	${CMAKE_CURRENT_LIST_DIR}/Core/INotification.h
-	${CMAKE_CURRENT_LIST_DIR}/Core/Client.h
-	${CMAKE_CURRENT_LIST_DIR}/Core/Client.cc
-	${CMAKE_CURRENT_LIST_DIR}/Core/Connection.h
-	${CMAKE_CURRENT_LIST_DIR}/Core/Connection.cc
-	${CMAKE_CURRENT_LIST_DIR}/Core/Server.h
-	${CMAKE_CURRENT_LIST_DIR}/Core/Server.cc
-	${CMAKE_CURRENT_LIST_DIR}/Core/ConnectionMgr.h
-	${CMAKE_CURRENT_LIST_DIR}/Core/ConnectionMgr.cc
+	${PROJECT_SOURCE_DIR}/Core/INotification.h
+	${PROJECT_SOURCE_DIR}/Core/Client.h
+	${PROJECT_SOURCE_DIR}/Core/Client.cc
+	${PROJECT_SOURCE_DIR}/Core/Connection.h
+	${PROJECT_SOURCE_DIR}/Core/Connection.cc
+	${PROJECT_SOURCE_DIR}/Core/Server.h
+	${PROJECT_SOURCE_DIR}/Core/Server.cc
+	${PROJECT_SOURCE_DIR}/Core/ConnectionMgr.h
+	${PROJECT_SOURCE_DIR}/Core/ConnectionMgr.cc
 )
 SET(Interface
-	${CMAKE_CURRENT_LIST_DIR}/Interface/ApplicationContext.h
-	${CMAKE_CURRENT_LIST_DIR}/Interface/ApplicationContext.cc
-	${CMAKE_CURRENT_LIST_DIR}/Interface/Interface.h
-	${CMAKE_CURRENT_LIST_DIR}/Interface/Interface.cc
+	${PROJECT_SOURCE_DIR}/Interface/ApplicationContext.h
+	${PROJECT_SOURCE_DIR}/Interface/ApplicationContext.cc
+	${PROJECT_SOURCE_DIR}/Interface/Interface.h
+	${PROJECT_SOURCE_DIR}/Interface/Interface.cc
 )
 SET(Timer
-	${CMAKE_CURRENT_LIST_DIR}/Timer/Timer.h
-	${CMAKE_CURRENT_LIST_DIR}/Timer/Timer.cc
-	${CMAKE_CURRENT_LIST_DIR}/Timer/TimerImpl.h
-	${CMAKE_CURRENT_LIST_DIR}/Timer/TimerImpl.cc
+	${PROJECT_SOURCE_DIR}/Timer/Timer.h
+	${PROJECT_SOURCE_DIR}/Timer/Timer.cc
+	${PROJECT_SOURCE_DIR}/Timer/TimerImpl.h
+	${PROJECT_SOURCE_DIR}/Timer/TimerImpl.cc
 )
 
 SET(all_srcs
-	${CMAKE_CURRENT_LIST_DIR}/Net.h
+	${PROJECT_SOURCE_DIR}/Net.h
 	${Common}
 	${Address}
 	${Sockets}
@@ -125,7 +128,7 @@ SOURCE_GROUP(Core FILES ${Core})
 # SOURCE_GROUP(Interface FILES ${Interface})
 # SOURCE_GROUP(Timer FILES ${Timer})
 
-# 设置
+# 设置输出目录
 SET(CMAKE_DEBUG_POSTFIX "d")
 SET(CMAKE_SUPPRESS_REGENERATION true)
 SET(OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/output)
@@ -163,30 +166,19 @@ ELSE()
 ENDIF()
 
 # 头文件
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR})
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/3rd/libuv/include)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR})
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/3rd/libuv/include)
 
 # 第三方类库
-LINK_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR}/3rd/libuv/lib)
+LINK_DIRECTORIES(${PROJECT_SOURCE_DIR}/3rd/libuv/lib)
 
 # uv
 SET(UV_DLL_FILE_DEBUG
-	${CMAKE_CURRENT_LIST_DIR}/3rd/libuv/lib/Debug/libuv.dll
+	${PROJECT_SOURCE_DIR}/3rd/libuv/lib/Debug/libuv.dll
 )
 SET(UV_DLL_FILE_RELEASE
-	${CMAKE_CURRENT_LIST_DIR}/3rd/libuv/lib/Release/libuv.dll
+	${PROJECT_SOURCE_DIR}/3rd/libuv/lib/Release/libuv.dll
 )
-
-# vld
-IF(VLD)
-	SET(VLD_LIB vld)
-	SET(VLD_DLL_FILE
-		${CMAKE_CURRENT_LIST_DIR}/3rd/vld/lib/vld_x64.dll
-		${CMAKE_CURRENT_LIST_DIR}/3rd/vld/lib/dbghelp.dll
-		${CMAKE_CURRENT_LIST_DIR}/3rd/vld/lib/Microsoft.DTfW.DHL.manifest
-		${CMAKE_CURRENT_LIST_DIR}/3rd/vld/lib/vld.ini
-	)
-ENDIF()
 
 # 生成静态库、动态库
 IF(WINDOWS)
