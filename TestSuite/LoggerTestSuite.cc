@@ -33,7 +33,6 @@ TEST_F(LoggerTestSuite, replace) {
 	EXPECT_EQ(false, jc_replace_logger(nullptr));
 	EXPECT_EQ(true, jc_replace_logger(LoggerTestSuite_WriteMessage));
 
-	EXPECT_EQ(false, jc_replace_abort(nullptr));
 	EXPECT_EQ(true, jc_replace_abort(LoggerTestSuite_DefaultAbort));
 }
 

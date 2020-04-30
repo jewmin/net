@@ -254,7 +254,7 @@ TEST_F(ReactorTestSuiteTest, acceptor_cb4) {
 	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
 	EXPECT_EQ(acceptor->Open(address_), true);
 	EXPECT_EQ(connector->Connect(connection, address_), true);
-	Run(3);
+	Run(10);
 	connector->Destroy();
 	connection->Destroy();
 	acceptor->Destroy();
@@ -356,7 +356,9 @@ TEST_F(ReactorTestSuiteTest, connection3) {
 	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
 	EXPECT_EQ(acceptor->Open(address_), true);
 	EXPECT_EQ(connector->Connect(connection, address_), true);
-	Run(3);
+	while (0 == ReactorTestSuite_Call_SomeDataSent) {
+		reactor_.Poll();
+	}
 	block = connection->GetRecvData(len);
 	EXPECT_FALSE(block == nullptr);
 	EXPECT_EQ(len, 3);
