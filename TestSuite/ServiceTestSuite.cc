@@ -149,3 +149,13 @@ TEST_F(ServiceTestSuiteTest, testConnection) {
 	EXPECT_EQ(client.Connect("127.0.0.1", 6789), true);
 	Run();
 }
+
+TEST_F(ServiceTestSuiteTest, testIPv6) {
+	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
+	Net::Server server("testServer", &reactor_, 128, 128, 64);
+	Net::Client client("testClient", &reactor_, connector, 128, 128, 64);
+	EXPECT_EQ(server.Listen("::", 6789, 128, true), true);
+	EXPECT_EQ(client.Connect("::1", 6789), true);
+	Run();
+	connector->Destroy();
+}
