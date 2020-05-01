@@ -1,0 +1,16 @@
+# cmake版本
+CMAKE_MINIMUM_REQUIRED(VERSION 3.7.2)
+
+PROJECT(libuv-download NONE)
+
+INCLUDE(ExternalProject)
+EXTERNALPROJECT_ADD(libuv
+	URL https://github.com/jewmin/libuv/archive/v${LIBUV_VERSION}.tar.gz
+	URL_MD5 4e5683b4abdcb308e82d5147512d8c62
+	SOURCE_DIR "${CMAKE_BINARY_DIR}/libuv-src"
+	BINARY_DIR "${CMAKE_BINARY_DIR}/libuv-build"
+	CONFIGURE_COMMAND ""
+	BUILD_COMMAND ""
+	INSTALL_COMMAND ""
+	TEST_COMMAND ""
+)
