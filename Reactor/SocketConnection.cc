@@ -37,16 +37,22 @@ SocketConnection::SocketIO::SocketIO(i32 max_out_buffer_size, i32 max_in_buffer_
 }
 
 SocketConnection::SocketIO::~SocketIO() {
+	delete in_buffer_;
+	delete out_buffer_;
 }
 
 SocketConnection::SocketConnection(i32 max_out_buffer_size, i32 max_in_buffer_size)
 	: EventHandler(nullptr), io_(nullptr), connect_state_(ConnectState::kDisconnected)
 	, max_out_buffer_size_(max_out_buffer_size), max_in_buffer_size_(max_in_buffer_size)
-	, shutdown_(false), called_on_disconnected_(false) {
+	, shutdown_(false), called_on_connectfailed_(false), called_on_disconnected_(false) {
 }
 
 SocketConnection::~SocketConnection() {
 	ShutdownImmediately();
+}
+
+StreamSocket * SocketConnection::GetSocket() {
+	return &socket_;
 }
 
 bool SocketConnection::RegisterToReactor() {
@@ -109,17 +115,24 @@ void SocketConnection::Destroy() {
 void SocketConnection::ShutdownImmediately() {
 	if (ConnectState::kConnecting == connect_state_) {
 		connect_state_ = ConnectState::kDisconnected;
-		OnConnectFailed(UV_ECANCELED);
+		CallOnConnectFailed(UV_ECANCELED);
 		socket_.Close();
 	} else if (ConnectState::kConnected == connect_state_ || ConnectState::kDisconnecting == connect_state_) {
 		GetReactor()->RemoveEventHandler(this);
 	}
 }
 
+void SocketConnection::CallOnConnectFailed(i32 reason) {
+	if (!called_on_connectfailed_) {
+		called_on_connectfailed_ = true;
+		OnConnectFailed(reason);
+	}
+}
+
 void SocketConnection::CallOnDisconnected(bool is_remote) {
 	if (!called_on_disconnected_) {
-		OnDisconnected(is_remote);
 		called_on_disconnected_ = true;
+		OnDisconnected(is_remote);
 	}
 }
 
@@ -188,7 +201,7 @@ i32 SocketConnection::Write(const i8 * data, i32 len) {
 
 	std::memcpy(block, data, actually_size);
 	i32 status = socket_.Write(block, actually_size, reinterpret_cast<void *>(static_cast<i64>(actually_size)));
-	if (0 == status) {
+	if (status > 0) {
 		io_->out_buffer_->Commit(actually_size);
 	}
 	return status;
@@ -207,6 +220,7 @@ i32 SocketConnection::Read(i8 * data, i32 len) {
 
 void SocketConnection::CloseCallback() {
 	shutdown_ = false;
+	called_on_connectfailed_ = false;
 	called_on_disconnected_ = false;
 }
 
@@ -227,7 +241,9 @@ void SocketConnection::ReadCallback(i32 status) {
 	if (status < 0) {
 		Error(status);
 	} else {
-		io_->in_buffer_->Commit(status);
+		if (io_) {
+			io_->in_buffer_->Commit(status);
+		}
 		if (ConnectState::kConnected == connect_state_ || ConnectState::kDisconnecting == connect_state_) {
 			OnNewDataReceived();
 		}
@@ -238,7 +254,9 @@ void SocketConnection::WrittenCallback(i32 status, void * arg) {
 	if (status < 0) {
 		Error(status);
 	} else {
-		io_->out_buffer_->DeCommit(static_cast<i32>(reinterpret_cast<i64>(arg)));
+		if (io_) {
+			io_->out_buffer_->DeCommit(static_cast<i32>(reinterpret_cast<i64>(arg)));
+		}
 		if (ConnectState::kConnected == connect_state_ || ConnectState::kDisconnecting == connect_state_) {
 			OnSomeDataSent();
 		}

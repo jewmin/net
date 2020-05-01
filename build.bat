@@ -1,7 +1,5 @@
 @echo off
 
-cd %~dp0
-
 set config=Debug
 set tag=OFF
 set vld=OFF
@@ -15,9 +13,6 @@ if /i "%1"=="vld"          set vld=ON&goto arg-ok
 shift
 goto next-arg
 :args-done
-
-set MSBuild="C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\"
-call %MSBuild%VsMSBuildCmd.bat
 
 if "%config%"=="Release" goto build-release
 
@@ -33,7 +28,7 @@ set tag=ON
 mkdir build\%config%
 cd build/%config%
 cmake ../.. -G "Visual Studio 15 2017 Win64" -DRELEASE=%tag% -DVLD=%vld%
-msbuild libnet.sln /t:Build /p:Configuration=%config% /p:Platform=x64 /clp:NoSummary;NoItemAndPropertyList;Verbosity=minimal /nologo /m
+cmake --build . --config %config%
 cd ../..
 
 :exit

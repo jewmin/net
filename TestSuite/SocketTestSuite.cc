@@ -103,12 +103,12 @@ TEST(SocketTestSuite, ConstructCatch) {
 		printf("SocketTestSuite - Catch: %s\n", e.what());
 	}
 
-	try {
-		Net::StreamSocket s7;
-		s7.SetUvData(nullptr);
-	} catch (std::exception & e) {
-		printf("SocketTestSuite - Catch: %s\n", e.what());
-	}
+	// try {
+	// 	Net::StreamSocket s7;
+	// 	s7.SetUvData(nullptr);
+	// } catch (std::exception & e) {
+	// 	printf("SocketTestSuite - Catch: %s\n", e.what());
+	// }
 }
 
 TEST(SocketTestSuite, Equal) {
@@ -358,12 +358,18 @@ TEST_F(SocketTestSuiteImplTest, Listen) {
 	EXPECT_EQ(GetImpl()->Listen(), UV_ECANCELED);
 }
 
+#ifdef _WIN32
 TEST_F(SocketTestSuiteImplTest, Connect) {
 	uv_tcp_t * tcp = GetImpl()->GetTcp();
 	tcp->delayed_error = UV_ECANCELED;
-	GetImpl()->Connect(Net::SocketAddress(Net::IPAddress("127.0.0.1"), 6789));
-	GetImpl()->Connect(Net::SocketAddress(Net::IPAddress("127.0.0.1"), 6789));
+	EXPECT_LT(GetImpl()->Connect(Net::SocketAddress(Net::IPAddress("127.0.0.1"), 6789)), 0);
 }
+#else
+TEST_F(SocketTestSuiteImplTest, Connect) {
+	EXPECT_EQ(GetImpl()->Connect(Net::SocketAddress(Net::IPAddress("127.0.0.1"), 6789)), 0);
+	EXPECT_LT(GetImpl()->Connect(Net::SocketAddress(Net::IPAddress("127.0.0.1"), 6789)), 0);
+}
+#endif
 
 TEST_F(SocketTestSuiteImplTest, Shutdown) {
 	EXPECT_EQ(GetImpl()->ShutdownRead(), 0);

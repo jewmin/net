@@ -81,7 +81,7 @@ void SocketAcceptor::AcceptCallback(i32 status) {
 		Close();
 	} else {
 		StreamSocket client;
-		if (socket_.AcceptSocket(client)) {
+		if (!socket_.AcceptSocket(client)) {
 			Log(kLog, __FILE__, __LINE__, "AcceptCallback() accept socket error");
 			return;
 		}
@@ -98,7 +98,7 @@ void SocketAcceptor::AcceptCallback(i32 status) {
 			connection->OnConnected();
 		} else {
 			Log(kLog, __FILE__, __LINE__, "AcceptCallback() ActivateConnection error");
-			connection->OnConnectFailed(UV_ECANCELED);
+			connection->CallOnConnectFailed(UV_ECANCELED);
 		}
 	}
 }
