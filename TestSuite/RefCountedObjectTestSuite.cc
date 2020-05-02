@@ -51,5 +51,4 @@ TEST(RefCountedObjectTestSuite, del) {
 	EXPECT_EQ(ref_object->ReferenceCount(), 2);
 	ref_object->Release();
 	EXPECT_EQ(ref_object->ReferenceCount(), 1);
-	ref_object->Release();
 }

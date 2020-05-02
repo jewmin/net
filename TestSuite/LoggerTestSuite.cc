@@ -86,15 +86,15 @@ TEST_F(LoggerTestSuite, item) {
 	unum = -123;
 	Net::LogItem item11((unsigned int)unum);
 	EXPECT_EQ((int)item11.tag_, 3);
-	EXPECT_EQ(item11.data_.unum, unum);
+	EXPECT_EQ(item11.data_.unum, (unsigned int)unum);
 
 	Net::LogItem item12((unsigned long)unum);
 	EXPECT_EQ((int)item12.tag_, 3);
-	EXPECT_EQ(item12.data_.unum, unum);
+	EXPECT_EQ(item12.data_.unum, (unsigned long)unum);
 
 	Net::LogItem item13((unsigned long long)unum);
 	EXPECT_EQ((int)item13.tag_, 3);
-	EXPECT_EQ(item13.data_.unum, unum);
+	EXPECT_EQ(item13.data_.unum, (unsigned long long)unum);
 
 	Net::LogItem item14("123");
 	EXPECT_EQ((int)item14.tag_, 0);
@@ -114,6 +114,7 @@ TEST_F(LoggerTestSuite, item) {
 	EXPECT_EQ((int)item17.tag_, 1);
 	EXPECT_EQ(item17.data_.ptr, p);
 	EXPECT_EQ(*(int*)item17.data_.ptr, 123);
+	jc_free(p);
 }
 
 TEST_F(LoggerTestSuite, log) {

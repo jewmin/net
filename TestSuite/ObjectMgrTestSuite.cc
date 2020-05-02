@@ -42,7 +42,7 @@ TEST_F(ObjectMgrTestSuite, ctor) {
 	Net::ObjectMgr<TestObj> mgr5(128);
 	EXPECT_EQ(mgr5.kObjectBitsMaxSize, 2);
 	Net::ObjectMgr<TestObj> mgr6(-1);
-	EXPECT_EQ(mgr5.kObjectBitsMaxSize, 67108863);
+	EXPECT_EQ(mgr6.kObjectBitsMaxSize, 67108863);
 }
 
 class ObjectMgrTestSuite_Add : public ObjectMgrTestSuite {
@@ -60,9 +60,9 @@ public:
 
 	void TestAdd() {
 		for (int i = 0; i < size_; ++i) {
-			if ((i >> mgr_->kBitShift) > (int)mgr_->kObjectBitsMaxSize) {
+			if ((i >> mgr_->kBitShift) >= (int)mgr_->kObjectBitsMaxSize) {
 				EXPECT_EQ(mgr_->AddNewObj(object_), -1);
-				EXPECT_EQ(mgr_->GetObjCount(), 1 << mgr_->kBitShift);
+				EXPECT_EQ(mgr_->GetObjCount(), mgr_->kObjectBitsMaxSize << mgr_->kBitShift);
 			} else {
 				EXPECT_EQ(mgr_->AddNewObj(object_), i);
 				EXPECT_EQ(mgr_->GetObjCount(), i + 1);
@@ -98,6 +98,8 @@ TEST_F(ObjectMgrTestSuite_Op, get) {
 	EXPECT_TRUE(mgr_->GetObj(64) != nullptr);
 	EXPECT_TRUE(mgr_->GetObj(127) != nullptr);
 	EXPECT_TRUE(mgr_->GetObj(128) != nullptr);
+	EXPECT_TRUE(mgr_->GetObj(191) != nullptr);
+	EXPECT_TRUE(mgr_->GetObj(192) == nullptr);
 	EXPECT_TRUE(mgr_->GetObj(255) == nullptr);
 	EXPECT_TRUE(mgr_->GetObj(256) == nullptr);
 	EXPECT_TRUE(mgr_->GetObj(-1) == nullptr);
@@ -105,14 +107,18 @@ TEST_F(ObjectMgrTestSuite_Op, get) {
 
 TEST_F(ObjectMgrTestSuite_Op, rm) {
 	for (int i = 0; i < size_; i += 2) {
-		if ((i >> mgr_->kBitShift) > (int)mgr_->kObjectBitsMaxSize) {
+		if ((i >> mgr_->kBitShift) >= (int)mgr_->kObjectBitsMaxSize) {
 			EXPECT_TRUE(mgr_->RemoveObj(i) == nullptr);
 		} else {
 			EXPECT_TRUE(mgr_->RemoveObj(i) != nullptr);
 		}
 	}
 	for (int i = 0; i < size_ / 2; ++i) {
-		EXPECT_EQ(mgr_->AddNewObj(object_), i);
+		if (i * 2 >= (int)mgr_->kObjectBitsMaxSize << mgr_->kBitShift) {
+			EXPECT_EQ(mgr_->AddNewObj(object_), -1);
+		} else {
+			EXPECT_EQ(mgr_->AddNewObj(object_), i * 2);
+		}
 	}
 	EXPECT_ANY_THROW(mgr_->RemoveObj(-1));
 }
