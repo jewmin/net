@@ -13,11 +13,26 @@ public:
 };
 
 TEST(NetObjectTestSuite, alloc) {
-	MockNetObject * o = new MockNetObject();
-	delete o;
+	MockNetObject object;
+	EXPECT_EQ(object.a, 1);
+	EXPECT_FLOAT_EQ(object.b, 1.5);
+	EXPECT_EQ(object.c, 2);
+	EXPECT_DOUBLE_EQ(object.d, 2.5);
 
-	MockNetObject * o1 = static_cast<MockNetObject *>(jc_malloc(sizeof(*o1)));
-	new(o1)MockNetObject();
-	o1->~MockNetObject();
-	jc_free(o1);
+	MockNetObject * object1 = new MockNetObject();
+	EXPECT_TRUE(object1 != nullptr);
+	EXPECT_EQ(object1->a, 1);
+	EXPECT_FLOAT_EQ(object1->b, 1.5);
+	EXPECT_EQ(object1->c, 2);
+	EXPECT_DOUBLE_EQ(object1->d, 2.5);
+	delete object1;
+
+	char buf[sizeof(MockNetObject)];
+	MockNetObject * object2 = reinterpret_cast<MockNetObject *>(const_cast<char *>(buf));
+	new(object2)MockNetObject();
+	EXPECT_EQ(object2->a, 1);
+	EXPECT_FLOAT_EQ(object2->b, 1.5);
+	EXPECT_EQ(object2->c, 2);
+	EXPECT_DOUBLE_EQ(object2->d, 2.5);
+	object2->~MockNetObject();
 }

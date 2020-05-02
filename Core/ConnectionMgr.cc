@@ -33,6 +33,7 @@ ConnectionMgr::ConnectionMgr(const std::string & name, u32 object_max_count)
 }
 
 ConnectionMgr::~ConnectionMgr() {
+	notification_ = nullptr;
 	CleanDeathConnections();
 	delete need_to_delete_list_;
 	object_mgr_->VisitObj(DestroyConnection, nullptr);
@@ -83,8 +84,10 @@ void ConnectionMgr::ShutDownOneConnection(i64 id) {
 }
 
 void ConnectionMgr::OnConnected(Connection * connection) {
-	if (Register(connection) >= 0 && notification_ && (notification_->OnConnected(connection) != 0)) {
-		connection->Shutdown(true);
+	if (Register(connection) >= 0 && notification_) {
+		if (notification_->OnConnected(connection) != 0) {
+			connection->Shutdown(true);
+		}
 	}
 }
 
@@ -103,14 +106,18 @@ void ConnectionMgr::OnDisconnected(Connection * connection, bool is_remote) {
 }
 
 void ConnectionMgr::OnNewDataReceived(Connection * connection) {
-	if (notification_ && (notification_->OnNewDataReceived(connection) != 0)) {
-		connection->Shutdown(true);
+	if (notification_) {
+		if (notification_->OnNewDataReceived(connection) != 0) {
+			connection->Shutdown(true);
+		}
 	}
 }
 
 void ConnectionMgr::OnSomeDataSent(Connection * connection) {
-	if (notification_ && (notification_->OnSomeDataSent(connection) != 0)) {
-		connection->Shutdown(true);
+	if (notification_) {
+		if (notification_->OnSomeDataSent(connection) != 0) {
+			connection->Shutdown(true);
+		}
 	}
 }
 

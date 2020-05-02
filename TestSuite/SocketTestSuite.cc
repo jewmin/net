@@ -450,6 +450,7 @@ public:
 };
 
 TEST_F(SocketTestSuiteTest, CloseCatch) {
+	
 	Net::StreamSocket client;
 	SocketTestSuiteError * data = new SocketTestSuiteError();
 	data->socket_.Open(GetLoop());
@@ -458,11 +459,7 @@ TEST_F(SocketTestSuiteTest, CloseCatch) {
 	data->socket_.SetUvData(data);
 	client.Open(GetLoop());
 	client.Connect(Net::SocketAddress(Net::IPAddress("127.0.0.1"), 6789));
-	try {
-		uv_run(GetLoop(), UV_RUN_DEFAULT);
-	} catch (std::exception & e) {
-		std::printf("SocketTestSuiteTest - CloseCatch: %s\n", e.what());
-	}
+	EXPECT_ANY_THROW(uv_run(GetLoop(), UV_RUN_DEFAULT));
 	client.Close();
 	data->Destroy();
 }

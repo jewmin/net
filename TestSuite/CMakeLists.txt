@@ -23,6 +23,7 @@ SET(test_srcs
 	${PROJECT_SOURCE_DIR}/SocketAddressTestSuite.cc
 	${PROJECT_SOURCE_DIR}/SocketTestSuite.cc
 	${PROJECT_SOURCE_DIR}/ReactorTestSuite.cc
+	${PROJECT_SOURCE_DIR}/ServiceTestSuite.cc
 )
 # AUX_SOURCE_DIRECTORY(${PROJECT_SOURCE_DIR} test_srcs)
 # MESSAGE(${test_srcs})

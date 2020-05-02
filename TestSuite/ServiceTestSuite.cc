@@ -77,7 +77,7 @@ class ServiceTestSuiteTest : public testing::Test {
 public:
 	void SetUp() override { notification_.Reset(); }
 	void TearDown() override {}
-	void Run(i32 count = 3) { while (count-- > 0) { reactor_.Poll(); } }
+	void Run(i32 count = 10) { while (count-- > 0) { reactor_.Poll(); } }
 	Net::EventReactor reactor_;
 	ServiceTestSuite_MockNotification notification_;
 	ServiceTestSuite_MockNotification2 notification2_;
@@ -145,17 +145,46 @@ TEST_F(ServiceTestSuiteTest, testMgrError) {
 TEST_F(ServiceTestSuiteTest, testConnection) {
 	Net::Server server("testServer", &reactor_, 128, 128, 64);
 	Net::Client client("testClient", &reactor_, nullptr, 128, 128, 64);
+	server.SetNotification(&notification_);
+	client.SetNotification(&notification_);
 	EXPECT_EQ(server.Listen("0.0.0.0", 6789), true);
 	EXPECT_EQ(client.Connect("127.0.0.1", 6789), true);
 	Run();
+	EXPECT_EQ(notification_.call_connected_, 2);
 }
 
 TEST_F(ServiceTestSuiteTest, testIPv6) {
 	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
 	Net::Server server("testServer", &reactor_, 128, 128, 64);
 	Net::Client client("testClient", &reactor_, connector, 128, 128, 64);
+	server.SetNotification(&notification_);
+	client.SetNotification(&notification_);
 	EXPECT_EQ(server.Listen("::", 6789, 128, true), true);
 	EXPECT_EQ(client.Connect("::1", 6789), true);
 	Run();
 	connector->Destroy();
+	EXPECT_EQ(notification_.call_connected_, 2);
+}
+
+TEST_F(ServiceTestSuiteTest, testConnectError) {
+	Net::Server server("testConnectErrorServer", &reactor_, 128, 128, 64);
+	Net::Client client("testConnectErrorClient", &reactor_, nullptr, 128, 128, 64);
+	Net::Client client2("testConnectErrorClient2", &reactor_, nullptr, 128, 128, 64);
+	EXPECT_EQ(server.Listen("::", 6789, 128, true), true);
+	EXPECT_EQ(client.Connect("127.0.0.1", 6789), true);
+	EXPECT_EQ(client.Connect("::1", 6789), true);
+	EXPECT_EQ(client2.Connect("192.168.1.1", 6789), true);
+	Run();
+}
+
+TEST_F(ServiceTestSuiteTest, testConnectRepeat) {
+	Net::Server server("testConnectRepeatServer", &reactor_, 128, 128, 64);
+	Net::Client client("testConnectRepeatClient", &reactor_, nullptr, 128, 128, 64);
+	server.SetNotification(&notification_);
+	client.SetNotification(&notification_);
+	EXPECT_EQ(server.Listen("::", 6789), true);
+	EXPECT_EQ(client.Connect("127.0.0.1", 6789), true);
+	EXPECT_EQ(client.Connect("::1", 6789), true);
+	Run();
+	EXPECT_EQ(notification_.call_connected_, 4);
 }

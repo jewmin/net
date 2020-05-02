@@ -10,44 +10,46 @@ public:
 };
 
 TEST(RefCountedObjectTestSuite, counter) {
-	Net::RefCounter c;
-	EXPECT_EQ((int)c, 1);
-	EXPECT_EQ((int)c++, 1);
-	EXPECT_EQ((int)++c, 3);
-	EXPECT_EQ((int)--c, 2);
-	EXPECT_EQ((int)c--, 2);
-	EXPECT_EQ((int)c, 1);
+	Net::RefCounter counter;
+	EXPECT_EQ((int)counter, 1);
+	EXPECT_EQ((int)counter++, 1);
+	EXPECT_EQ((int)++counter, 3);
+	EXPECT_EQ((int)--counter, 2);
+	EXPECT_EQ((int)counter--, 2);
+	EXPECT_EQ((int)counter, 1);
 }
 
 TEST(RefCountedObjectTestSuite, ref) {
-	MockRefCountedObject o;
-	EXPECT_EQ(o.ReferenceCount(), 1);
-	o.Duplicate();
-	EXPECT_EQ(o.ReferenceCount(), 2);
-	o.Duplicate();
-	EXPECT_EQ(o.ReferenceCount(), 3);
-	o.Release();
-	EXPECT_EQ(o.ReferenceCount(), 2);
-	o.Release();
-	EXPECT_EQ(o.ReferenceCount(), 1);
+	MockRefCountedObject ref_object;
+	EXPECT_EQ(ref_object.ReferenceCount(), 1);
+	ref_object.Duplicate();
+	EXPECT_EQ(ref_object.ReferenceCount(), 2);
+	ref_object.Duplicate();
+	EXPECT_EQ(ref_object.ReferenceCount(), 3);
+	ref_object.Release();
+	EXPECT_EQ(ref_object.ReferenceCount(), 2);
+	ref_object.Release();
+	EXPECT_EQ(ref_object.ReferenceCount(), 1);
 }
 
 TEST(RefCountedObjectTestSuite, ref_ptr) {
-	MockRefCountedObject * o = new MockRefCountedObject();
-	EXPECT_EQ(o->ReferenceCount(), 1);
-	o->Duplicate();
-	EXPECT_EQ(o->ReferenceCount(), 2);
-	o->Release();
-	EXPECT_EQ(o->ReferenceCount(), 1);
-	o->Release();
+	MockRefCountedObject * ref_object = new MockRefCountedObject();
+	EXPECT_EQ(ref_object->ReferenceCount(), 1);
+	ref_object->Duplicate();
+	EXPECT_EQ(ref_object->ReferenceCount(), 2);
+	ref_object->Release();
+	EXPECT_EQ(ref_object->ReferenceCount(), 1);
+	ref_object->Release();
 }
 
 TEST(RefCountedObjectTestSuite, del) {
-	MockRefCountedObject * o = (MockRefCountedObject *)jc_malloc(sizeof(*o));
-	new(o)MockRefCountedObject();
-	EXPECT_EQ(o->ReferenceCount(), 1);
-	o->Duplicate();
-	EXPECT_EQ(o->ReferenceCount(), 2);
-	o->Release();
-	o->Release();
+	char buf[sizeof(MockRefCountedObject)];
+	MockRefCountedObject * ref_object = reinterpret_cast<MockRefCountedObject *>(const_cast<char *>(buf));
+	new(ref_object)MockRefCountedObject();
+	EXPECT_EQ(ref_object->ReferenceCount(), 1);
+	ref_object->Duplicate();
+	EXPECT_EQ(ref_object->ReferenceCount(), 2);
+	ref_object->Release();
+	EXPECT_EQ(ref_object->ReferenceCount(), 1);
+	ref_object->Release();
 }

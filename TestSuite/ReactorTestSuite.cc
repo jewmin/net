@@ -201,7 +201,7 @@ TEST_F(ReactorTestSuiteTest, Reactor) {
 	EXPECT_EQ(reactor_.AddEventHandler(connector), false);
 	EXPECT_EQ(reactor_.RemoveEventHandler(connector), false);
 	EXPECT_EQ(connector->Connect(connection, address_), true);
-	Run(3);
+	Run(10);
 	connector->Destroy();
 	acceptor->Destroy();
 	connection->Destroy();
@@ -240,7 +240,7 @@ TEST_F(ReactorTestSuiteTest, acceptor_cb3) {
 	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
 	EXPECT_EQ(acceptor->Open(address_), true);
 	EXPECT_EQ(connector->Connect(connection, address_), true);
-	Run(3);
+	Run(10);
 	connector->Destroy();
 	connection->Destroy();
 	acceptor->Destroy();
@@ -278,7 +278,7 @@ TEST_F(ReactorTestSuiteTest, connector_cb) {
 	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
 	EXPECT_EQ(connector->Connect(connection, address_), true);
 	connection->Shutdown(false);
-	Run(3);
+	Run(10);
 	connector->Destroy();
 	connection->Destroy();
 	EXPECT_EQ(ReactorTestSuite_Call_ConnectFailed, 1);
@@ -289,7 +289,7 @@ TEST_F(ReactorTestSuiteTest, connector_cb2) {
 	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
 	EXPECT_EQ(connector->Connect(connection, address_), true);
 	connection->GetSocket()->Close();
-	Run(3);
+	Run(10);
 	connector->Destroy();
 	connection->Destroy();
 	EXPECT_EQ(ReactorTestSuite_Call_ConnectFailed, 1);
@@ -302,7 +302,7 @@ TEST_F(ReactorTestSuiteTest, connector_cb3) {
 	EXPECT_EQ(acceptor->Open(address_), true);
 	EXPECT_EQ(connector->Connect(connection, address_), true);
 	connection->SetConnectState(Net::ConnectState::kConnected);
-	Run(3);
+	Run(10);
 	connection->SetConnectState(Net::ConnectState::kDisconnected);
 	connector->Destroy();
 	connection->Destroy();
@@ -326,7 +326,7 @@ TEST_F(ReactorTestSuiteTest, connection1) {
 	connection->GetSocket()->Open(reactor_.GetUvLoop());
 	connection->GetSocket()->Connect(address_);
 	connection->GetSocket()->SetUvData(new ReactorTestSuiteMock(&reactor_, connection));
-	Run(3);
+	Run(10);
 	connection->Destroy();
 	acceptor->Destroy();
 }
@@ -378,7 +378,7 @@ TEST_F(ReactorTestSuiteTest, connection4) {
 	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
 	EXPECT_EQ(acceptor->Open(address_), true);
 	EXPECT_EQ(connector->Connect(connection, address_), true);
-	Run(3);
+	Run(10);
 	connection->TestError(UV_UNKNOWN);
 	connection->Destroy();
 	acceptor->Destroy();
@@ -391,7 +391,7 @@ TEST_F(ReactorTestSuiteTest, connection5) {
 	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
 	EXPECT_EQ(acceptor->Open(address_), true);
 	EXPECT_EQ(connector->Connect(connection, address_), true);
-	Run(3);
+	Run(10);
 	connection->TestError(UV_EOF);
 	connection->Destroy();
 	acceptor->Destroy();
@@ -404,7 +404,7 @@ TEST_F(ReactorTestSuiteTest, connection6) {
 	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
 	EXPECT_EQ(acceptor->Open(address_), true);
 	EXPECT_EQ(connector->Connect(connection, address_), true);
-	Run(3);
+	Run(10);
 	EXPECT_EQ(connection->Write("123", 3), 3);
 	connection->Shutdown(false);
 	connection->TestError(UV_EOF);
@@ -419,7 +419,7 @@ TEST_F(ReactorTestSuiteTest, connection7) {
 	Net::SocketConnector * connector = new Net::SocketConnector(&reactor_);
 	EXPECT_EQ(acceptor->Open(address_), true);
 	EXPECT_EQ(connector->Connect(connection, address_), true);
-	Run(3);
+	Run(10);
 	EXPECT_EQ(connection->Write("123", 3), 3);
 	connection->TestError(UV_EOF);
 	connection->Destroy();
