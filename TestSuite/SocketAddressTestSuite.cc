@@ -1,53 +1,191 @@
 #include "gtest/gtest.h"
 #include "Address/SocketAddress.h"
 
-using namespace Net;
-
-TEST(SocketAddressTestSuite, Constructor) {
-	SocketAddress address1;
-	SocketAddress address2(7777);
-	SocketAddress address3(IPAddress::Parse("127.0.0.1"), 8888);
-	SocketAddress address4(IPAddress("fe80::e56a:23a:b5b8:e855%8"), 9999);
-
-	struct sockaddr_in si4;
-	uv_ip4_addr("192.168.245.81", 6666, &si4);
-	struct sockaddr_in6 si6;
-	uv_ip6_addr("fe80::4435:43f0:11d2:4349%6", 5555, &si6);
-	SocketAddress address5(reinterpret_cast<struct sockaddr *>(&si4), sizeof(si4));
-	SocketAddress address6(reinterpret_cast<struct sockaddr *>(&si6), sizeof(si6));
-
-	SocketAddress address7(address5);
-	SocketAddress address8(address6);
-
-	address1 = address3;
-	address1 = address4;
-
-	EXPECT_EQ(address1, address4);
-	EXPECT_NE(address1, address2);
-	EXPECT_EQ(address3.AF(), AF_INET);
-	EXPECT_EQ(address4.AF(), AF_INET6);
-	EXPECT_EQ(address5.Family(), IPAddress::IPv4);
-	EXPECT_EQ(address6.Family(), IPAddress::IPv6);
-	EXPECT_EQ(address7.Host(), IPAddress("192.168.245.81"));
-	EXPECT_EQ(address8.Host(), IPAddress("fe80::4435:43f0:11d2:4349%6"));
-	EXPECT_EQ(address2.Port(), 7777);
-	EXPECT_STREQ(address1.ToString().c_str(), "fe80::e56a:23a:b5b8:e855:9999");
-	EXPECT_STREQ(address5.ToString().c_str(), "192.168.245.81:6666");
-	EXPECT_EQ(address1.Length(), sizeof(si6));
-	EXPECT_EQ(address3.Length(), sizeof(si4));
-}
-
-TEST(SocketAddressTestSuite, Impl) {
-	IPv6SocketAddressImpl impl;
-}
-
-TEST(SocketAddressTestSuite, Error) {
-	try {
-		struct sockaddr_in si4;
-		struct sockaddr_in6 si6;
-		si6.sin6_family = AF_INET6;
-		SocketAddress address(reinterpret_cast<struct sockaddr *>(&si6), sizeof(si4));
-	} catch (std::exception & e) {
-		printf("SocketAddressTestSuite - Error: %s\n", e.what());
+class SocketAddressImplTestSuite : testing::Test {
+public:
+	// Sets up the test fixture.
+	virtual void SetUp() {
+		EXPECT_EQ(0, uv_ip4_addr("192.168.1.100", 6789, &ipv4_addr_));
+		EXPECT_EQ(0, uv_ip6_addr("fe80::6101:927f:1dde:cb33", 6789, &ipv6_addr_));
+		ipv4_impl_ = new Net::IPv4SocketAddressImpl(&ipv4_addr_);
+		ipv6_impl_ = new Net::IPv6SocketAddressImpl(&ipv6_addr_);
 	}
+	// Tears down the test fixture.
+	virtual void TearDown() {
+		delete ipv4_impl_;
+		delete ipv6_impl_;
+	}
+	Net::IPv4SocketAddressImpl * ipv4_impl_;
+	Net::IPv6SocketAddressImpl * ipv6_impl_;
+	sockaddr_in ipv4_addr_;
+	sockaddr_in6 ipv6_addr_;
+};
+
+TEST_F(SocketAddressImplTestSuite, ipv4_ctor) {
+	Net::IPv4SocketAddressImpl ipv4;
+	EXPECT_STREQ(ipv4.Host().ToString().c_str(), "0.0.0.0");
+	EXPECT_EQ(ipv4.Port(), 0);
+	EXPECT_EQ(ipv4.Length(), sizeof(ipv4_addr_));
+	EXPECT_EQ(std::memcmp(ipv4.Addr(), ipv4_impl_->Addr(), ipv4.Length()), -1);
+	EXPECT_EQ(ipv4.AF(), AF_INET);
+	EXPECT_EQ(ipv4.Family(), Net::AddressFamily::IPv4);
+	EXPECT_STREQ(ipv4.ToString().c_str(), "0.0.0.0:0");
+}
+
+TEST_F(SocketAddressImplTestSuite, ipv6_ctor) {
+	Net::IPv6SocketAddressImpl ipv6;
+	EXPECT_STREQ(ipv6.Host().ToString().c_str(), "::");
+	EXPECT_EQ(ipv6.Port(), 0);
+	EXPECT_EQ(ipv6.Length(), sizeof(ipv6_addr_));
+	EXPECT_EQ(std::memcmp(ipv6.Addr(), ipv6_impl_->Addr(), ipv6.Length()), -1);
+	EXPECT_EQ(ipv6.AF(), AF_INET6);
+	EXPECT_EQ(ipv6.Family(), Net::AddressFamily::IPv6);
+	EXPECT_STREQ(ipv6.ToString().c_str(), ":::0");
+}
+
+TEST_F(SocketAddressImplTestSuite, ipv4_display) {
+	EXPECT_STREQ(ipv4_impl_->Host().ToString().c_str(), "192.168.1.100");
+	EXPECT_EQ(ipv4_impl_->Port(), 6789);
+	EXPECT_EQ(ipv4_impl_->Length(), sizeof(ipv4_addr_));
+	EXPECT_EQ(std::memcmp(ipv4_impl_->Addr(), &ipv4_addr_, ipv4_impl_->Length()), 0);
+	EXPECT_EQ(ipv4_impl_->AF(), AF_INET);
+	EXPECT_EQ(ipv4_impl_->Family(), Net::AddressFamily::IPv4);
+	EXPECT_STREQ(ipv4_impl_->ToString().c_str(), "192.168.1.100:6789");
+}
+
+TEST_F(SocketAddressImplTestSuite, ipv6_display) {
+	EXPECT_STREQ(ipv6_impl_->Host().ToString().c_str(), "fe80::6101:927f:1dde:cb33");
+	EXPECT_EQ(ipv6_impl_->Port(), 6789);
+	EXPECT_EQ(ipv6_impl_->Length(), sizeof(ipv6_addr_));
+	EXPECT_EQ(std::memcmp(ipv6_impl_->Addr(), &ipv6_addr_, ipv6_impl_->Length()), 0);
+	EXPECT_EQ(ipv6_impl_->AF(), AF_INET6);
+	EXPECT_EQ(ipv6_impl_->Family(), Net::AddressFamily::IPv6);
+	EXPECT_STREQ(ipv6_impl_->ToString().c_str(), "fe80::6101:927f:1dde:cb33:6789");
+}
+
+class SocketAddressTestSuite : SocketAddressImplTestSuite {
+public:
+	// Sets up the test fixture.
+	virtual void SetUp() {
+		SocketAddressImplTestSuite::SetUp();
+		ip_ = new Net::SocketAddress(Net::IPAddress("192.168.1.100"), 6789);
+		ip6_ = new Net::SocketAddress(Net::IPAddress("fe80::6101:927f:1dde:cb33:6789"), 6789);
+	}
+	// Tears down the test fixture.
+	virtual void TearDown() {
+		delete ip_;
+		delete ip6_;
+		SocketAddressImplTestSuite::TearDown();
+	}
+	Net::SocketAddress * ip_;
+	Net::SocketAddress * ip6_;
+};
+
+TEST_F(SocketAddressTestSuite, ctor) {
+	Net::SocketAddress ip;
+	EXPECT_TRUE(ip.Host() == Net::IPAddress());
+	EXPECT_EQ(ip.Port(), 0);
+	EXPECT_EQ(ip.Length(), sizeof(ipv4_addr_));
+	EXPECT_EQ(std::memcmp(ip.Addr(), &ipv4_addr_, ip.Length()), -1);
+	EXPECT_EQ(ip.AF(), AF_INET);
+	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
+	EXPECT_EQ(ip.ToString().c_str(), "0.0.0.0:0");
+}
+
+TEST_F(SocketAddressTestSuite, ctor1) {
+	Net::SocketAddress ip(6789);
+	EXPECT_TRUE(ip.Host() == Net::IPAddress());
+	EXPECT_EQ(ip.Port(), 6789);
+	EXPECT_EQ(ip.Length(), sizeof(ipv4_addr_));
+	EXPECT_EQ(std::memcmp(ip.Addr(), &ipv4_addr_, ip.Length()), -1);
+	EXPECT_EQ(ip.AF(), AF_INET);
+	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
+	EXPECT_EQ(ip.ToString().c_str(), "0.0.0.0:6789");
+}
+
+TEST_F(SocketAddressTestSuite, ctor2) {
+	Net::SocketAddress ip(&ipv4_addr_, sizeof(ipv4_addr_));
+	EXPECT_TRUE(ip.Host() == ip_->Host());
+	EXPECT_EQ(ip.Port(), ip_->Port());
+	EXPECT_EQ(ip.Length(), ip_->Length());
+	EXPECT_EQ(std::memcmp(ip.Addr(), ip_->Addr(), ip.Length()), 0);
+	EXPECT_EQ(ip.AF(), ip_->AF());
+	EXPECT_EQ(ip.Family(), ip_->Family());
+	EXPECT_EQ(ip.ToString().c_str(), "192.168.1.100:6789");
+}
+
+TEST_F(SocketAddressTestSuite, ctor3) {
+	Net::SocketAddress ip(&ipv6_addr_, sizeof(ipv6_addr_));
+	EXPECT_TRUE(ip.Host() == ip6_->Host());
+	EXPECT_EQ(ip.Port(), ip6_->Port());
+	EXPECT_EQ(ip.Length(), ip6_->Length());
+	EXPECT_EQ(std::memcmp(ip.Addr(), ip6_->Addr(), ip.Length()), 0);
+	EXPECT_EQ(ip.AF(), ip6_->AF());
+	EXPECT_EQ(ip.Family(), ip6_->Family());
+	EXPECT_EQ(ip.ToString().c_str(), "fe80::6101:927f:1dde:cb33:6789");
+}
+
+TEST_F(SocketAddressTestSuite, ctor4) {
+	ipv4_addr_.sa_family = AF_UNIX;
+	EXPECT_ANY_THROW(Net::SocketAddress ip(&ipv4_addr_, sizeof(ipv4_addr_)));
+}
+
+TEST_F(SocketAddressTestSuite, ctor5) {
+	Net::SocketAddress ip(*ip_);
+	EXPECT_TRUE(ip.Host() == ip_->Host());
+	EXPECT_EQ(ip.Port(), ip_->Port());
+	EXPECT_EQ(ip.Length(), ip_->Length());
+	EXPECT_EQ(std::memcmp(ip.Addr(), ip_->Addr(), ip.Length()), 0);
+	EXPECT_EQ(ip.AF(), ip_->AF());
+	EXPECT_EQ(ip.Family(), ip_->Family());
+	EXPECT_EQ(ip.ToString().c_str(), "192.168.1.100:6789");
+}
+
+TEST_F(SocketAddressTestSuite, ctor6) {
+	Net::SocketAddress ip(*ip6_);
+	EXPECT_TRUE(ip.Host() == ip6_->Host());
+	EXPECT_EQ(ip.Port(), ip6_->Port());
+	EXPECT_EQ(ip.Length(), ip6_->Length());
+	EXPECT_EQ(std::memcmp(ip.Addr(), ip6_->Addr(), ip.Length()), 0);
+	EXPECT_EQ(ip.AF(), ip6_->AF());
+	EXPECT_EQ(ip.Family(), ip6_->Family());
+	EXPECT_EQ(ip.ToString().c_str(), "fe80::6101:927f:1dde:cb33:6789");
+}
+
+TEST_F(SocketAddressTestSuite, ctor7) {
+	Net::SocketAddress ip;
+	ip = *ip_;
+	EXPECT_TRUE(ip.Host() == ip_->Host());
+	EXPECT_EQ(ip.Port(), ip_->Port());
+	EXPECT_EQ(ip.Length(), ip_->Length());
+	EXPECT_EQ(std::memcmp(ip.Addr(), ip_->Addr(), ip.Length()), 0);
+	EXPECT_EQ(ip.AF(), ip_->AF());
+	EXPECT_EQ(ip.Family(), ip_->Family());
+	EXPECT_EQ(ip.ToString().c_str(), "192.168.1.100:6789");
+}
+
+TEST_F(SocketAddressTestSuite, ctor8) {
+	Net::SocketAddress ip;
+	ip = *ip6_;
+	EXPECT_TRUE(ip.Host() == ip6_->Host());
+	EXPECT_EQ(ip.Port(), ip6_->Port());
+	EXPECT_EQ(ip.Length(), ip6_->Length());
+	EXPECT_EQ(std::memcmp(ip.Addr(), ip6_->Addr(), ip.Length()), 0);
+	EXPECT_EQ(ip.AF(), ip6_->AF());
+	EXPECT_EQ(ip.Family(), ip6_->Family());
+	EXPECT_EQ(ip.ToString().c_str(), "fe80::6101:927f:1dde:cb33:6789");
+}
+
+TEST_F(SocketAddressTestSuite, ctor9) {
+	Net::SocketAddress ip;
+	ip = ip;
+}
+
+TEST_F(SocketAddressTestSuite, cmp) {
+	EXPECT_TRUE(*ip_ != *ip6_);
+}
+
+TEST_F(SocketAddressTestSuite, cmp2) {
+	Net::SocketAddress ip(ip_->Host(), 9999);
+	EXPECT_TRUE(ip != *ip_);
 }
