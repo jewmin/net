@@ -16,7 +16,7 @@ void LoggerTestSuite_WriteMessage(const i8 * msg, i32 length) {
 }
 
 void LoggerTestSuite_DefaultAbort() {
-	throw std::exception("LoggerTestSuite_DefaultAbort");
+	throw std::runtime_error("LoggerTestSuite_DefaultAbort");
 }
 
 class LoggerTestSuite : public testing::Test {

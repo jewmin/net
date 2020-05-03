@@ -36,13 +36,13 @@ TEST_F(ObjectMgrTestSuite, ctor) {
 	EXPECT_ANY_THROW(Net::ObjectMgr<TestObj> mgr1(0));
 	EXPECT_ANY_THROW(Net::ObjectMgr<TestObj> mgr2(63));
 	Net::ObjectMgr<TestObj> mgr3(64);
-	EXPECT_EQ(mgr3.kObjectBitsMaxSize, 1);
+	EXPECT_EQ((int)mgr3.kObjectBitsMaxSize, 1);
 	Net::ObjectMgr<TestObj> mgr4(100);
-	EXPECT_EQ(mgr4.kObjectBitsMaxSize, 1);
+	EXPECT_EQ((int)mgr4.kObjectBitsMaxSize, 1);
 	Net::ObjectMgr<TestObj> mgr5(128);
-	EXPECT_EQ(mgr5.kObjectBitsMaxSize, 2);
+	EXPECT_EQ((int)mgr5.kObjectBitsMaxSize, 2);
 	Net::ObjectMgr<TestObj> mgr6(-1);
-	EXPECT_EQ(mgr6.kObjectBitsMaxSize, 67108863);
+	EXPECT_EQ((int)mgr6.kObjectBitsMaxSize, 67108863);
 }
 
 class ObjectMgrTestSuite_Add : public ObjectMgrTestSuite {
@@ -65,7 +65,7 @@ public:
 				EXPECT_EQ(mgr_->GetObjCount(), mgr_->kObjectBitsMaxSize << mgr_->kBitShift);
 			} else {
 				EXPECT_EQ(mgr_->AddNewObj(object_), i);
-				EXPECT_EQ(mgr_->GetObjCount(), i + 1);
+				EXPECT_EQ((int)mgr_->GetObjCount(), i + 1);
 			}
 		}
 	}
@@ -131,7 +131,7 @@ void Func(TestObj * object, void * ud) {
 TEST_F(ObjectMgrTestSuite_Op, visit) {
 	int sum = 0;
 	mgr_->VisitObj(Func, (void *)&sum);
-	EXPECT_EQ(sum, mgr_->kObjectBitsMaxSize << mgr_->kBitShift);
+	EXPECT_EQ(sum, (int)mgr_->kObjectBitsMaxSize << mgr_->kBitShift);
 }
 
 TEST_F(ObjectMgrTestSuite_Op, ffs) {

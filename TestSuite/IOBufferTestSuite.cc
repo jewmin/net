@@ -95,7 +95,7 @@ TEST(IOBufferTestSuite, straight) {
 	EXPECT_EQ(io.GetCommitedSize(), 0);
 	char * block = io.GetReserveBlock(sizeof(buf), size);
 	EXPECT_FALSE(block == nullptr);
-	EXPECT_EQ(size, sizeof(buf));
+	EXPECT_EQ(size, (int)sizeof(buf));
 	std::memcpy(block, buf, size);
 	io.Commit(0);
 	//1 --------------------
@@ -105,7 +105,7 @@ TEST(IOBufferTestSuite, straight) {
 
 	block = io.GetReserveBlock(sizeof(buf), size);
 	EXPECT_FALSE(block == nullptr);
-	EXPECT_EQ(size, sizeof(buf));
+	EXPECT_EQ(size, (int)sizeof(buf));
 	std::memcpy(block, buf, size);
 	io.Commit(sizeof(buf));
 	//2 123456--------------
@@ -116,7 +116,7 @@ TEST(IOBufferTestSuite, straight) {
 
 	block = io.GetReserveBlock(sizeof(buf), size);
 	EXPECT_FALSE(block == nullptr);
-	EXPECT_EQ(size, sizeof(buf));
+	EXPECT_EQ(size, (int)sizeof(buf));
 	std::memcpy(block, buf, size);
 	io.Commit(sizeof(buf));
 	//3 123456123456--------
@@ -127,7 +127,7 @@ TEST(IOBufferTestSuite, straight) {
 
 	block = io.GetReserveBlock(sizeof(buf), size);
 	EXPECT_FALSE(block == nullptr);
-	EXPECT_EQ(size, sizeof(buf));
+	EXPECT_EQ(size, (int)sizeof(buf));
 	std::memcpy(block, buf, size);
 	io.Commit(sizeof(buf));
 	//4 123456123456123456--
@@ -138,7 +138,7 @@ TEST(IOBufferTestSuite, straight) {
 
 	block = io.GetReserveBlock(sizeof(buf), size);
 	EXPECT_FALSE(block == nullptr);
-	EXPECT_LT(size, sizeof(buf));
+	EXPECT_LT(size, (int)sizeof(buf));
 	std::memcpy(block, buf, size);
 	io.Commit(sizeof(buf));
 	//5 12345612345612345612
@@ -165,7 +165,7 @@ TEST(IOBufferTestSuite, straight) {
 
 	block = io.GetReserveBlock(sizeof(buf), size);
 	EXPECT_FALSE(block == nullptr);
-	EXPECT_EQ(size, sizeof(buf));
+	EXPECT_EQ(size, (int)sizeof(buf));
 	std::memcpy(block, buf, size);
 	io.Commit(sizeof(buf));
 	//7 12345612123456------
@@ -196,7 +196,7 @@ TEST(IOBufferTestSuite, bip) {
 	int size;
 	char * block = io.GetReserveBlock(sizeof(buf), size);
 	EXPECT_FALSE(block == nullptr);
-	EXPECT_EQ(size, sizeof(buf));
+	EXPECT_EQ(size, (int)sizeof(buf));
 	std::memcpy(block, buf, size);
 	io.Commit(0);
 	//1 --------------------
@@ -206,7 +206,7 @@ TEST(IOBufferTestSuite, bip) {
 
 	block = io.GetReserveBlock(sizeof(buf), size);
 	EXPECT_FALSE(block == nullptr);
-	EXPECT_EQ(size, sizeof(buf));
+	EXPECT_EQ(size, (int)sizeof(buf));
 	std::memcpy(block, buf, size);
 	io.Commit(sizeof(buf));
 	//2 123456--------------
@@ -217,7 +217,7 @@ TEST(IOBufferTestSuite, bip) {
 
 	block = io.GetReserveBlock(sizeof(buf), size);
 	EXPECT_FALSE(block == nullptr);
-	EXPECT_EQ(size, sizeof(buf));
+	EXPECT_EQ(size, (int)sizeof(buf));
 	std::memcpy(block, buf, size);
 	io.Commit(sizeof(buf));
 	//3 123456123456--------
@@ -228,7 +228,7 @@ TEST(IOBufferTestSuite, bip) {
 
 	block = io.GetReserveBlock(sizeof(buf), size);
 	EXPECT_FALSE(block == nullptr);
-	EXPECT_EQ(size, sizeof(buf));
+	EXPECT_EQ(size, (int)sizeof(buf));
 	std::memcpy(block, buf, size);
 	io.Commit(sizeof(buf));
 	//4 123456123456123456--
@@ -239,7 +239,7 @@ TEST(IOBufferTestSuite, bip) {
 
 	block = io.GetReserveBlock(sizeof(buf), size);
 	EXPECT_FALSE(block == nullptr);
-	EXPECT_LT(size, sizeof(buf));
+	EXPECT_LT(size, (int)sizeof(buf));
 	std::memcpy(block, buf, size);
 	io.Commit(sizeof(buf));
 	//5 12345612345612345612
@@ -266,7 +266,7 @@ TEST(IOBufferTestSuite, bip) {
 
 	block = io.GetReserveBlock(sizeof(buf), size);
 	EXPECT_FALSE(block == nullptr);
-	EXPECT_EQ(size, sizeof(buf));
+	EXPECT_EQ(size, (int)sizeof(buf));
 	std::memcpy(block, buf, size);
 	io.Commit(sizeof(buf));
 	//7 123456------12345612
@@ -293,7 +293,7 @@ TEST(IOBufferTestSuite, bip) {
 
 	block = io.GetReserveBlock(sizeof(buf), size);
 	EXPECT_FALSE(block == nullptr);
-	EXPECT_EQ(size, sizeof(buf));
+	EXPECT_EQ(size, (int)sizeof(buf));
 	std::memcpy(block, buf, size);
 	io.Commit(sizeof(buf));
 	//10 123456--------------
@@ -304,7 +304,7 @@ TEST(IOBufferTestSuite, bip) {
 
 	block = io.GetReserveBlock(sizeof(buf), size);
 	EXPECT_FALSE(block == nullptr);
-	EXPECT_EQ(size, sizeof(buf));
+	EXPECT_EQ(size, (int)sizeof(buf));
 	std::memcpy(block, buf, size);
 	io.Commit(sizeof(buf));
 	//11 123456123456--------
@@ -323,7 +323,7 @@ TEST(IOBufferTestSuite, bip) {
 
 	block = io.GetReserveBlock(sizeof(buf), size);
 	EXPECT_FALSE(block == nullptr);
-	EXPECT_EQ(size, sizeof(buf));
+	EXPECT_EQ(size, (int)sizeof(buf));
 	std::memcpy(block, buf, size);
 	io.Commit(sizeof(buf));
 	//13 --------3456123456--
@@ -345,7 +345,7 @@ TEST(IOBufferTestSuite, bip) {
 
 	block = io.GetReserveBlock(sizeof(buf), size);
 	EXPECT_FALSE(block == nullptr);
-	EXPECT_EQ(size, sizeof(buf));
+	EXPECT_EQ(size, (int)sizeof(buf));
 	std::memcpy(block, buf, size);
 	io.Commit(sizeof(buf));
 	//15 123456--34561234569-
@@ -356,7 +356,7 @@ TEST(IOBufferTestSuite, bip) {
 
 	block = io.GetReserveBlock(sizeof(buf), size);
 	EXPECT_FALSE(block == nullptr);
-	EXPECT_LT(size, sizeof(buf));
+	EXPECT_LT(size, (int)sizeof(buf));
 	std::memcpy(block, buf, size);
 	io.Commit(sizeof(buf));
 	//16 1234561234561234569-

@@ -5,7 +5,7 @@
 #include "Net.h"
 
 void MyAbort() {
-	throw std::exception("MyAbort");
+	throw std::runtime_error("MyAbort");
 }
 
 int main(int argc, char * * argv) {

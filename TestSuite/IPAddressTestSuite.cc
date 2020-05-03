@@ -62,7 +62,7 @@ TEST_F(IPAddressImplTestSuite, ipv4_get) {
 	EXPECT_EQ(ipv4_impl_->Length(), sizeof(ipv4_addr_.sin_addr));
 	EXPECT_EQ(ipv4_impl_->Family(), Net::AddressFamily::IPv4);
 	EXPECT_EQ(ipv4_impl_->AF(), AF_INET);
-	EXPECT_EQ(ipv4_impl_->Scope(), 0);
+	EXPECT_EQ((int)ipv4_impl_->Scope(), 0);
 }
 
 TEST_F(IPAddressImplTestSuite, ipv6_get) {
@@ -117,7 +117,7 @@ TEST_F(IPAddressTestSuite, ctor) {
 	EXPECT_EQ(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), -1);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
 	EXPECT_EQ(ip.AF(), AF_INET);
-	EXPECT_EQ(ip.Scope(), 0);
+	EXPECT_EQ((int)ip.Scope(), 0);
 }
 
 TEST_F(IPAddressTestSuite, ctor2) {
@@ -127,7 +127,7 @@ TEST_F(IPAddressTestSuite, ctor2) {
 	EXPECT_EQ(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), -1);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
 	EXPECT_EQ(ip.AF(), AF_INET);
-	EXPECT_EQ(ip.Scope(), 0);
+	EXPECT_EQ((int)ip.Scope(), 0);
 }
 
 TEST_F(IPAddressTestSuite, ctor3) {
@@ -137,7 +137,7 @@ TEST_F(IPAddressTestSuite, ctor3) {
 	EXPECT_EQ(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), -1);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
 	EXPECT_EQ(ip.AF(), AF_INET);
-	EXPECT_EQ(ip.Scope(), 0);
+	EXPECT_EQ((int)ip.Scope(), 0);
 }
 
 TEST_F(IPAddressTestSuite, ctor4) {
@@ -147,7 +147,7 @@ TEST_F(IPAddressTestSuite, ctor4) {
 	EXPECT_EQ(std::memcmp(ip.Addr(), ipv6_impl_->Addr(), ip.Length()), -1);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv6);
 	EXPECT_EQ(ip.AF(), AF_INET6);
-	EXPECT_EQ(ip.Scope(), 0);
+	EXPECT_EQ((int)ip.Scope(), 0);
 }
 
 TEST_F(IPAddressTestSuite, ctor5) {
@@ -157,7 +157,7 @@ TEST_F(IPAddressTestSuite, ctor5) {
 	EXPECT_EQ(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
 	EXPECT_EQ(ip.AF(), AF_INET);
-	EXPECT_EQ(ip.Scope(), 0);
+	EXPECT_EQ((int)ip.Scope(), 0);
 }
 
 TEST_F(IPAddressTestSuite, ctor6) {
@@ -185,7 +185,7 @@ TEST_F(IPAddressTestSuite, ctor8) {
 	EXPECT_EQ(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
 	EXPECT_EQ(ip.AF(), AF_INET);
-	EXPECT_EQ(ip.Scope(), 0);
+	EXPECT_EQ((int)ip.Scope(), 0);
 }
 
 TEST_F(IPAddressTestSuite, ctor9) {
@@ -205,7 +205,7 @@ TEST_F(IPAddressTestSuite, ctor10) {
 	EXPECT_EQ(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
 	EXPECT_EQ(ip.AF(), AF_INET);
-	EXPECT_EQ(ip.Scope(), 0);
+	EXPECT_EQ((int)ip.Scope(), 0);
 }
 
 TEST_F(IPAddressTestSuite, ctor11) {
@@ -230,7 +230,7 @@ TEST_F(IPAddressTestSuite, assign) {
 	EXPECT_EQ(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
 	EXPECT_EQ(ip.AF(), AF_INET);
-	EXPECT_EQ(ip.Scope(), 0);
+	EXPECT_EQ((int)ip.Scope(), 0);
 }
 
 TEST_F(IPAddressTestSuite, assign2) {
@@ -252,7 +252,7 @@ TEST_F(IPAddressTestSuite, assign3) {
 	EXPECT_EQ(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), -1);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
 	EXPECT_EQ(ip.AF(), AF_INET);
-	EXPECT_EQ(ip.Scope(), 0);
+	EXPECT_EQ((int)ip.Scope(), 0);
 }
 
 TEST_F(IPAddressTestSuite, cmp) {
