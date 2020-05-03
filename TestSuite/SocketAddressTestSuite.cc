@@ -26,7 +26,7 @@ TEST_F(SocketAddressImplTestSuite, ipv4_ctor) {
 	EXPECT_STREQ(ipv4.Host().ToString().c_str(), "0.0.0.0");
 	EXPECT_EQ(ipv4.Port(), 0);
 	EXPECT_EQ(ipv4.Length(), sizeof(ipv4_addr_));
-	EXPECT_EQ(std::memcmp(ipv4.Addr(), ipv4_impl_->Addr(), ipv4.Length()), -1);
+	EXPECT_LT(std::memcmp(ipv4.Addr(), ipv4_impl_->Addr(), ipv4.Length()), 0);
 	EXPECT_EQ(ipv4.AF(), AF_INET);
 	EXPECT_EQ(ipv4.Family(), Net::AddressFamily::IPv4);
 	EXPECT_STREQ(ipv4.ToString().c_str(), "0.0.0.0:0");
@@ -37,7 +37,7 @@ TEST_F(SocketAddressImplTestSuite, ipv6_ctor) {
 	EXPECT_STREQ(ipv6.Host().ToString().c_str(), "::");
 	EXPECT_EQ(ipv6.Port(), 0);
 	EXPECT_EQ(ipv6.Length(), sizeof(ipv6_addr_));
-	EXPECT_EQ(std::memcmp(ipv6.Addr(), ipv6_impl_->Addr(), ipv6.Length()), -1);
+	EXPECT_LT(std::memcmp(ipv6.Addr(), ipv6_impl_->Addr(), ipv6.Length()), 0);
 	EXPECT_EQ(ipv6.AF(), AF_INET6);
 	EXPECT_EQ(ipv6.Family(), Net::AddressFamily::IPv6);
 	EXPECT_STREQ(ipv6.ToString().c_str(), ":::0");
@@ -86,7 +86,7 @@ TEST_F(SocketAddressTestSuite, ctor) {
 	EXPECT_TRUE(ip.Host() == Net::IPAddress());
 	EXPECT_EQ(ip.Port(), 0);
 	EXPECT_EQ(ip.Length(), sizeof(ipv4_addr_));
-	EXPECT_EQ(std::memcmp(ip.Addr(), &ipv4_addr_, ip.Length()), -1);
+	EXPECT_LT(std::memcmp(ip.Addr(), &ipv4_addr_, ip.Length()), 0);
 	EXPECT_EQ(ip.AF(), AF_INET);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
 	EXPECT_EQ(ip.ToString().c_str(), "0.0.0.0:0");
@@ -97,7 +97,7 @@ TEST_F(SocketAddressTestSuite, ctor1) {
 	EXPECT_TRUE(ip.Host() == Net::IPAddress());
 	EXPECT_EQ(ip.Port(), 6789);
 	EXPECT_EQ(ip.Length(), sizeof(ipv4_addr_));
-	EXPECT_EQ(std::memcmp(ip.Addr(), &ipv4_addr_, ip.Length()), -1);
+	EXPECT_LT(std::memcmp(ip.Addr(), &ipv4_addr_, ip.Length()), 0);
 	EXPECT_EQ(ip.AF(), AF_INET);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
 	EXPECT_EQ(ip.ToString().c_str(), "0.0.0.0:6789");

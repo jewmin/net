@@ -5,29 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "centos (gdb) Launch",
+            "name": "gdb Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/jim/net/build/debug/output/test_suite",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ]
-        },
-        {
-            "name": "wsl (gdb) Launch",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "/mnt/h/net/build/linux_debug/output/test_suite",
+            "program": "${workspaceFolder}/build/Debug/output/test_suite",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

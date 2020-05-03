@@ -114,7 +114,7 @@ TEST_F(IPAddressTestSuite, ctor) {
 	Net::IPAddress ip;
 	EXPECT_STREQ(ip.ToString().c_str(), "0.0.0.0");
 	EXPECT_EQ(ip.Length(), sizeof(ipv4_addr_.sin_addr));
-	EXPECT_EQ(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), -1);
+	EXPECT_LT(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
 	EXPECT_EQ(ip.AF(), AF_INET);
 	EXPECT_EQ((int)ip.Scope(), 0);
@@ -124,7 +124,7 @@ TEST_F(IPAddressTestSuite, ctor2) {
 	Net::IPAddress ip("");
 	EXPECT_STREQ(ip.ToString().c_str(), "0.0.0.0");
 	EXPECT_EQ(ip.Length(), sizeof(ipv4_addr_.sin_addr));
-	EXPECT_EQ(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), -1);
+	EXPECT_LT(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
 	EXPECT_EQ(ip.AF(), AF_INET);
 	EXPECT_EQ((int)ip.Scope(), 0);
@@ -134,7 +134,7 @@ TEST_F(IPAddressTestSuite, ctor3) {
 	Net::IPAddress ip("0.0.0.0");
 	EXPECT_STREQ(ip.ToString().c_str(), "0.0.0.0");
 	EXPECT_EQ(ip.Length(), sizeof(ipv4_addr_.sin_addr));
-	EXPECT_EQ(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), -1);
+	EXPECT_LT(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
 	EXPECT_EQ(ip.AF(), AF_INET);
 	EXPECT_EQ((int)ip.Scope(), 0);
@@ -144,7 +144,7 @@ TEST_F(IPAddressTestSuite, ctor4) {
 	Net::IPAddress ip("::");
 	EXPECT_STREQ(ip.ToString().c_str(), "::");
 	EXPECT_EQ(ip.Length(), sizeof(ipv6_addr_.sin6_addr));
-	EXPECT_EQ(std::memcmp(ip.Addr(), ipv6_impl_->Addr(), ip.Length()), -1);
+	EXPECT_LT(std::memcmp(ip.Addr(), ipv6_impl_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv6);
 	EXPECT_EQ(ip.AF(), AF_INET6);
 	EXPECT_EQ((int)ip.Scope(), 0);
@@ -249,7 +249,7 @@ TEST_F(IPAddressTestSuite, assign3) {
 	ip = ip;
 	EXPECT_STREQ(ip.ToString().c_str(), "0.0.0.0");
 	EXPECT_EQ(ip.Length(), sizeof(ipv4_addr_.sin_addr));
-	EXPECT_EQ(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), -1);
+	EXPECT_LT(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
 	EXPECT_EQ(ip.AF(), AF_INET);
 	EXPECT_EQ((int)ip.Scope(), 0);
