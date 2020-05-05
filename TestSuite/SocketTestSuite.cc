@@ -1,338 +1,87 @@
 #include "gtest/gtest.h"
+#include "Sockets/Socket.h"
+#include "Sockets/StreamSocket.h"
+#include "Sockets/ServerSocket.h"
+#include "Sockets/StreamSocketImpl.h"
+#include "Sockets/ServerSocketImpl.h"
 #include "Common/Allocator.h"
-#include "Sockets/SocketImpl.h"
 
-class MockSocketImpl : public Net::SocketImpl {
+class MockSocket : public Net::Socket {
 public:
-	void delayed_error(i32 err) {
-		reinterpret_cast<uv_tcp_t *>(handle_)->delayed_error = err;
-	}
-	void write_queue_size(i32 size) {
-		reinterpret_cast<uv_tcp_t *>(handle_)->write_queue_size = size;
-	}
-#ifdef _WIN32
-	void io_fd(SOCKET fd) {
-		fd_ = reinterpret_cast<uv_tcp_t *>(handle_)->socket;
-		reinterpret_cast<uv_tcp_t *>(handle_)->socket = fd;
-	}
-	SOCKET fd_;
-#else
-	void io_fd(i32 fd) {
-		fd_ = reinterpret_cast<uv_stream_t *>(socket_impl_->handle_)->io_watcher.fd;
-		reinterpret_cast<uv_stream_t *>(socket_impl_->handle_)->io_watcher.fd = fd;
-	}
-	i32 fd_;
-#endif
-	void OpenPipe(uv_loop_t * loop) {
-		if (!handle_) {
-			handle_ = static_cast<uv_handle_t *>(jc_malloc(sizeof(uv_pipe_t)));
-			uv_pipe_init(loop, reinterpret_cast<uv_pipe_t *>(handle_), 0);
-			handle_->data = nullptr;
-		}
-	}
-	uv_handle_t * GetHandle() { return handle_; }
+	MockSocket(Net::SocketImpl * impl) : Net::Socket(impl) {}
 };
 
-class MockUvData : public Net::UvData {
-};
-
-class UvDataTestSuite : public testing::Test {
+class SocketTestSuite : public testing::Test {
 public:
 	// Sets up the test fixture.
 	virtual void SetUp() {
-		uv_data_ = new MockUvData();
+		socket_ = new MockSocket(new Net::StreamSocketImpl());
+		EXPECT_EQ(socket_->Impl()->ReferenceCount(), 1);
 	}
 
 	// Tears down the test fixture.
 	virtual void TearDown() {
-		uv_data_->Destroy();
+		delete socket_;
 	}
 
-	Net::UvData * uv_data_;
+	Net::Socket * socket_;
 };
 
-TEST_F(UvDataTestSuite, use) {
-	EXPECT_EQ(uv_data_->ReferenceCount(), 1);
-	uv_data_->Duplicate();
-	EXPECT_EQ(uv_data_->ReferenceCount(), 2);
-	uv_data_->Release();
-	EXPECT_EQ(uv_data_->ReferenceCount(), 1);
+TEST_F(SocketTestSuite, ctor) {
+	Net::Socket so;
+	EXPECT_EQ(so.Impl()->ReferenceCount(), 1);
 }
 
-class SocketImplTestSuite : public UvDataTestSuite {
+TEST_F(SocketTestSuite, ctor2) {
+	EXPECT_ANY_THROW(MockSocket so(nullptr));
+}
+
+TEST_F(SocketTestSuite, ctor3) {
+	{
+		Net::Socket so(*socket_);
+		EXPECT_EQ(socket_->Impl()->ReferenceCount(), 2);
+	}
+	EXPECT_EQ(socket_->Impl()->ReferenceCount(), 1);
+}
+
+TEST_F(SocketTestSuite, assign) {
+	Net::Socket so;
+	EXPECT_EQ(so.Impl()->ReferenceCount(), 1);
+	so = so;
+	EXPECT_EQ(so.Impl()->ReferenceCount(), 1);
+}
+
+TEST_F(SocketTestSuite, assign2) {
+	Net::Socket so;
+	EXPECT_EQ(so.Impl()->ReferenceCount(), 1);
+	so = *socket_;
+	EXPECT_EQ(so.Impl()->ReferenceCount(), 2);
+	so = *socket_;
+	EXPECT_EQ(so.Impl()->ReferenceCount(), 2);
+}
+
+TEST_F(SocketTestSuite, assign3) {
+	*socket_ = Net::Socket();
+	EXPECT_EQ(socket_->Impl()->ReferenceCount(), 1);
+	*socket_ = *socket_;
+	EXPECT_EQ(socket_->Impl()->ReferenceCount(), 1);
+}
+
+class SocketLoopTestSuite : public SocketTestSuite {
 public:
 	// Sets up the test fixture.
 	virtual void SetUp() {
-		UvDataTestSuite::SetUp();
-		std::strncpy(w_content_, "hello world", std::strlen("hello world"));
 		loop_ = static_cast<uv_loop_t *>(jc_malloc(sizeof(*loop_)));
 		uv_loop_init(loop_);
-		socket_impl_ = new MockSocketImpl();
-		address_ = Net::SocketAddress(Net::IPAddress("::1"), 6789);
+		SocketTestSuite::SetUp();
 	}
 
 	// Tears down the test fixture.
 	virtual void TearDown() {
-		socket_impl_->Release();
+		SocketTestSuite::TearDown();
 		uv_run(loop_, UV_RUN_DEFAULT);
 		uv_loop_close(loop_);
 		jc_free(loop_);
-		UvDataTestSuite::TearDown();
-	}
-	
-	i8 w_content_[12];
-	uv_loop_t * loop_;
-	MockSocketImpl * socket_impl_;
-	Net::SocketAddress address_;
-};
-
-TEST_F(SocketImplTestSuite, open) {
-	socket_impl_->Open(loop_);
-	socket_impl_->Open(loop_);
-	socket_impl_->Close();
-}
-
-TEST_F(SocketImplTestSuite, close) {
-	socket_impl_->OpenPipe(loop_);
-	uv_handle_t * handle = socket_impl_->GetHandle();
-	socket_impl_->Close();
-	EXPECT_ANY_THROW(uv_run(loop_, UV_RUN_DEFAULT));
-	jc_free(handle);
-}
-
-TEST_F(SocketImplTestSuite, bind) {
-	EXPECT_EQ(socket_impl_->Bind(address_), UV_UNKNOWN);
-}
-
-TEST_F(SocketImplTestSuite, listen) {
-	EXPECT_EQ(socket_impl_->Listen(), UV_UNKNOWN);
-}
-
-TEST_F(SocketImplTestSuite, connect) {
-	EXPECT_EQ(socket_impl_->Connect(address_), UV_UNKNOWN);
-}
-
-TEST_F(SocketImplTestSuite, accept) {
-	EXPECT_TRUE(socket_impl_->AcceptSocket(address_) == nullptr);
-}
-
-TEST_F(SocketImplTestSuite, shutdown) {
-	EXPECT_EQ(socket_impl_->ShutdownRead(), UV_UNKNOWN);
-	EXPECT_EQ(socket_impl_->ShutdownWrite(), UV_UNKNOWN);
-	EXPECT_EQ(socket_impl_->Shutdown(), UV_UNKNOWN);
-}
-
-TEST_F(SocketImplTestSuite, established) {
-	EXPECT_EQ(socket_impl_->Established(), UV_UNKNOWN);
-}
-
-TEST_F(SocketImplTestSuite, write) {
-	EXPECT_EQ(socket_impl_->Write(nullptr, 0), UV_EPROTONOSUPPORT);
-}
-
-TEST_F(SocketImplTestSuite, buff) {
-	socket_impl_->SetSendBufferSize(1024);
-	socket_impl_->SetRecvBufferSize(1024);
-	EXPECT_EQ(socket_impl_->GetSendBufferSize(), 0);
-	EXPECT_EQ(socket_impl_->GetRecvBufferSize(), 0);
-	EXPECT_EQ(socket_impl_->GetWriteQueueSize(), 0);
-}
-
-TEST_F(SocketImplTestSuite, address) {
-	EXPECT_EQ(socket_impl_->LocalAddress(), Net::SocketAddress());
-	EXPECT_EQ(socket_impl_->RemoteAddress(), Net::SocketAddress());
-}
-
-TEST_F(SocketImplTestSuite, opt) {
-	socket_impl_->SetNoDelay();
-	socket_impl_->SetKeepAlive(60);
-	socket_impl_->SetUvData(uv_data_);
-	socket_impl_->SetUvData(nullptr);
-}
-
-class SocketImplOpenTestSuite : public SocketImplTestSuite {
-public:
-	// Sets up the test fixture.
-	virtual void SetUp() {
-		SocketImplTestSuite::SetUp();
-		socket_impl_->Open(loop_);
-	}
-
-	// Tears down the test fixture.
-	virtual void TearDown() {
-		SocketImplTestSuite::TearDown();
-	}
-};
-
-TEST_F(SocketImplOpenTestSuite, bind) {
-	EXPECT_EQ(socket_impl_->Bind(address_), 0);
-}
-
-TEST_F(SocketImplOpenTestSuite, bind2) {
-	EXPECT_LT(socket_impl_->Bind(Net::SocketAddress(Net::IPAddress("127.0.0.1"), 6789), true), 0);
-}
-
-TEST_F(SocketImplOpenTestSuite, listen) {
-	EXPECT_EQ(socket_impl_->Listen(), 0);
-}
-
-TEST_F(SocketImplOpenTestSuite, listen2) {
-	EXPECT_EQ(socket_impl_->Bind(address_), 0);
-	EXPECT_EQ(socket_impl_->Listen(5), 0);
-}
-
-TEST_F(SocketImplOpenTestSuite, listen3) {
-	socket_impl_->delayed_error(UV_ECANCELED);
-	EXPECT_EQ(socket_impl_->Listen(), UV_ECANCELED);
-}
-
-TEST_F(SocketImplOpenTestSuite, connect) {
-	EXPECT_EQ(socket_impl_->Connect(address_), 0);
-}
-
-TEST_F(SocketImplOpenTestSuite, connect2) {
-#ifdef _WIN32
-	socket_impl_->delayed_error(UV_EALREADY);
-#else
-	EXPECT_EQ(socket_impl_->Connect(address_), 0);
-#endif
-	EXPECT_EQ(socket_impl_->Connect(address_), UV_EALREADY);
-}
-
-TEST_F(SocketImplOpenTestSuite, accept) {
-	EXPECT_TRUE(socket_impl_->AcceptSocket(address_) == nullptr);
-}
-
-TEST_F(SocketImplOpenTestSuite, shutdown) {
-	EXPECT_EQ(socket_impl_->ShutdownRead(), 0);
-	EXPECT_EQ(socket_impl_->ShutdownWrite(), UV_ENOTCONN);
-	EXPECT_EQ(socket_impl_->Shutdown(), UV_ENOTCONN);
-}
-
-TEST_F(SocketImplOpenTestSuite, established) {
-	EXPECT_EQ(socket_impl_->Established(), UV_ENOTCONN);
-}
-
-TEST_F(SocketImplOpenTestSuite, write) {
-	EXPECT_EQ(socket_impl_->Write(nullptr, 1), UV_ENOBUFS);
-	EXPECT_EQ(socket_impl_->Write(w_content_, 0), UV_ENOBUFS);
-	EXPECT_EQ(socket_impl_->Write(w_content_, (i32)std::strlen(w_content_)), UV_EPIPE);
-}
-
-TEST_F(SocketImplOpenTestSuite, buff) {
-	socket_impl_->SetSendBufferSize(1024);
-	socket_impl_->SetRecvBufferSize(1024);
-	EXPECT_EQ(socket_impl_->GetSendBufferSize(), 0);
-	EXPECT_EQ(socket_impl_->GetRecvBufferSize(), 0);
-	socket_impl_->write_queue_size(100);
-	EXPECT_EQ(socket_impl_->GetWriteQueueSize(), 100);
-	socket_impl_->write_queue_size(0);
-}
-
-TEST_F(SocketImplOpenTestSuite, address) {
-	EXPECT_EQ(socket_impl_->LocalAddress(), Net::SocketAddress());
-	EXPECT_EQ(socket_impl_->RemoteAddress(), Net::SocketAddress());
-}
-
-TEST_F(SocketImplOpenTestSuite, opt) {
-	socket_impl_->io_fd(0);
-	socket_impl_->SetNoDelay();
-	socket_impl_->SetKeepAlive(60);
-	socket_impl_->io_fd(socket_impl_->fd_);
-	socket_impl_->SetUvData(uv_data_);
-	socket_impl_->SetUvData(nullptr);
-}
-
-class MockUvData2 : public MockUvData {
-public:
-	MockUvData2()
-		: call_close_count_(0), call_accpet_count_(0), call_connect_count_(0), call_shutdown_count_(0)
-		, call_alloc_count_(0), call_read_count_(0), call_written_count_(0), server_impl_(nullptr), client_impl_(nullptr) {}
-	virtual void CloseCallback() {
-		call_close_count_++;
-	}
-	virtual void AcceptCallback(i32 status) {
-		call_accpet_count_++;
-		if (status < 0) {
-			std::printf("MockUvData2::AcceptCallback: %s\n", uv_strerror(status));
-		} else if (server_impl_) {
-			Net::SocketAddress client_address;
-			client_impl_ = server_impl_->AcceptSocket(client_address);
-			EXPECT_TRUE(client_impl_ != nullptr);
-		}
-	}
-	virtual void ConnectCallback(i32 status, void * arg) {
-		call_connect_count_++;
-		if (status < 0) {
-			std::printf("MockUvData2::ConnectCallback: %s\n", uv_strerror(status));
-		}
-	}
-	virtual void ShutdownCallback(i32 status, void * arg) {
-		call_shutdown_count_++;
-		if (status < 0) {
-			std::printf("MockUvData2::ConnectCallback: %s\n", uv_strerror(status));
-		}
-	}
-	virtual void AllocCallback(uv_buf_t * buf) {
-		call_alloc_count_++;
-	}
-	virtual void ReadCallback(i32 status) {
-		call_read_count_++;
-	}
-	virtual void WrittenCallback(i32 status, void * arg) {
-		call_written_count_++;
-	}
-	void SetServer(Net::SocketImpl * impl) {
-		server_impl_ = impl;
-	}
-	void SetClient(Net::SocketImpl * impl) {
-		client_impl_ = impl;
-	}
-	void ReleaseClient() {
-		if (client_impl_) {
-			client_impl_->Release();
-		}
-	}
-
-	i32 call_close_count_;
-	i32 call_accpet_count_;
-	i32 call_connect_count_;
-	i32 call_shutdown_count_;
-	i32 call_alloc_count_;
-	i32 call_read_count_;
-	i32 call_written_count_;
-	Net::SocketImpl * server_impl_;
-	Net::SocketImpl * client_impl_;
-};
-
-class SocketImplCbNullTestSuite : public SocketImplOpenTestSuite {
-public:
-	// Sets up the test fixture.
-	virtual void SetUp() {
-		SocketImplOpenTestSuite::SetUp();
-		server_data_ = new MockUvData2();
-		client_data_ = new MockUvData2();
-		client_socket_impl_ = new MockSocketImpl();
-		Listen();
-		Connect();
-	}
-
-	// Tears down the test fixture.
-	virtual void TearDown() {
-		client_socket_impl_->Release();
-		client_data_->Destroy();
-		server_data_->Destroy();
-		SocketImplOpenTestSuite::TearDown();
-	}
-
-	void Connect() {
-		client_socket_impl_->Open(loop_);
-		client_socket_impl_->Connect(address_);
-	}
-
-	void Listen() {
-		socket_impl_->Bind(address_, true);
-		socket_impl_->Listen();
 	}
 
 	void Loop(i32 count = 10) {
@@ -341,114 +90,364 @@ public:
 		}
 	}
 
-	void SetUvData() {
-		socket_impl_->SetUvData(server_data_);
-		server_data_->SetServer(socket_impl_);
-		client_socket_impl_->SetUvData(client_data_);
-		client_data_->SetClient(client_socket_impl_);
-		client_data_->Duplicate();
-	}
-
-	MockSocketImpl * client_socket_impl_;
-	MockUvData2 * server_data_;
-	MockUvData2 * client_data_;
+	uv_loop_t * loop_;
 };
 
-TEST_F(SocketImplCbNullTestSuite, cb) {
-	Loop(30);
+TEST_F(SocketLoopTestSuite, open) {
+	socket_->Open(loop_);
+	socket_->Open(loop_);
+	socket_->Close();
 }
 
-TEST_F(SocketImplCbNullTestSuite, cb2) {
-	SetUvData();
-	Loop(30);
-	EXPECT_EQ(server_data_->call_accpet_count_, 1);
-	EXPECT_EQ(client_data_->call_connect_count_, 1);
-	server_data_->ReleaseClient();
-}
+class MockUvData : public Net::UvData {
+public:
+	virtual ~MockUvData() {}
+};
 
-class SocketImplCbTestSuite : public SocketImplCbNullTestSuite {
+class SocketOpenTestSuite : public SocketLoopTestSuite {
 public:
 	// Sets up the test fixture.
 	virtual void SetUp() {
-		SocketImplCbNullTestSuite::SetUp();
-		SetUvData();
-		while (client_data_->call_connect_count_ <= 0 || server_data_->call_accpet_count_ <= 0) {
-			Loop(1);
+		SocketLoopTestSuite::SetUp();
+		socket_->Open(loop_);
+	}
+
+	// Tears down the test fixture.
+	virtual void TearDown() {
+		socket_->Close();
+		SocketLoopTestSuite::TearDown();
+	}
+};
+
+TEST_F(SocketOpenTestSuite, operation) {
+	socket_->SetSendBufferSize(1024);
+	socket_->SetRecvBufferSize(1024);
+	EXPECT_EQ(socket_->GetSendBufferSize(), 0);
+	EXPECT_EQ(socket_->GetRecvBufferSize(), 0);
+	EXPECT_EQ(socket_->GetWriteQueueSize(), 0);
+	EXPECT_EQ(socket_->LocalAddress(), Net::SocketAddress());
+	EXPECT_EQ(socket_->RemoteAddress(), Net::SocketAddress());
+	socket_->SetNoDelay();
+	socket_->SetKeepAlive(60);
+	Net::UvData * data = new MockUvData();
+	socket_->SetUvData(data);
+	socket_->SetUvData(nullptr);
+	data->Destroy();
+}
+
+class SocketCmpTestSuite : public SocketOpenTestSuite {
+public:
+	// Sets up the test fixture.
+	virtual void SetUp() {
+		SocketOpenTestSuite::SetUp();
+		for (i32 i = 0; i < 3; ++i) {
+			impl_[i].Duplicate();
 		}
+		small_socket_ = new MockSocket(&impl_[0]);
+		equals_socket_ = new MockSocket(&impl_[1]);
+		big_socket_ = new MockSocket(&impl_[2]);
+		*socket_ = *equals_socket_;
+		EXPECT_EQ(small_socket_->Impl()->ReferenceCount(), 2);
+		EXPECT_EQ(equals_socket_->Impl()->ReferenceCount(), 3);
+		EXPECT_EQ(big_socket_->Impl()->ReferenceCount(), 2);
 	}
 
 	// Tears down the test fixture.
 	virtual void TearDown() {
-		server_data_->ReleaseClient();
-		SocketImplCbNullTestSuite::TearDown();
+		delete big_socket_;
+		delete equals_socket_;
+		delete small_socket_;
+		EXPECT_EQ(impl_[0].ReferenceCount(), 1);
+		EXPECT_EQ(impl_[1].ReferenceCount(), 2);
+		EXPECT_EQ(impl_[2].ReferenceCount(), 1);
+		SocketOpenTestSuite::TearDown();
+		EXPECT_EQ(impl_[0].ReferenceCount(), 1);
+		EXPECT_EQ(impl_[1].ReferenceCount(), 1);
+		EXPECT_EQ(impl_[2].ReferenceCount(), 1);
 	}
+
+	Net::StreamSocketImpl impl_[3];
+	Net::Socket * big_socket_;
+	Net::Socket * equals_socket_;
+	Net::Socket * small_socket_;
 };
 
-TEST_F(SocketImplCbTestSuite, shutdown) {
-	EXPECT_EQ(client_socket_impl_->ShutdownWrite(), 0);
+TEST_F(SocketCmpTestSuite, cmp) {
+	EXPECT_EQ(*small_socket_, *small_socket_);
+	EXPECT_EQ(*equals_socket_, *equals_socket_);
+	EXPECT_EQ(*big_socket_, *big_socket_);
+	EXPECT_EQ(*equals_socket_, *socket_);
 }
 
-TEST_F(SocketImplCbTestSuite, shutdown2) {
-	client_socket_impl_->SetUvData(nullptr);
-	EXPECT_EQ(client_socket_impl_->Shutdown(), 0);
+TEST_F(SocketCmpTestSuite, cmp1) {
+	EXPECT_NE(*small_socket_, *equals_socket_);
+	EXPECT_NE(*small_socket_, *big_socket_);
+	EXPECT_NE(*equals_socket_, *big_socket_);
 }
 
-TEST_F(SocketImplCbTestSuite, established) {
-	EXPECT_EQ(client_socket_impl_->Established(), 0);
+TEST_F(SocketCmpTestSuite, cmp2) {
+	EXPECT_LT(*small_socket_, *equals_socket_);
+	EXPECT_LT(*small_socket_, *big_socket_);
+	EXPECT_LT(*equals_socket_, *big_socket_);
 }
 
-TEST_F(SocketImplCbTestSuite, write) {
-	EXPECT_EQ(client_socket_impl_->Write(w_content_, (i32)std::strlen(w_content_)), (i32)std::strlen(w_content_));
+TEST_F(SocketCmpTestSuite, cmp3) {
+	EXPECT_LE(*small_socket_, *small_socket_);
+	EXPECT_LE(*small_socket_, *equals_socket_);
+	EXPECT_LE(*small_socket_, *big_socket_);
+	EXPECT_LE(*equals_socket_, *equals_socket_);
+	EXPECT_LE(*equals_socket_, *big_socket_);
+	EXPECT_LE(*big_socket_, *big_socket_);
 }
 
-TEST_F(SocketImplCbTestSuite, write2) {
-	client_socket_impl_->SetUvData(nullptr);
-	EXPECT_EQ(client_socket_impl_->Write(w_content_, (i32)std::strlen(w_content_)), (i32)std::strlen(w_content_));
+TEST_F(SocketCmpTestSuite, cmp4) {
+	EXPECT_GT(*equals_socket_, *small_socket_);
+	EXPECT_GT(*big_socket_, *small_socket_);
+	EXPECT_GT(*big_socket_, *equals_socket_);
 }
 
-TEST_F(SocketImplCbTestSuite, buff) {
-	client_socket_impl_->SetSendBufferSize(1024);
-	client_socket_impl_->SetRecvBufferSize(1024);
-	EXPECT_EQ(client_socket_impl_->GetSendBufferSize(), 1024);
-	EXPECT_EQ(client_socket_impl_->GetRecvBufferSize(), 1024);
+TEST_F(SocketCmpTestSuite, cmp5) {
+	EXPECT_GE(*small_socket_, *small_socket_);
+	EXPECT_GE(*equals_socket_, *small_socket_);
+	EXPECT_GE(*big_socket_, *small_socket_);
+	EXPECT_GE(*equals_socket_, *equals_socket_);
+	EXPECT_GE(*big_socket_, *equals_socket_);
+	EXPECT_GE(*big_socket_, *big_socket_);
 }
 
-TEST_F(SocketImplCbTestSuite, address) {
-	EXPECT_NE(client_socket_impl_->LocalAddress(), Net::SocketAddress());
-	EXPECT_NE(client_socket_impl_->RemoteAddress(), Net::SocketAddress());
-}
-
-TEST_F(SocketImplCbTestSuite, opt) {
-	client_socket_impl_->SetNoDelay();
-	client_socket_impl_->SetKeepAlive(60);
-}
-
-class SocketImplEstablishedTestSuite : public SocketImplCbTestSuite {
+class SocketServerTestSuite : public SocketOpenTestSuite {
 public:
 	// Sets up the test fixture.
 	virtual void SetUp() {
-		SocketImplCbTestSuite::SetUp();
-		EXPECT_EQ(client_socket_impl_->Established(), 0);
-		EXPECT_EQ(server_data_->client_impl_->Write(w_content_, (i32)std::strlen(w_content_)), (i32)std::strlen(w_content_));
+		SocketOpenTestSuite::SetUp();
+		server_socket_ = new Net::ServerSocket();
+		other_server_socket_ = new Net::ServerSocket();
+		EXPECT_EQ(server_socket_->Impl()->ReferenceCount(), 1);
 	}
 
 	// Tears down the test fixture.
 	virtual void TearDown() {
-		SocketImplCbTestSuite::TearDown();
+		delete server_socket_;
+		delete other_server_socket_;
+		SocketOpenTestSuite::TearDown();
+	}
+
+	Net::ServerSocket * server_socket_;
+	Net::Socket * other_server_socket_;
+};
+
+TEST_F(SocketServerTestSuite, ctor) {
+	{
+		Net::ServerSocket so(*server_socket_);
+		EXPECT_EQ(so.Impl()->ReferenceCount(), 2);
+	}
+	EXPECT_EQ(server_socket_->Impl()->ReferenceCount(), 1);
+}
+
+TEST_F(SocketServerTestSuite, ctor2) {
+	EXPECT_ANY_THROW(Net::ServerSocket so(*socket_));
+}
+
+TEST_F(SocketServerTestSuite, ctor3) {
+	{
+		Net::ServerSocket so(*other_server_socket_);
+		EXPECT_EQ(so.Impl()->ReferenceCount(), 2);
+	}
+	EXPECT_EQ(other_server_socket_->Impl()->ReferenceCount(), 1);
+}
+
+TEST_F(SocketServerTestSuite, assign) {
+	*server_socket_ = Net::ServerSocket();
+	EXPECT_EQ(server_socket_->Impl()->ReferenceCount(), 1);
+	*server_socket_ = *server_socket_;
+	EXPECT_EQ(server_socket_->Impl()->ReferenceCount(), 1);
+}
+
+TEST_F(SocketServerTestSuite, assign2) {
+	Net::ServerSocket so;
+	EXPECT_EQ(so.Impl()->ReferenceCount(), 1);
+	so = *server_socket_;
+	EXPECT_EQ(so.Impl()->ReferenceCount(), 2);
+	so = so;
+	EXPECT_EQ(so.Impl()->ReferenceCount(), 2);
+	so = *other_server_socket_;
+	EXPECT_EQ(so.Impl()->ReferenceCount(), 2);
+}
+
+TEST_F(SocketServerTestSuite, assign3) {
+	Net::ServerSocket so;
+	EXPECT_ANY_THROW(so = *socket_);
+}
+
+class SocketServerOpenTestSuite : public SocketServerTestSuite {
+public:
+	// Sets up the test fixture.
+	virtual void SetUp() {
+		SocketServerTestSuite::SetUp();
+		server_address_ = Net::SocketAddress(Net::IPAddress("::"), 6789);
+		server_socket_->Open(loop_);
+	}
+
+	// Tears down the test fixture.
+	virtual void TearDown() {
+		server_socket_->Close();
+		SocketServerTestSuite::TearDown();
+	}
+
+	Net::SocketAddress server_address_;
+};
+
+TEST_F(SocketServerOpenTestSuite, bind) {
+	EXPECT_EQ(server_socket_->Bind(server_address_, true, true), 0);
+}
+
+TEST_F(SocketServerOpenTestSuite, listen) {
+	EXPECT_EQ(server_socket_->Listen(), 0);
+}
+
+TEST_F(SocketServerOpenTestSuite, accept) {
+	Net::StreamSocket so;
+	EXPECT_EQ(server_socket_->AcceptSocket(so), false);
+}
+
+class MockStreamSocket : public Net::StreamSocket {
+public:
+	MockStreamSocket(Net::SocketImpl * impl) : Net::StreamSocket(impl) {}
+};
+
+class SocketStreamTestSuite : public SocketServerOpenTestSuite {
+public:
+	// Sets up the test fixture.
+	virtual void SetUp() {
+		SocketServerOpenTestSuite::SetUp();
+		stream_socket_ = new Net::StreamSocket();
+		other_stream_socket_ = new Net::StreamSocket();
+		EXPECT_EQ(stream_socket_->Impl()->ReferenceCount(), 1);
+	}
+
+	// Tears down the test fixture.
+	virtual void TearDown() {
+		delete stream_socket_;
+		delete other_stream_socket_;
+		SocketServerOpenTestSuite::TearDown();
+	}
+
+	Net::StreamSocket * stream_socket_;
+	Net::Socket * other_stream_socket_;
+};
+
+TEST_F(SocketStreamTestSuite, ctor) {
+	{
+		Net::StreamSocket so(*stream_socket_);
+		EXPECT_EQ(so.Impl()->ReferenceCount(), 2);
+	}
+	EXPECT_EQ(stream_socket_->Impl()->ReferenceCount(), 1);
+}
+
+TEST_F(SocketStreamTestSuite, ctor2) {
+	EXPECT_ANY_THROW(Net::StreamSocket so(*server_socket_));
+}
+
+TEST_F(SocketStreamTestSuite, ctor3) {
+	MockStreamSocket so(new Net::StreamSocketImpl());
+	EXPECT_EQ(so.Impl()->ReferenceCount(), 1);
+}
+
+TEST_F(SocketStreamTestSuite, ctor4) {
+	EXPECT_ANY_THROW(MockStreamSocket so(new Net::ServerSocketImpl()));
+}
+
+TEST_F(SocketStreamTestSuite, ctor5) {
+	{
+		Net::StreamSocket so(*other_stream_socket_);
+		EXPECT_EQ(so.Impl()->ReferenceCount(), 2);
+	}
+	EXPECT_EQ(other_stream_socket_->Impl()->ReferenceCount(), 1);
+}
+
+TEST_F(SocketStreamTestSuite, assign) {
+	*stream_socket_ = Net::StreamSocket();
+	EXPECT_EQ(stream_socket_->Impl()->ReferenceCount(), 1);
+	*stream_socket_ = *stream_socket_;
+	EXPECT_EQ(stream_socket_->Impl()->ReferenceCount(), 1);
+}
+
+TEST_F(SocketStreamTestSuite, assign2) {
+	Net::StreamSocket so;
+	EXPECT_EQ(so.Impl()->ReferenceCount(), 1);
+	so = *stream_socket_;
+	EXPECT_EQ(so.Impl()->ReferenceCount(), 2);
+	so = so;
+	EXPECT_EQ(so.Impl()->ReferenceCount(), 2);
+	so = *other_stream_socket_;
+	EXPECT_EQ(so.Impl()->ReferenceCount(), 2);
+}
+
+TEST_F(SocketStreamTestSuite, assign3) {
+	Net::StreamSocket so;
+	EXPECT_ANY_THROW(so = *server_socket_);
+}
+
+class SocketStreamOpenTestSuite : public SocketStreamTestSuite {
+public:
+	// Sets up the test fixture.
+	virtual void SetUp() {
+		SocketStreamTestSuite::SetUp();
+		std::strncpy(w_content_, "hello world", std::strlen("hello world"));
+		stream_address_ = Net::SocketAddress(Net::IPAddress("::1"), 6789);
+		stream_socket_->Open(loop_);
+	}
+
+	// Tears down the test fixture.
+	virtual void TearDown() {
+		stream_socket_->Close();
+		SocketStreamTestSuite::TearDown();
+	}
+
+	i8 w_content_[12];
+	Net::SocketAddress stream_address_;
+};
+
+TEST_F(SocketStreamOpenTestSuite, bind) {
+	EXPECT_EQ(stream_socket_->Bind(stream_address_, true, true), 0);
+}
+
+TEST_F(SocketStreamOpenTestSuite, connect) {
+	EXPECT_EQ(stream_socket_->Connect(stream_address_), 0);
+}
+
+TEST_F(SocketStreamOpenTestSuite, shutdown) {
+	EXPECT_EQ(stream_socket_->ShutdownRead(), 0);
+	EXPECT_EQ(stream_socket_->ShutdownWrite(), UV_ENOTCONN);
+	EXPECT_EQ(stream_socket_->Shutdown(), UV_ENOTCONN);
+}
+
+TEST_F(SocketStreamOpenTestSuite, established) {
+	EXPECT_EQ(stream_socket_->Established(), UV_ENOTCONN);
+}
+
+TEST_F(SocketStreamOpenTestSuite, write) {
+	EXPECT_EQ(stream_socket_->Write(w_content_, (i32)std::strlen(w_content_)), UV_EPIPE);
+}
+
+class SocketStreamServerTestSuite : public SocketStreamOpenTestSuite {
+public:
+	// Sets up the test fixture.
+	virtual void SetUp() {
+		SocketStreamOpenTestSuite::SetUp();
+		EXPECT_EQ(server_socket_->Bind(server_address_, true, true), 0);
+		EXPECT_EQ(server_socket_->Listen(), 0);
+		EXPECT_EQ(stream_socket_->Connect(stream_address_), 0);
+	}
+
+	// Tears down the test fixture.
+	virtual void TearDown() {
+		SocketStreamOpenTestSuite::TearDown();
 	}
 };
 
-TEST_F(SocketImplEstablishedTestSuite, read) {
-	Loop();
-	EXPECT_EQ(server_data_->call_accpet_count_, 1);
-	EXPECT_GE(client_data_->call_alloc_count_, 1);
-	EXPECT_GE(client_data_->call_read_count_, 1);
-}
-
-TEST_F(SocketImplEstablishedTestSuite, read2) {
-	client_socket_impl_->SetUvData(nullptr);
-	Loop();
-	EXPECT_EQ(server_data_->call_accpet_count_, 1);
-	EXPECT_EQ(client_data_->call_alloc_count_, 0);
-	EXPECT_EQ(client_data_->call_read_count_, 0);
+TEST_F(SocketStreamServerTestSuite, accept) {
+	Loop(30);
+	Net::StreamSocket so;
+	EXPECT_EQ(server_socket_->AcceptSocket(so), true);
 }

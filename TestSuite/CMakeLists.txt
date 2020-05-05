@@ -21,6 +21,7 @@ SET(test_srcs
 	${PROJECT_SOURCE_DIR}/ObjectMgrTestSuite.cc
 	${PROJECT_SOURCE_DIR}/IPAddressTestSuite.cc
 	${PROJECT_SOURCE_DIR}/SocketAddressTestSuite.cc
+	${PROJECT_SOURCE_DIR}/SocketImplTestSuite.cc
 	${PROJECT_SOURCE_DIR}/SocketTestSuite.cc
 	# ${PROJECT_SOURCE_DIR}/ReactorTestSuite.cc
 	# ${PROJECT_SOURCE_DIR}/ServiceTestSuite.cc
