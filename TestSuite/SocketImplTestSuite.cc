@@ -18,8 +18,8 @@ public:
 	SOCKET fd_;
 #else
 	void io_fd(i32 fd) {
-		fd_ = reinterpret_cast<uv_stream_t *>(socket_impl_->handle_)->io_watcher.fd;
-		reinterpret_cast<uv_stream_t *>(socket_impl_->handle_)->io_watcher.fd = fd;
+		fd_ = reinterpret_cast<uv_stream_t *>(handle_)->io_watcher.fd;
+		reinterpret_cast<uv_stream_t *>(handle_)->io_watcher.fd = fd;
 	}
 	i32 fd_;
 #endif
@@ -61,6 +61,9 @@ TEST_F(UvDataTestSuite, use) {
 
 class SocketImplTestSuite : public UvDataTestSuite {
 public:
+	SocketImplTestSuite() {
+		std::memset(w_content_, 0, sizeof(w_content_));
+	}
 	// Sets up the test fixture.
 	virtual void SetUp() {
 		UvDataTestSuite::SetUp();
@@ -214,6 +217,7 @@ TEST_F(SocketImplOpenTestSuite, established) {
 }
 
 TEST_F(SocketImplOpenTestSuite, write) {
+	EXPECT_EQ(socket_impl_->Bind(address_), 0);
 	EXPECT_EQ(socket_impl_->Write(nullptr, 1), UV_ENOBUFS);
 	EXPECT_EQ(socket_impl_->Write(w_content_, 0), UV_ENOBUFS);
 	EXPECT_EQ(socket_impl_->Write(w_content_, (i32)std::strlen(w_content_)), UV_EPIPE);
@@ -407,10 +411,13 @@ TEST_F(SocketImplCbTestSuite, write2) {
 }
 
 TEST_F(SocketImplCbTestSuite, buff) {
-	client_socket_impl_->SetSendBufferSize(1024);
-	client_socket_impl_->SetRecvBufferSize(1024);
-	EXPECT_EQ(client_socket_impl_->GetSendBufferSize(), 1024);
-	EXPECT_EQ(client_socket_impl_->GetRecvBufferSize(), 1024);
+	client_socket_impl_->SetSendBufferSize(8192);
+	client_socket_impl_->SetRecvBufferSize(8192);
+	i32 send_buff = client_socket_impl_->GetSendBufferSize();
+	i32 recv_buff = client_socket_impl_->GetRecvBufferSize();
+	EXPECT_GE(send_buff, 8192);
+	EXPECT_GE(recv_buff, 8192);
+	std::printf("send: %d, recv: %d\n", send_buff, recv_buff);
 }
 
 TEST_F(SocketImplCbTestSuite, address) {

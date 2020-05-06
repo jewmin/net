@@ -390,6 +390,9 @@ TEST_F(SocketStreamTestSuite, assign3) {
 
 class SocketStreamOpenTestSuite : public SocketStreamTestSuite {
 public:
+	SocketStreamOpenTestSuite() {
+		std::memset(w_content_, 0, sizeof(w_content_));
+	}
 	// Sets up the test fixture.
 	virtual void SetUp() {
 		SocketStreamTestSuite::SetUp();
@@ -427,6 +430,7 @@ TEST_F(SocketStreamOpenTestSuite, established) {
 }
 
 TEST_F(SocketStreamOpenTestSuite, write) {
+	EXPECT_EQ(stream_socket_->Bind(stream_address_, true, true), 0);
 	EXPECT_EQ(stream_socket_->Write(w_content_, (i32)std::strlen(w_content_)), UV_EPIPE);
 }
 

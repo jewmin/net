@@ -40,7 +40,7 @@ TEST_F(SocketAddressImplTestSuite, ipv6_ctor) {
 	EXPECT_LT(std::memcmp(ipv6.Addr(), ipv6_impl_->Addr(), ipv6.Length()), 0);
 	EXPECT_EQ(ipv6.AF(), AF_INET6);
 	EXPECT_EQ(ipv6.Family(), Net::AddressFamily::IPv6);
-	EXPECT_STREQ(ipv6.ToString().c_str(), ":::0");
+	EXPECT_STREQ(ipv6.ToString().c_str(), "[::]:0");
 }
 
 TEST_F(SocketAddressImplTestSuite, ipv4_display) {
@@ -60,7 +60,7 @@ TEST_F(SocketAddressImplTestSuite, ipv6_display) {
 	EXPECT_EQ(std::memcmp(ipv6_impl_->Addr(), &ipv6_addr_, ipv6_impl_->Length()), 0);
 	EXPECT_EQ(ipv6_impl_->AF(), AF_INET6);
 	EXPECT_EQ(ipv6_impl_->Family(), Net::AddressFamily::IPv6);
-	EXPECT_STREQ(ipv6_impl_->ToString().c_str(), "fe80::6101:927f:1dde:cb33:6789");
+	EXPECT_STREQ(ipv6_impl_->ToString().c_str(), "[fe80::6101:927f:1dde:cb33]:6789");
 }
 
 class SocketAddressTestSuite : public SocketAddressImplTestSuite {
@@ -122,7 +122,7 @@ TEST_F(SocketAddressTestSuite, ctor3) {
 	EXPECT_EQ(std::memcmp(ip.Addr(), ip6_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.AF(), ip6_->AF());
 	EXPECT_EQ(ip.Family(), ip6_->Family());
-	EXPECT_STREQ(ip.ToString().c_str(), "fe80::6101:927f:1dde:cb33:6789");
+	EXPECT_STREQ(ip.ToString().c_str(), "[fe80::6101:927f:1dde:cb33]:6789");
 }
 
 TEST_F(SocketAddressTestSuite, ctor4) {
@@ -149,7 +149,7 @@ TEST_F(SocketAddressTestSuite, ctor6) {
 	EXPECT_EQ(std::memcmp(ip.Addr(), ip6_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.AF(), ip6_->AF());
 	EXPECT_EQ(ip.Family(), ip6_->Family());
-	EXPECT_STREQ(ip.ToString().c_str(), "fe80::6101:927f:1dde:cb33:6789");
+	EXPECT_STREQ(ip.ToString().c_str(), "[fe80::6101:927f:1dde:cb33]:6789");
 }
 
 TEST_F(SocketAddressTestSuite, ctor7) {
@@ -173,7 +173,7 @@ TEST_F(SocketAddressTestSuite, ctor8) {
 	EXPECT_EQ(std::memcmp(ip.Addr(), ip6_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.AF(), ip6_->AF());
 	EXPECT_EQ(ip.Family(), ip6_->Family());
-	EXPECT_STREQ(ip.ToString().c_str(), "fe80::6101:927f:1dde:cb33:6789");
+	EXPECT_STREQ(ip.ToString().c_str(), "[fe80::6101:927f:1dde:cb33]:6789");
 }
 
 TEST_F(SocketAddressTestSuite, ctor9) {

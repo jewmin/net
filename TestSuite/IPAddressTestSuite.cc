@@ -9,7 +9,7 @@ public:
 #ifdef _WIN32
 		EXPECT_EQ(0, uv_ip6_addr("fe80::6101:927f:1dde:cb33%1", 6789, &ipv6_addr_));
 #else
-		EXPECT_EQ(0, uv_ip6_addr("fe80::6101:927f:1dde:cb33%eth0", 6789, &ipv6_addr_));
+		EXPECT_EQ(0, uv_ip6_addr("fe80::6101:927f:1dde:cb33%lo", 6789, &ipv6_addr_));
 #endif
 		ipv4_impl_ = new Net::IPv4AddressImpl(&ipv4_addr_.sin_addr);
 		ipv6_impl_ = new Net::IPv6AddressImpl(&ipv6_addr_.sin6_addr, ipv6_addr_.sin6_scope_id);
@@ -88,7 +88,7 @@ TEST_F(IPAddressImplTestSuite, ipv6_parse) {
 #ifdef _WIN32
 	EXPECT_STREQ(Net::IPv6AddressImpl::Parse("fe80::6101:927f:1dde:cb33%1").ToString().c_str(), "fe80::6101:927f:1dde:cb33");
 #else
-	EXPECT_STREQ(Net::IPv6AddressImpl::Parse("fe80::6101:927f:1dde:cb33%eth0").ToString().c_str(), "fe80::6101:927f:1dde:cb33");
+	EXPECT_STREQ(Net::IPv6AddressImpl::Parse("fe80::6101:927f:1dde:cb33%lo").ToString().c_str(), "fe80::6101:927f:1dde:cb33");
 #endif
 }
 
@@ -164,7 +164,7 @@ TEST_F(IPAddressTestSuite, ctor6) {
 #ifdef _WIN32
 	Net::IPAddress ip("fe80::6101:927f:1dde:cb33%1");
 #else
-	Net::IPAddress ip("fe80::6101:927f:1dde:cb33%eth0");
+	Net::IPAddress ip("fe80::6101:927f:1dde:cb33%lo");
 #endif
 	EXPECT_STREQ(ip.ToString().c_str(), "fe80::6101:927f:1dde:cb33");
 	EXPECT_EQ(ip.Length(), sizeof(ipv6_addr_.sin6_addr));

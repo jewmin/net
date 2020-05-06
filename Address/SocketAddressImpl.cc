@@ -72,7 +72,7 @@ IPv6SocketAddressImpl::~IPv6SocketAddressImpl() {
 
 std::string IPv6SocketAddressImpl::ToString() const {
 	std::stringstream result;
-	result << Host().ToString() << ":" << Port();
+	result << "[" << Host().ToString() << "]:" << Port();
 	return result.str();
 }
 
