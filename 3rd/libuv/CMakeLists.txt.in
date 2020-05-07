@@ -7,7 +7,7 @@ INCLUDE(ExternalProject)
 EXTERNALPROJECT_ADD(libuv
 	URL https://github.com/jewmin/libuv/archive/v${LIBUV_VERSION}.tar.gz
 	#URL_MD5 4e5683b4abdcb308e82d5147512d8c62
-	SOURCE_DIR "${CMAKE_BINARY_DIR}/libuv-src"
+	SOURCE_DIR "${CMAKE_BINARY_DIR}/../libuv-src"
 	BINARY_DIR "${CMAKE_BINARY_DIR}/libuv-build"
 	CONFIGURE_COMMAND ""
 	BUILD_COMMAND ""

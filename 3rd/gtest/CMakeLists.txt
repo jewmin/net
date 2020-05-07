@@ -13,7 +13,7 @@ SET(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 # Add googletest directly to our build. This adds the following targets:
 # gtest, gtest_main, gmock and gmock_main
-ADD_SUBDIRECTORY("${CMAKE_BINARY_DIR}/googletest-src" "${CMAKE_BINARY_DIR}/googletest-build")
+ADD_SUBDIRECTORY("${CMAKE_BINARY_DIR}/../googletest-src" "${CMAKE_BINARY_DIR}/googletest-build")
 
 SET(GTEST_ROOT_DIR ${CMAKE_BINARY_DIR}/googletest-src)
 

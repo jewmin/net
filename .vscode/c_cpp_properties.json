@@ -3,7 +3,10 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/build/libuv-src/include",
+                "${workspaceFolder}/build/googletest-src/googletest/include",
+                "${workspaceFolder}/build/googletest-src/googlemock/include"
             ],
             "defines": [],
             "windowsSdkVersion": "10.0.17763.0",
@@ -15,7 +18,10 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/build/libuv-src/include",
+                "${workspaceFolder}/build/googletest-src/googletest/include",
+                "${workspaceFolder}/build/googletest-src/googlemock/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
