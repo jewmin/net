@@ -29,13 +29,17 @@
 
 namespace Net {
 
+class SocketImpl;
 class UvData : public RefCountedObject {
+	friend class SocketImpl;
+
 public:
 	virtual ~UvData() {}
 
 	// 只能调用一次
 	virtual void Destroy() { Release(); }
 
+protected:
 	// 套接字回调函数
 	virtual void CloseCallback() {}
 	virtual void AcceptCallback(i32 status) {}
