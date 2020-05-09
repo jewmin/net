@@ -26,10 +26,11 @@
 #define Net_Reactor_SocketConnector_INCLUDED
 
 #include "Reactor/EventHandler.h"
-#include "Reactor/SocketConnection.h"
+#include "Address/SocketAddress.h"
 
 namespace Net {
 
+class SocketConnection;
 class SocketConnector : public EventHandler {
 	class Context : public UvData {
 	public:

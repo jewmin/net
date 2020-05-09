@@ -43,16 +43,16 @@ SocketConnection::SocketIO::~SocketIO() {
 
 SocketConnection::SocketConnection(i32 max_out_buffer_size, i32 max_in_buffer_size)
 	: EventHandler(nullptr), io_(nullptr), connect_state_(ConnectState::kDisconnected)
-	, max_out_buffer_size_(max_out_buffer_size), max_in_buffer_size_(max_in_buffer_size)
-	, shutdown_(false), called_on_connectfailed_(false), called_on_disconnected_(false) {
+	, max_out_buffer_size_(max_out_buffer_size), max_in_buffer_size_(max_in_buffer_size), shutdown_(false)
+	, called_on_connected_(false), called_on_connectfailed_(false), called_on_disconnected_(false) {
 }
 
 SocketConnection::~SocketConnection() {
-	ShutdownImmediately();
 }
 
-StreamSocket * SocketConnection::GetSocket() {
-	return &socket_;
+void SocketConnection::Destroy() {
+	Shutdown(true);
+	EventHandler::Destroy();
 }
 
 bool SocketConnection::RegisterToReactor() {
@@ -91,48 +91,29 @@ bool SocketConnection::Establish() {
 	return GetReactor()->AddEventHandler(this);
 }
 
-void SocketConnection::Shutdown(bool now) {
+void SocketConnection::Shutdown(bool now, i32 reason) {
 	if (ConnectState::kConnecting == connect_state_) {
 		shutdown_ = true;
-		ShutdownImmediately();
+		ShutdownImmediately(reason);
 	} else if (ConnectState::kConnected == connect_state_) {
 		shutdown_ = true;
 		connect_state_ = ConnectState::kDisconnecting;
 		if (io_->out_buffer_->GetCommitedSize() > 0 && !now) {
 			socket_.ShutdownWrite();
 		} else {
-			ShutdownImmediately();
+			ShutdownImmediately(reason);
 			CallOnDisconnected(false);
 		}
 	}
 }
 
-void SocketConnection::Destroy() {
-	Shutdown(true);
-	EventHandler::Destroy();
-}
-
-void SocketConnection::ShutdownImmediately() {
+void SocketConnection::ShutdownImmediately(i32 reason) {
 	if (ConnectState::kConnecting == connect_state_) {
 		connect_state_ = ConnectState::kDisconnected;
-		CallOnConnectFailed(UV_ECANCELED);
+		CallOnConnectFailed(reason);
 		socket_.Close();
 	} else if (ConnectState::kConnected == connect_state_ || ConnectState::kDisconnecting == connect_state_) {
 		GetReactor()->RemoveEventHandler(this);
-	}
-}
-
-void SocketConnection::CallOnConnectFailed(i32 reason) {
-	if (!called_on_connectfailed_) {
-		called_on_connectfailed_ = true;
-		OnConnectFailed(reason);
-	}
-}
-
-void SocketConnection::CallOnDisconnected(bool is_remote) {
-	if (!called_on_disconnected_) {
-		called_on_disconnected_ = true;
-		OnDisconnected(is_remote);
 	}
 }
 
@@ -173,7 +154,7 @@ void SocketConnection::HandleClose4EOF(i32 reason) {
 			shutdown_ = true;
 			socket_.Shutdown();
 		} else {
-			ShutdownImmediately();
+			ShutdownImmediately(reason);
 			CallOnDisconnected(true);
 		}
 	}
@@ -182,7 +163,7 @@ void SocketConnection::HandleClose4EOF(i32 reason) {
 void SocketConnection::HandleClose4Error(i32 reason) {
 	if (ConnectState::kConnected == connect_state_ || ConnectState::kDisconnecting == connect_state_) {
 		connect_state_ = ConnectState::kDisconnecting;
-		ShutdownImmediately();
+		ShutdownImmediately(reason);
 		CallOnDisconnected(!shutdown_);
 	}
 }
@@ -208,8 +189,8 @@ i32 SocketConnection::Write(const i8 * data, i32 len) {
 }
 
 i32 SocketConnection::Read(i8 * data, i32 len) {
-	if (!io_) {
-		Log(kCrash, __FILE__, __LINE__, "Read() io_ == nullptr");
+	if (ConnectState::kConnected != connect_state_ && ConnectState::kDisconnecting != connect_state_) {
+		return UV_ENOTCONN;
 	}
 	return io_->in_buffer_->Read(data, len);
 }
@@ -220,20 +201,23 @@ i32 SocketConnection::Read(i8 * data, i32 len) {
 
 void SocketConnection::CloseCallback() {
 	shutdown_ = false;
+	called_on_connected_ = false;
 	called_on_connectfailed_ = false;
 	called_on_disconnected_ = false;
 }
 
 void SocketConnection::ShutdownCallback(i32 status, void * arg) {
-	ShutdownImmediately();
+	ShutdownImmediately(status);
 	CallOnDisconnected(false);
 }
 
 void SocketConnection::AllocCallback(uv_buf_t * buf) {
-	i32 actually_size = 0;
-	i8 * block = io_->in_buffer_->GetReserveBlock(SocketIO::kReadMax, actually_size);
-	if (block && actually_size > 0) {
-		*buf = uv_buf_init(block, actually_size);
+	if (io_) {
+		i32 actually_size = 0;
+		i8 * block = io_->in_buffer_->GetReserveBlock(SocketIO::kReadMax, actually_size);
+		if (block && actually_size > 0) {
+			*buf = uv_buf_init(block, actually_size);
+		}
 	}
 }
 

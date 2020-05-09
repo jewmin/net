@@ -90,12 +90,11 @@ void SocketAcceptor::AcceptCallback(i32 status) {
 			Log(kLog, __FILE__, __LINE__, "AcceptCallback() connection == null");
 			return;
 		}
-		StreamSocket * associate_socket = connection->GetSocket();
-		*associate_socket = client;
-		associate_socket->SetNoDelay();
-		associate_socket->SetKeepAlive(60);
+		client.SetNoDelay();
+		client.SetKeepAlive(60);
+		connection->SetSocket(client);
 		if (ActivateConnection(connection)) {
-			connection->OnConnected();
+			connection->CallOnConnected();
 		} else {
 			Log(kLog, __FILE__, __LINE__, "AcceptCallback() ActivateConnection error");
 			connection->CallOnConnectFailed(UV_ECANCELED);

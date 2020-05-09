@@ -23,6 +23,7 @@
  */
 
 #include "Reactor/SocketConnector.h"
+#include "Reactor/SocketConnection.h"
 #include "Reactor/ConnectState.h"
 #include "Common/Logger.h"
 
@@ -43,16 +44,12 @@ void SocketConnector::Context::ConnectCallback(i32 status, void * arg) {
 	StreamSocket * associate_socket = connection_->GetSocket();
 	associate_socket->SetUvData(nullptr);
 	if (status < 0) {
-		if (connection_->GetConnectState() == ConnectState::kConnecting) {
-			connection_->SetConnectState(ConnectState::kDisconnected);
-			connection_->CallOnConnectFailed(status);
-			associate_socket->Close();
-		}
+		connection_->Shutdown(true, status);
 	} else {
 		associate_socket->SetNoDelay();
 		associate_socket->SetKeepAlive(60);
 		if (connector_->ActivateConnection(connection_)) {
-			connection_->OnConnected();
+			connection_->CallOnConnected();
 		} else {
 			Log(kLog, __FILE__, __LINE__, "ConnectCallback() ActivateConnection error");
 			connection_->CallOnConnectFailed(UV_ECANCELED);
@@ -74,7 +71,7 @@ bool SocketConnector::Connect(SocketConnection * connection, const SocketAddress
 		connection->CallOnConnectFailed(status);
 		return false;
 	} else {
-		connection->SetConnectState(ConnectState::kConnecting);
+		connection->connect_state_ = ConnectState::kConnecting;
 		associate_socket->SetUvData(new Context(this, connection));
 		return true;
 	}

@@ -56,7 +56,8 @@ bool EventReactor::AddEventHandler(EventHandler * handler) {
 
 bool EventReactor::RemoveEventHandler(EventHandler * handler) {
 	bool success = handler->UnRegisterFromReactor();
-	if (success) {
+	// 如果失败就不移除的话，可能会导致死循环
+	/*if (success) */{
 		handlers_.remove(handler);
 	}
 	return success;
