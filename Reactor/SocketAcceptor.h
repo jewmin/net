@@ -38,13 +38,13 @@ public:
 
 	bool Open(const SocketAddress & address, i32 backlog = 128, bool ipv6_only = false);
 	void Close();
-	virtual void Destroy() override;
 
 protected:
 	explicit SocketAcceptor(EventReactor * reactor);
 	virtual bool RegisterToReactor() override;
 	virtual bool UnRegisterFromReactor() override;
 	virtual SocketConnection * CreateConnection() = 0;
+	virtual void DestroyConnection(SocketConnection * connection) = 0;
 	virtual void AcceptCallback(i32 status) override;
 
 private:

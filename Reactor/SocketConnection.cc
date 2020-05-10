@@ -48,11 +48,7 @@ SocketConnection::SocketConnection(i32 max_out_buffer_size, i32 max_in_buffer_si
 }
 
 SocketConnection::~SocketConnection() {
-}
-
-void SocketConnection::Destroy() {
-	Shutdown(true);
-	EventHandler::Destroy();
+	ShutdownImmediately();
 }
 
 bool SocketConnection::RegisterToReactor() {
@@ -135,7 +131,7 @@ void SocketConnection::OnSomeDataSent() {
 void SocketConnection::OnError(i32 reason) {
 }
 
-void SocketConnection::Error(i32 reason) {
+void SocketConnection::InternalError(i32 reason) {
 	OnError(reason);
 	if (UV_EOF == reason) {
 		HandleClose4EOF(reason);
@@ -176,7 +172,7 @@ i32 SocketConnection::Write(const i8 * data, i32 len) {
 	i32 actually_size = 0;
 	i8 * block = io_->out_buffer_->GetReserveBlock(len, actually_size);
 	if (!block || actually_size < len) {
-		Log(kLog, __FILE__, __LINE__, "Write() buffer status used/need/max", io_->out_buffer_->GetCommitedSize(), len, max_out_buffer_size_);
+		Log(kLog, __FILE__, __LINE__, "Write() buffer not enough, used/need/max", io_->out_buffer_->GetCommitedSize(), len, max_out_buffer_size_);
 		return UV_ENOBUFS;
 	}
 
@@ -207,7 +203,7 @@ void SocketConnection::CloseCallback() {
 }
 
 void SocketConnection::ShutdownCallback(i32 status, void * arg) {
-	ShutdownImmediately(status);
+	ShutdownImmediately();
 	CallOnDisconnected(false);
 }
 
@@ -223,7 +219,7 @@ void SocketConnection::AllocCallback(uv_buf_t * buf) {
 
 void SocketConnection::ReadCallback(i32 status) {
 	if (status < 0) {
-		Error(status);
+		InternalError(status);
 	} else {
 		if (io_) {
 			io_->in_buffer_->Commit(status);
@@ -236,7 +232,7 @@ void SocketConnection::ReadCallback(i32 status) {
 
 void SocketConnection::WrittenCallback(i32 status, void * arg) {
 	if (status < 0) {
-		Error(status);
+		InternalError(status);
 	} else {
 		if (io_) {
 			io_->out_buffer_->DeCommit(static_cast<i32>(reinterpret_cast<i64>(arg)));

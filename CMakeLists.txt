@@ -117,7 +117,7 @@ SET(all_srcs
 	${Common}
 	${Address}
 	${Sockets}
-	# ${Reactor}
+	${Reactor}
 	# ${Core}
 	# ${Interface}
 	# ${Timer}

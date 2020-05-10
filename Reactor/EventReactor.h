@@ -39,6 +39,7 @@ public:
 	bool RemoveEventHandler(EventHandler * handler);
 	bool Poll(uv_run_mode mode = UV_RUN_NOWAIT);
 	uv_loop_t * GetUvLoop() const;
+	i32 GetHandlerCount() const;
 
 private:
 	EventReactor(EventReactor &&) = delete;
@@ -48,7 +49,7 @@ private:
 
 private:
 	uv_loop_t * loop_;
-	std::list<EventHandler *> handlers_;
+	i32 handler_count_;
 };
 
 inline bool EventReactor::Poll(uv_run_mode mode) {
@@ -57,6 +58,10 @@ inline bool EventReactor::Poll(uv_run_mode mode) {
 
 inline uv_loop_t * EventReactor::GetUvLoop() const {
 	return loop_;
+}
+
+inline i32 EventReactor::GetHandlerCount() const {
+	return handler_count_;
 }
 
 }

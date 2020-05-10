@@ -29,16 +29,13 @@
 
 namespace Net {
 
-EventReactor::EventReactor() : loop_(static_cast<uv_loop_t *>(jc_malloc(sizeof(uv_loop_t)))) {
+EventReactor::EventReactor() : loop_(static_cast<uv_loop_t *>(jc_malloc(sizeof(uv_loop_t)))), handler_count_(0) {
 	Log(kLog, __FILE__, __LINE__, "<libuv>", uv_version_string());
 	uv_loop_init(loop_);
 	loop_->data = this;
 }
 
 EventReactor::~EventReactor() {
-	while (!handlers_.empty()) {
-		RemoveEventHandler(handlers_.front());
-	}
 	while (Poll()) {
 		Poll(UV_RUN_ONCE);
 	}
@@ -49,16 +46,15 @@ EventReactor::~EventReactor() {
 bool EventReactor::AddEventHandler(EventHandler * handler) {
 	bool success = handler->RegisterToReactor();
 	if (success) {
-		handlers_.push_back(handler);
+		++handler_count_;
 	}
 	return success;
 }
 
 bool EventReactor::RemoveEventHandler(EventHandler * handler) {
 	bool success = handler->UnRegisterFromReactor();
-	// 如果失败就不移除的话，可能会导致死循环
-	/*if (success) */{
-		handlers_.remove(handler);
+	if (success) {
+		--handler_count_;
 	}
 	return success;
 }

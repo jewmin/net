@@ -30,29 +30,32 @@
 namespace Net {
 
 SocketConnector::Context::Context(SocketConnector * connector, SocketConnection * connection)
-	: connector_(connector), connection_(connection) {
-	connector_->Duplicate();
-	connection_->Duplicate();
+	: connector_reference_(connector->WeakRef()), connection_reference_(connection->WeakRef()) {
 }
 
 SocketConnector::Context::~Context() {
-	connection_->Release();
-	connector_->Release();
+	connector_reference_->Release();
+	connection_reference_->Release();
 }
 
 void SocketConnector::Context::ConnectCallback(i32 status, void * arg) {
-	StreamSocket * associate_socket = connection_->GetSocket();
-	associate_socket->SetUvData(nullptr);
-	if (status < 0) {
-		connection_->Shutdown(true, status);
-	} else {
-		associate_socket->SetNoDelay();
-		associate_socket->SetKeepAlive(60);
-		if (connector_->ActivateConnection(connection_)) {
-			connection_->CallOnConnected();
+	SocketConnector * connector = dynamic_cast<SocketConnector *>(connector_reference_->Get());
+	SocketConnection * connection = dynamic_cast<SocketConnection *>(connection_reference_->Get());
+	delete this;
+	if (connector && connection) {
+		StreamSocket * associate_socket = connection->GetSocket();
+		associate_socket->SetUvData(nullptr);
+		if (status < 0) {
+			connection->Shutdown(true, status);
 		} else {
-			Log(kLog, __FILE__, __LINE__, "ConnectCallback() ActivateConnection error");
-			connection_->CallOnConnectFailed(UV_ECANCELED);
+			associate_socket->SetNoDelay();
+			associate_socket->SetKeepAlive(60);
+			if (connector->ActivateConnection(connection)) {
+				connection->CallOnConnected();
+			} else {
+				Log(kLog, __FILE__, __LINE__, "ConnectCallback() ActivateConnection error");
+				connection->CallOnConnectFailed(UV_ECANCELED);
+			}
 		}
 	}
 }

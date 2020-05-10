@@ -37,8 +37,8 @@ class SocketConnector : public EventHandler {
 		Context(SocketConnector * connector, SocketConnection * connection);
 		virtual ~Context();
 		virtual void ConnectCallback(i32 status, void * arg) override;
-		SocketConnector * connector_;
-		SocketConnection * connection_;
+		WeakReference * connector_reference_;
+		WeakReference * connection_reference_;
 	};
 
 public:

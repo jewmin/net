@@ -49,7 +49,6 @@ public:
 	SocketConnection(i32 max_out_buffer_size, i32 max_in_buffer_size);
 	virtual ~SocketConnection();
 
-	virtual void Destroy() override;
 	bool Establish();
 	void Shutdown(bool now, i32 reason = UV_ECANCELED);
 
@@ -84,9 +83,9 @@ private:
 	virtual void ReadCallback(i32 status) override;
 	virtual void WrittenCallback(i32 status, void * arg) override;
 
-	void ShutdownImmediately(i32 reason);
+	void ShutdownImmediately(i32 reason = UV_ECANCELED);
 	void CallOnDisconnected(bool is_remote);
-	void Error(i32 reason);
+	void InternalError(i32 reason);
 	void HandleClose4EOF(i32 reason);
 	void HandleClose4Error(i32 reason);
 

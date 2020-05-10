@@ -31,6 +31,7 @@ SocketAcceptor::SocketAcceptor(EventReactor * reactor) : EventHandler(reactor), 
 }
 
 SocketAcceptor::~SocketAcceptor() {
+	Close();
 }
 
 bool SocketAcceptor::Open(const SocketAddress & address, i32 backlog, bool ipv6_only) {
@@ -51,11 +52,6 @@ void SocketAcceptor::Close() {
 	if (opened_) {
 		GetReactor()->RemoveEventHandler(this);
 	}
-}
-
-void SocketAcceptor::Destroy() {
-	Close();
-	EventHandler::Destroy();
 }
 
 bool SocketAcceptor::RegisterToReactor() {
@@ -87,7 +83,7 @@ void SocketAcceptor::AcceptCallback(i32 status) {
 		}
 		SocketConnection * connection = CreateConnection();
 		if (!connection) {
-			Log(kLog, __FILE__, __LINE__, "AcceptCallback() connection == null");
+			Log(kLog, __FILE__, __LINE__, "AcceptCallback() connection == nullptr");
 			return;
 		}
 		client.SetNoDelay();
@@ -97,7 +93,7 @@ void SocketAcceptor::AcceptCallback(i32 status) {
 			connection->CallOnConnected();
 		} else {
 			Log(kLog, __FILE__, __LINE__, "AcceptCallback() ActivateConnection error");
-			connection->CallOnConnectFailed(UV_ECANCELED);
+			DestroyConnection(connection);
 		}
 	}
 }
