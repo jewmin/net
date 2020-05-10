@@ -64,7 +64,7 @@ public:
 			DeCommit(data_len);
 			return data_len;
 		}
-		return UV_ENOBUFS;
+		return 0;
 	}
 
 	virtual i8 * GetReserveBlock(i32 want_size, i32 & actually_size) = 0;
@@ -72,6 +72,7 @@ public:
 	virtual void Commit(i32 size) = 0;
 	virtual void DeCommit(i32 size) = 0;
 	virtual i32 GetCommitedSize() const = 0;
+	virtual i32 GetFreeSize() const = 0;
 
 protected:
 	void DeAllocate() {

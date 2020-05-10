@@ -23,6 +23,7 @@
  */
 
 #include "Common/BipBuffer.h"
+#include "Common/Logger.h"
 
 namespace Net {
 
@@ -110,7 +111,9 @@ void BipBuffer::Commit(i32 size) {
 }
 
 void BipBuffer::DeCommit(i32 size) {
-	if (size >= size_a_) {
+	if (size < 0) {
+		Log(kCrash, __FILE__, __LINE__, "size < 0");
+	} else if (size >= size_a_) {
 		offset_a_ = offset_b_;
 		size_a_ = size_b_;
 		offset_b_ = size_b_ = 0;
@@ -122,6 +125,14 @@ void BipBuffer::DeCommit(i32 size) {
 
 i32 BipBuffer::GetCommitedSize() const {
 	return size_a_ + size_b_;
+}
+
+i32 BipBuffer::GetFreeSize() const {
+	if (size_b_ > 0) {
+		return GetBFreeSpace();
+	} else {
+		return (std::max)(GetBFreeSpace(), GetSpaceAfterA());
+	}
 }
 
 }

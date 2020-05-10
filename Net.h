@@ -29,6 +29,7 @@
 #include "uv.h"
 
 // stl标准库头文件
+#include <new>
 #include <set>
 #include <map>
 #include <list>
@@ -43,8 +44,8 @@
 #include <sstream>
 #include <typeinfo>
 #include <stdexcept>
+#include <algorithm>
 #include <unordered_map>
-#include <new>
 
 // C头文件
 #include <assert.h>

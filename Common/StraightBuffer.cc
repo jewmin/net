@@ -23,6 +23,7 @@
  */
 
 #include "Common/StraightBuffer.h"
+#include "Common/Logger.h"
 
 namespace Net {
 
@@ -78,7 +79,9 @@ void StraightBuffer::Commit(i32 size) {
 }
 
 void StraightBuffer::DeCommit(i32 size) {
-	if (size >= size_) {
+	if (size < 0) {
+		Log(kCrash, __FILE__, __LINE__, "size < 0");
+	} else if (size >= size_) {
 		offset_ = 0;
 		size_ = 0;
 	} else {
@@ -89,6 +92,10 @@ void StraightBuffer::DeCommit(i32 size) {
 
 i32 StraightBuffer::GetCommitedSize() const {
 	return size_;
+}
+
+i32 StraightBuffer::GetFreeSize() const {
+	return buffer_length_ - size_;
 }
 
 }

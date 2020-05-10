@@ -39,6 +39,7 @@ public:
 	virtual void Commit(i32 size) override;
 	virtual void DeCommit(i32 size) override;
 	virtual i32 GetCommitedSize() const override;
+	virtual i32 GetFreeSize() const override;
 
 protected:
 	i32 GetSpaceAfterA() const;

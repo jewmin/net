@@ -72,6 +72,35 @@ private:
 	mutable RefCounter counter_;
 };
 
+class StrongRefObject;
+class WeakReference : public RefCountedObject {
+	friend class StrongRefObject;
+public:
+	virtual ~WeakReference() {}
+	
+	StrongRefObject * Get() const;
+
+protected:
+	WeakReference() : object_(nullptr) {}
+
+private:
+	StrongRefObject * object_;
+};
+
+class StrongRefObject : public NetObject {
+public:
+	StrongRefObject() : weak_reference_(nullptr) {}
+	virtual ~StrongRefObject() { Release(); }
+
+	WeakReference * Duplicate();
+
+protected:
+	void Release();
+
+private:
+	WeakReference * weak_reference_;
+};
+
 //*********************************************************************
 //RefCounter
 //*********************************************************************
@@ -105,6 +134,9 @@ inline void Net::RefCountedObject::Duplicate() const {
 }
 
 inline void Net::RefCountedObject::Release() {
+	if (counter_ == 0) {
+		Log(kCrash, __FILE__, __LINE__, "counter_ == 0");
+	}
 	if (--counter_ == 0) {
 		delete this;
 	}
@@ -112,6 +144,33 @@ inline void Net::RefCountedObject::Release() {
 
 inline i32 Net::RefCountedObject::ReferenceCount() const {
 	return counter_;
+}
+
+//*********************************************************************
+//WeakReference
+//*********************************************************************
+inline StrongRefObject * WeakReference::Get() const {
+	return object_;
+}
+
+//*********************************************************************
+//StrongRefObject
+//*********************************************************************
+inline WeakReference * StrongRefObject::Duplicate() {
+	if (!weak_reference_) {
+		weak_reference_ = new WeakReference();
+		weak_reference_->object_ = this;
+	}
+	weak_reference_->Duplicate();
+	return weak_reference_;
+}
+
+inline void StrongRefObject::Release() {
+	if (weak_reference_) {
+		weak_reference_->object_ = nullptr;
+		weak_reference_->Release();
+		weak_reference_ = nullptr;
+	}
 }
 
 }
