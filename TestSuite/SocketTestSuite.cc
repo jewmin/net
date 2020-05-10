@@ -132,7 +132,7 @@ TEST_F(SocketOpenTestSuite, operation) {
 	Net::UvData * data = new MockUvData();
 	socket_->SetUvData(data);
 	socket_->SetUvData(nullptr);
-	data->Destroy();
+	delete data;
 }
 
 class SocketCmpTestSuite : public SocketOpenTestSuite {

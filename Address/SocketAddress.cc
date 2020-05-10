@@ -35,6 +35,10 @@ SocketAddress::SocketAddress(u16 port) {
 	Init(IPAddress(), port);
 }
 
+SocketAddress::SocketAddress(const std::string & ip, u16 port) {
+	Init(IPAddress(ip), port);
+}
+
 SocketAddress::SocketAddress(const IPAddress & host, u16 port) {
 	Init(host, port);
 }

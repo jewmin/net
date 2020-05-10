@@ -90,12 +90,18 @@ private:
 class StrongRefObject : public NetObject {
 public:
 	StrongRefObject() : weak_reference_(nullptr) {}
-	virtual ~StrongRefObject() { Release(); }
+	virtual ~StrongRefObject() { ClearWeakReferences(); }
 
-	WeakReference * Duplicate();
+	WeakReference * WeakRef();
 
 protected:
-	void Release();
+	void ClearWeakReferences();
+
+private:
+	StrongRefObject(StrongRefObject &&) = delete;
+	StrongRefObject(const StrongRefObject &) = delete;
+	StrongRefObject & operator=(StrongRefObject &&) = delete;
+	StrongRefObject & operator=(const StrongRefObject &) = delete;
 
 private:
 	WeakReference * weak_reference_;
@@ -156,7 +162,7 @@ inline StrongRefObject * WeakReference::Get() const {
 //*********************************************************************
 //StrongRefObject
 //*********************************************************************
-inline WeakReference * StrongRefObject::Duplicate() {
+inline WeakReference * StrongRefObject::WeakRef() {
 	if (!weak_reference_) {
 		weak_reference_ = new WeakReference();
 		weak_reference_->object_ = this;
@@ -165,7 +171,7 @@ inline WeakReference * StrongRefObject::Duplicate() {
 	return weak_reference_;
 }
 
-inline void StrongRefObject::Release() {
+inline void StrongRefObject::ClearWeakReferences() {
 	if (weak_reference_) {
 		weak_reference_->object_ = nullptr;
 		weak_reference_->Release();

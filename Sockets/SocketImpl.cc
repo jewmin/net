@@ -276,14 +276,11 @@ void SocketImpl::SetKeepAlive(i32 interval) {
 }
 
 void SocketImpl::SetUvData(UvData * data) {
-	if (handle_ && handle_->data != data) {
+	if (handle_) {
 		if (handle_->data) {
-			static_cast<UvData *>(handle_->data)->Release();
+			static_cast<WeakReference *>(handle_->data)->Release();
 		}
-		handle_->data = data;
-		if (data) {
-			data->Duplicate();
-		}
+		handle_->data = data ? data->WeakRef() : nullptr;
 	}
 }
 
@@ -292,10 +289,15 @@ void SocketImpl::SetUvData(UvData * data) {
 //*********************************************************************
 
 void SocketImpl::close_cb(uv_handle_t * handle) {
-	UvData * data = static_cast<UvData *>(handle->data);
-	if (data) {
-		data->CloseCallback();
-		data->Release();
+	WeakReference * reference = static_cast<WeakReference *>(handle->data);
+	if (reference) {
+		UvData * data = dynamic_cast<UvData *>(reference->Get());
+		if (data) {
+			data->CloseCallback();
+		} else {
+			Log(kLog, __FILE__, __LINE__, "close_cb() UvData has been released");
+		}
+		reference->Release();
 	}
 	if (UV_TCP == handle->type) {
 		jc_free(handle);
@@ -305,59 +307,76 @@ void SocketImpl::close_cb(uv_handle_t * handle) {
 }
 
 void SocketImpl::connection_cb(uv_stream_t * server, int status) {
-	UvData * data = static_cast<UvData *>(server->data);
-	if (data) {
-		data->AcceptCallback(status);
-	} else {
-		Log(kLog, __FILE__, __LINE__, "connection_cb() server->data == nullptr");
+	WeakReference * reference = static_cast<WeakReference *>(server->data);
+	if (reference) {
+		UvData * data = dynamic_cast<UvData *>(reference->Get());
+		if (data) {
+			data->AcceptCallback(status);
+		} else {
+			Log(kLog, __FILE__, __LINE__, "connection_cb() UvData has been released");
+		}
 	}
 }
 
 void SocketImpl::connect_cb(uv_connect_t * req, int status) {
-	UvData * data = static_cast<UvData *>(req->handle->data);
-	if (data) {
-		data->ConnectCallback(status, req->data);
-		data->Release();
-	} else {
-		Log(kLog, __FILE__, __LINE__, "connect_cb() req->handle->data == nullptr");
+	WeakReference * reference = static_cast<WeakReference *>(req->handle->data);
+	if (reference) {
+		UvData * data = dynamic_cast<UvData *>(reference->Get());
+		if (data) {
+			data->ConnectCallback(status, req->data);
+		} else {
+			Log(kLog, __FILE__, __LINE__, "connect_cb() UvData has been released");
+		}
 	}
 	jc_free(req);
 }
 
 void SocketImpl::shutdown_cb(uv_shutdown_t * req, int status) {
-	UvData * data = static_cast<UvData *>(req->handle->data);
-	if (data) {
-		data->ShutdownCallback(status, req->data);
-	} else {
-		Log(kLog, __FILE__, __LINE__, "shutdown_cb() req->handle->data == nullptr");
+	WeakReference * reference = static_cast<WeakReference *>(req->handle->data);
+	if (reference) {
+		UvData * data = dynamic_cast<UvData *>(reference->Get());
+		if (data) {
+			data->ShutdownCallback(status, req->data);
+		} else {
+			Log(kLog, __FILE__, __LINE__, "shutdown_cb() UvData has been released");
+		}
 	}
 	jc_free(req);
 }
 
 void SocketImpl::alloc_cb(uv_handle_t * handle, size_t suggested_size, uv_buf_t * buf) {
-	UvData * data = static_cast<UvData *>(handle->data);
-	if (data) {
-		data->AllocCallback(buf);
-	} else {
-		Log(kLog, __FILE__, __LINE__, "alloc_cb() handle->data == nullptr");
+	WeakReference * reference = static_cast<WeakReference *>(handle->data);
+	if (reference) {
+		UvData * data = dynamic_cast<UvData *>(reference->Get());
+		if (data) {
+			data->AllocCallback(buf);
+		} else {
+			Log(kLog, __FILE__, __LINE__, "alloc_cb() UvData has been released");
+		}
 	}
 }
 
 void SocketImpl::read_cb(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf) {
-	UvData * data = static_cast<UvData *>(stream->data);
-	if (data) {
-		data->ReadCallback(static_cast<i32>(nread));
-	} else {
-		Log(kLog, __FILE__, __LINE__, "read_cb() stream->data == nullptr");
+	WeakReference * reference = static_cast<WeakReference *>(stream->data);
+	if (reference) {
+		UvData * data = dynamic_cast<UvData *>(reference->Get());
+		if (data) {
+			data->ReadCallback(static_cast<i32>(nread));
+		} else {
+			Log(kLog, __FILE__, __LINE__, "read_cb() UvData has been released");
+		}
 	}
 }
 
 void SocketImpl::write_cb(uv_write_t * req, int status) {
-	UvData * data = static_cast<UvData *>(req->handle->data);
-	if (data) {
-		data->WrittenCallback(status, req->data);
-	} else {
-		Log(kLog, __FILE__, __LINE__, "write_cb() req->handle->data == nullptr");
+	WeakReference * reference = static_cast<WeakReference *>(req->handle->data);
+	if (reference) {
+		UvData * data = dynamic_cast<UvData *>(reference->Get());
+		if (data) {
+			data->WrittenCallback(status, req->data);
+		} else {
+			Log(kLog, __FILE__, __LINE__, "write_cb() UvData has been released");
+		}
 	}
 	jc_free(req);
 }

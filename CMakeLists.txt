@@ -117,8 +117,8 @@ SET(all_srcs
 	${Common}
 	${Address}
 	${Sockets}
-	${Reactor}
-	${Core}
+	# ${Reactor}
+	# ${Core}
 	# ${Interface}
 	# ${Timer}
 )

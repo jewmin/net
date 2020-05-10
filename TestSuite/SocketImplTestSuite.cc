@@ -45,19 +45,11 @@ public:
 
 	// Tears down the test fixture.
 	virtual void TearDown() {
-		uv_data_->Destroy();
+		delete uv_data_;
 	}
 
 	Net::UvData * uv_data_;
 };
-
-TEST_F(UvDataTestSuite, use) {
-	EXPECT_EQ(uv_data_->ReferenceCount(), 1);
-	uv_data_->Duplicate();
-	EXPECT_EQ(uv_data_->ReferenceCount(), 2);
-	uv_data_->Release();
-	EXPECT_EQ(uv_data_->ReferenceCount(), 1);
-}
 
 class SocketImplTestSuite : public UvDataTestSuite {
 public:
@@ -92,6 +84,7 @@ public:
 TEST_F(SocketImplTestSuite, open) {
 	socket_impl_->Open(loop_);
 	socket_impl_->Open(loop_);
+	socket_impl_->Close();
 	socket_impl_->Close();
 }
 
@@ -163,6 +156,7 @@ public:
 
 	// Tears down the test fixture.
 	virtual void TearDown() {
+		socket_impl_->Close();
 		SocketImplTestSuite::TearDown();
 	}
 };
@@ -244,6 +238,7 @@ TEST_F(SocketImplOpenTestSuite, opt) {
 	socket_impl_->SetKeepAlive(60);
 	socket_impl_->io_fd(socket_impl_->fd_);
 	socket_impl_->SetUvData(uv_data_);
+	socket_impl_->SetUvData(uv_data_);
 	socket_impl_->SetUvData(nullptr);
 }
 
@@ -252,10 +247,16 @@ public:
 	MockUvData2()
 		: call_close_count_(0), call_accpet_count_(0), call_connect_count_(0), call_shutdown_count_(0)
 		, call_alloc_count_(0), call_read_count_(0), call_written_count_(0), server_impl_(nullptr), client_impl_(nullptr) {}
+	virtual ~MockUvData2() {
+		if (server_impl_) server_impl_->Release();
+		if (client_impl_) client_impl_->Release();
+	}
 	virtual void CloseCallback() {
+		MockUvData::CloseCallback();
 		call_close_count_++;
 	}
 	virtual void AcceptCallback(i32 status) {
+		MockUvData::AcceptCallback(status);
 		call_accpet_count_++;
 		if (status < 0) {
 			std::printf("MockUvData2::AcceptCallback: %s\n", uv_strerror(status));
@@ -263,39 +264,48 @@ public:
 			Net::SocketAddress client_address;
 			client_impl_ = server_impl_->AcceptSocket(client_address);
 			EXPECT_TRUE(client_impl_ != nullptr);
+			client_impl_->SetUvData(this);
 		}
 	}
 	virtual void ConnectCallback(i32 status, void * arg) {
+		MockUvData::ConnectCallback(status, arg);
 		call_connect_count_++;
 		if (status < 0) {
 			std::printf("MockUvData2::ConnectCallback: %s\n", uv_strerror(status));
 		}
 	}
 	virtual void ShutdownCallback(i32 status, void * arg) {
+		MockUvData::ShutdownCallback(status, arg);
 		call_shutdown_count_++;
 		if (status < 0) {
-			std::printf("MockUvData2::ConnectCallback: %s\n", uv_strerror(status));
+			std::printf("MockUvData2::ShutdownCallback: %s\n", uv_strerror(status));
 		}
 	}
 	virtual void AllocCallback(uv_buf_t * buf) {
+		MockUvData::AllocCallback(buf);
 		call_alloc_count_++;
 	}
 	virtual void ReadCallback(i32 status) {
+		MockUvData::ReadCallback(status);
 		call_read_count_++;
+		if (status < 0) {
+			std::printf("MockUvData2::ReadCallback: %s\n", uv_strerror(status));
+		}
 	}
 	virtual void WrittenCallback(i32 status, void * arg) {
+		MockUvData::WrittenCallback(status, arg);
 		call_written_count_++;
+		if (status < 0) {
+			std::printf("MockUvData2::WrittenCallback: %s\n", uv_strerror(status));
+		}
 	}
 	void SetServer(Net::SocketImpl * impl) {
 		server_impl_ = impl;
+		server_impl_->Duplicate();
 	}
 	void SetClient(Net::SocketImpl * impl) {
 		client_impl_ = impl;
-	}
-	void ReleaseClient() {
-		if (client_impl_) {
-			client_impl_->Release();
-		}
+		client_impl_->Duplicate();
 	}
 
 	i32 call_close_count_;
@@ -324,8 +334,8 @@ public:
 	// Tears down the test fixture.
 	virtual void TearDown() {
 		client_socket_impl_->Release();
-		client_data_->Destroy();
-		server_data_->Destroy();
+		delete client_data_;
+		delete server_data_;
 		SocketImplOpenTestSuite::TearDown();
 	}
 
@@ -339,7 +349,7 @@ public:
 		socket_impl_->Listen();
 	}
 
-	void Loop(i32 count = 10) {
+	void Loop(i32 count = 30) {
 		while (count-- > 0) {
 			uv_run(loop_, UV_RUN_NOWAIT);
 		}
@@ -350,7 +360,6 @@ public:
 		server_data_->SetServer(socket_impl_);
 		client_socket_impl_->SetUvData(client_data_);
 		client_data_->SetClient(client_socket_impl_);
-		client_data_->Duplicate();
 	}
 
 	MockSocketImpl * client_socket_impl_;
@@ -359,15 +368,40 @@ public:
 };
 
 TEST_F(SocketImplCbNullTestSuite, cb) {
-	Loop(30);
+	Loop();
 }
 
 TEST_F(SocketImplCbNullTestSuite, cb2) {
 	SetUvData();
-	Loop(30);
+	Loop();
 	EXPECT_EQ(server_data_->call_accpet_count_, 1);
 	EXPECT_EQ(client_data_->call_connect_count_, 1);
-	server_data_->ReleaseClient();
+	client_socket_impl_->Shutdown();
+	client_socket_impl_->Close();
+	Loop();
+	EXPECT_EQ(client_data_->call_shutdown_count_, 1);
+	EXPECT_EQ(client_data_->call_close_count_, 1);
+}
+
+TEST_F(SocketImplCbNullTestSuite, cb3) {
+	SetUvData();
+	Loop();
+	EXPECT_EQ(server_data_->call_accpet_count_, 1);
+	EXPECT_EQ(client_data_->call_connect_count_, 1);
+	EXPECT_EQ(server_data_->client_impl_->Established(), 0);
+	client_socket_impl_->Write("123", 3);
+	Loop();
+	EXPECT_EQ(client_data_->call_written_count_, 1);
+	EXPECT_GE(server_data_->call_alloc_count_, 1);
+	EXPECT_GE(server_data_->call_read_count_, 1);
+}
+
+TEST_F(SocketImplCbNullTestSuite, cb4) {
+	MockUvData * data = new MockUvData();
+	socket_impl_->SetUvData(data);
+	client_socket_impl_->SetUvData(data);
+	delete data;
+	Loop();
 }
 
 class SocketImplCbTestSuite : public SocketImplCbNullTestSuite {
@@ -383,7 +417,6 @@ public:
 
 	// Tears down the test fixture.
 	virtual void TearDown() {
-		server_data_->ReleaseClient();
 		SocketImplCbNullTestSuite::TearDown();
 	}
 };
@@ -447,15 +480,15 @@ public:
 
 TEST_F(SocketImplEstablishedTestSuite, read) {
 	Loop();
-	EXPECT_EQ(server_data_->call_accpet_count_, 1);
 	EXPECT_GE(client_data_->call_alloc_count_, 1);
 	EXPECT_GE(client_data_->call_read_count_, 1);
 }
 
 TEST_F(SocketImplEstablishedTestSuite, read2) {
-	client_socket_impl_->SetUvData(nullptr);
+	MockUvData * data = new MockUvData();
+	client_socket_impl_->SetUvData(data);
+	delete data;
 	Loop();
-	EXPECT_EQ(server_data_->call_accpet_count_, 1);
 	EXPECT_EQ(client_data_->call_alloc_count_, 0);
 	EXPECT_EQ(client_data_->call_read_count_, 0);
 }

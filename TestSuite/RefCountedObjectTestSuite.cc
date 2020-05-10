@@ -68,7 +68,7 @@ TEST(RefCountedObjectTestSuite, weak) {
 TEST(RefCountedObjectTestSuite, weak2) {
 	MockStrongObject object(2);
 	EXPECT_EQ(object.value_, 2);
-	Net::WeakReference * ref = object.Duplicate();
+	Net::WeakReference * ref = object.WeakRef();
 	EXPECT_EQ(ref->ReferenceCount(), 2);
 	EXPECT_TRUE(ref->Get() == &object);
 	ref->Release();
@@ -84,10 +84,10 @@ TEST(RefCountedObjectTestSuite, weak3) {
 TEST(RefCountedObjectTestSuite, weak4) {
 	MockStrongObject * object = new MockStrongObject(4);
 	EXPECT_EQ(object->value_, 4);
-	Net::WeakReference * ref = object->Duplicate();
+	Net::WeakReference * ref = object->WeakRef();
 	EXPECT_EQ(ref->ReferenceCount(), 2);
 	EXPECT_TRUE(ref->Get() == object);
-	Net::WeakReference * ref2 = object->Duplicate();
+	Net::WeakReference * ref2 = object->WeakRef();
 	EXPECT_EQ(ref->ReferenceCount(), 3);
 	EXPECT_EQ(ref2->ReferenceCount(), ref->ReferenceCount());
 	EXPECT_TRUE(ref->Get() == ref2->Get());
@@ -100,10 +100,10 @@ TEST(RefCountedObjectTestSuite, weak4) {
 TEST(RefCountedObjectTestSuite, weak5) {
 	MockStrongObject * object = new MockStrongObject(5);
 	EXPECT_EQ(object->value_, 5);
-	Net::WeakReference * ref = object->Duplicate();
+	Net::WeakReference * ref = object->WeakRef();
 	EXPECT_EQ(ref->ReferenceCount(), 2);
 	EXPECT_TRUE(ref->Get() == object);
-	Net::WeakReference * ref2 = object->Duplicate();
+	Net::WeakReference * ref2 = object->WeakRef();
 	EXPECT_EQ(ref->ReferenceCount(), 3);
 	EXPECT_EQ(ref2->ReferenceCount(), ref->ReferenceCount());
 	EXPECT_TRUE(ref->Get() == ref2->Get());
@@ -116,10 +116,10 @@ TEST(RefCountedObjectTestSuite, weak5) {
 TEST(RefCountedObjectTestSuite, weak6) {
 	MockStrongObject * object = new MockStrongObject(6);
 	EXPECT_EQ(object->value_, 6);
-	Net::WeakReference * ref = object->Duplicate();
+	Net::WeakReference * ref = object->WeakRef();
 	EXPECT_EQ(ref->ReferenceCount(), 2);
 	EXPECT_TRUE(ref->Get() == object);
-	Net::WeakReference * ref2 = object->Duplicate();
+	Net::WeakReference * ref2 = object->WeakRef();
 	EXPECT_EQ(ref->ReferenceCount(), 3);
 	EXPECT_EQ(ref2->ReferenceCount(), ref->ReferenceCount());
 	EXPECT_TRUE(ref->Get() == ref2->Get());
@@ -132,10 +132,10 @@ TEST(RefCountedObjectTestSuite, weak6) {
 TEST(RefCountedObjectTestSuite, weak7) {
 	MockStrongObject * object = new MockStrongObject(7);
 	EXPECT_EQ(object->value_, 7);
-	Net::WeakReference * ref = object->Duplicate();
+	Net::WeakReference * ref = object->WeakRef();
 	EXPECT_EQ(ref->ReferenceCount(), 2);
 	EXPECT_TRUE(ref->Get() == object);
-	Net::WeakReference * ref2 = object->Duplicate();
+	Net::WeakReference * ref2 = object->WeakRef();
 	EXPECT_EQ(ref->ReferenceCount(), 3);
 	EXPECT_EQ(ref2->ReferenceCount(), ref->ReferenceCount());
 	EXPECT_TRUE(ref->Get() == ref2->Get());

@@ -33,6 +33,7 @@ class SocketAddress : public NetObject {
 public:
 	SocketAddress();
 	explicit SocketAddress(u16 port);
+	SocketAddress(const std::string & ip, u16 port);
 	SocketAddress(const IPAddress & host, u16 port);
 	SocketAddress(const struct sockaddr * addr, socklen_t length);
 	SocketAddress(const SocketAddress & rhs);
