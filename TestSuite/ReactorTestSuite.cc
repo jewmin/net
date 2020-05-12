@@ -90,7 +90,7 @@ TEST_F(ReactorTestSuite, reactor2) {
 
 class MockConnection : public Net::SocketConnection {
 public:
-	MockConnection() : Net::SocketConnection(1024, 1024), call_connected_(0), call_connect_failed_(0)
+	MockConnection() : Net::SocketConnection(50, 50), call_connected_(0), call_connect_failed_(0)
 		, call_disconnected_(0), call_recv_(0), call_sent_(0), call_error_(0) {}
 	virtual void OnConnected() {
 		Net::SocketConnection::OnConnected();
@@ -173,11 +173,26 @@ public:
 	MockStreamSocket() : Net::StreamSocket(new MockStreamSocketImpl()) {}
 };
 
+TEST_F(ReactorTestSuite, address) {
+	MockAcceptor acceptor(reactor_);
+	Net::SocketAddress address("::", 10000);
+	EXPECT_EQ(acceptor.Open(address), true);
+	EXPECT_EQ(acceptor.GetListenAddress(), address);
+}
+
+TEST_F(ReactorTestSuite, address2) {
+	MockAcceptor acceptor(reactor_);
+	Net::SocketAddress address("::", 0);
+	EXPECT_EQ(acceptor.Open(address), true);
+	EXPECT_NE(acceptor.GetListenAddress(), address);
+}
+
 class ReactorPollTestSuite : public ReactorTestSuite {
 public:
 	ReactorPollTestSuite() {
 		std::strncpy(w_content_, "hello world", std::strlen("hello world"));
 		w_content_len_ = static_cast<i32>(std::strlen("hello world"));
+		w_content_[w_content_len_] = 0;
 	}
 	// Sets up the test fixture.
 	virtual void SetUp() {
@@ -187,8 +202,9 @@ public:
 		connection_->SetReactor(reactor_);
 		connector_ = new Net::SocketConnector(reactor_);
 		client_ = new MockConnection();
-		acceptor_address_ = Net::SocketAddress(Net::IPAddress("127.0.0.1"), 6789);
+		acceptor_address_ = Net::SocketAddress("::", 0);
 		EXPECT_EQ(acceptor_->Open(acceptor_address_), true);
+		acceptor_address_ = Net::SocketAddress("127.0.0.1", acceptor_->GetListenAddress().Port());
 		EXPECT_EQ(connector_->Connect(connection_, acceptor_address_), true);
 		Poll();
 		EXPECT_EQ(connection_->GetConnectState(), Net::ConnectState::kConnected);
@@ -243,9 +259,19 @@ TEST_F(ReactorPollTestSuite, handler) {
 	EXPECT_EQ(reactor_->RemoveEventHandler(&connection), false);
 }
 
+TEST_F(ReactorPollTestSuite, handler2) {
+	Net::StreamSocket * socket = connection_->GetSocket();
+	socket->ShutdownRead();
+	Net::StreamSocket tmp_socket = *socket;
+	connection_->SetSocket(Net::StreamSocket());
+	EXPECT_EQ(connector_->Connect(connection_, acceptor_address_), true);
+	connection_->SetSocket(tmp_socket);
+	EXPECT_ANY_THROW(reactor_->AddEventHandler(connection_));
+}
+
 TEST_F(ReactorPollTestSuite, open) {
 	MockAcceptor acceptor(reactor_);
-	EXPECT_EQ(acceptor.Open(Net::SocketAddress(8888)), true);
+	EXPECT_EQ(acceptor.Open(Net::SocketAddress()), true);
 }
 
 TEST_F(ReactorPollTestSuite, open2) {
@@ -254,7 +280,7 @@ TEST_F(ReactorPollTestSuite, open2) {
 
 TEST_F(ReactorPollTestSuite, open3) {
 	MockAcceptor acceptor(reactor_);
-	EXPECT_EQ(acceptor.Open(Net::SocketAddress(8888), 128, true), false);
+	EXPECT_EQ(acceptor.Open(Net::SocketAddress(), 128, true), false);
 }
 
 TEST_F(ReactorPollTestSuite, close) {
@@ -320,6 +346,15 @@ TEST_F(ReactorPollTestSuite, connect_cb4) {
 	Poll();
 }
 
+TEST_F(ReactorPollTestSuite, connect_cb5) {
+	MockConnection connection;
+	EXPECT_EQ(connector_->Connect(&connection, acceptor_address_), true);
+	Net::StreamSocket * socket = connection.GetSocket();
+	Net::StreamSocket tmp_socket = *socket;
+	connection.SetSocket(Net::StreamSocket());
+	Poll();
+}
+
 TEST_F(ReactorPollTestSuite, state) {
 	MockConnection connection;
 	EXPECT_EQ(connection_->GetConnectState(), Net::ConnectState::kConnected);
@@ -350,8 +385,8 @@ TEST_F(ReactorPollTestSuite, recv) {
 
 TEST_F(ReactorPollTestSuite, recv2) {
 	MockConnection connection;
-	EXPECT_ANY_THROW(client_->PopRecvData(w_content_len_));
-	connection.PopRecvData(w_content_len_);
+	client_->PopRecvData(w_content_len_);
+	EXPECT_ANY_THROW(connection.PopRecvData(w_content_len_));
 	connection_->PopRecvData(w_content_len_);
 }
 
@@ -366,4 +401,99 @@ TEST_F(ReactorPollTestSuite, call) {
 	EXPECT_EQ(connection.call_connected_, 1);
 	EXPECT_EQ(connection.call_connect_failed_, 1);
 	EXPECT_EQ(connection.call_disconnected_, 0);
+}
+
+TEST_F(ReactorPollTestSuite, write) {
+	MockConnection connection;
+	EXPECT_EQ(connection.Write(w_content_, w_content_len_), UV_ENOTCONN);
+	EXPECT_EQ(connection_->Write(w_content_, w_content_len_), w_content_len_);
+	EXPECT_EQ(connection_->Write(w_content_, w_content_len_), w_content_len_);
+	EXPECT_EQ(connection_->Write(w_content_, w_content_len_), w_content_len_);
+	EXPECT_EQ(connection_->Write(w_content_, w_content_len_), w_content_len_);
+	EXPECT_EQ(connection_->Write(w_content_, w_content_len_), UV_ENOBUFS);
+}
+
+TEST_F(ReactorPollTestSuite, write2) {
+	for (auto & it : acceptor_->connection_list_) {
+		it->GetSocket()->Close();
+	}
+	Poll(1);
+	EXPECT_EQ(connection_->Write(w_content_, w_content_len_), w_content_len_);
+	Poll();
+}
+
+TEST_F(ReactorPollTestSuite, read) {
+	i8 buff[50];
+	MockConnection connection;
+	EXPECT_EQ(connection.Read(w_content_, w_content_len_), UV_ENOTCONN);
+	EXPECT_EQ(connection_->Read(buff, sizeof(buff)), w_content_len_);
+	buff[w_content_len_] = 0;
+	EXPECT_STREQ(buff, w_content_);
+	EXPECT_EQ(client_->Read(buff, sizeof(buff)), 0);
+}
+
+TEST_F(ReactorPollTestSuite, shutdown) {
+	MockConnection connection;
+	connection.Shutdown(false);
+	connection_->Shutdown(false);
+	client_->Shutdown(false);
+}
+
+TEST_F(ReactorPollTestSuite, shutdown2) {
+	MockConnection connection;
+	connection.Shutdown(true);
+	connection_->Shutdown(true);
+	client_->Shutdown(true);
+}
+
+TEST_F(ReactorPollTestSuite, shutdown3) {
+	MockConnection connection;
+	EXPECT_EQ(connection.Write(w_content_, w_content_len_), UV_ENOTCONN);
+	EXPECT_EQ(connection_->Write(w_content_, w_content_len_), w_content_len_);
+	EXPECT_EQ(client_->Write(w_content_, w_content_len_), w_content_len_);
+	connection.Shutdown(false);
+	connection_->Shutdown(false);
+	client_->Shutdown(false);
+	Poll();
+}
+
+TEST_F(ReactorPollTestSuite, shutdown4) {
+	MockConnection connection;
+	EXPECT_EQ(connection.Write(w_content_, w_content_len_), UV_ENOTCONN);
+	EXPECT_EQ(connection_->Write(w_content_, w_content_len_), w_content_len_);
+	EXPECT_EQ(client_->Write(w_content_, w_content_len_), w_content_len_);
+	connection.Shutdown(true);
+	connection_->Shutdown(true);
+	client_->Shutdown(true);
+	Poll();
+}
+
+class MockConnection2 : public MockConnection {
+public:
+	virtual void OnError(i32 reason) {
+		MockConnection::OnError(reason);
+		Write("123", 3);
+	}
+};
+
+class MockConnection3 : public MockConnection {
+public:
+	virtual void OnError(i32 reason) {
+		MockConnection::OnError(reason);
+		Write("123", 3);
+		Shutdown(false);
+	}
+};
+
+TEST_F(ReactorPollTestSuite, shutdown5) {
+	MockConnection2 connection;
+	MockConnection3 connection2;
+	EXPECT_EQ(connector_->Connect(&connection, acceptor_address_), true);
+	EXPECT_EQ(connector_->Connect(&connection2, acceptor_address_), true);
+	Poll();
+	for (auto & it : acceptor_->connection_list_) {
+		it->GetSocket()->ShutdownRead();
+		it->GetSocket()->Close();
+	}
+	Poll();
 }

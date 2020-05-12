@@ -49,6 +49,11 @@ SocketConnection::SocketConnection(i32 max_out_buffer_size, i32 max_in_buffer_si
 
 SocketConnection::~SocketConnection() {
 	ShutdownImmediately();
+	// 保证异常时不出现内存泄漏
+	if (io_) {
+		delete io_;
+		io_ = nullptr;
+	}
 }
 
 bool SocketConnection::RegisterToReactor() {

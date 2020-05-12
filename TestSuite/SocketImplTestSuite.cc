@@ -63,7 +63,7 @@ public:
 		loop_ = static_cast<uv_loop_t *>(jc_malloc(sizeof(*loop_)));
 		uv_loop_init(loop_);
 		socket_impl_ = new MockSocketImpl();
-		address_ = Net::SocketAddress(Net::IPAddress("::1"), 6789);
+		address_ipv6_any_ = Net::SocketAddress("::", 0);
 	}
 
 	// Tears down the test fixture.
@@ -78,7 +78,8 @@ public:
 	i8 w_content_[12];
 	uv_loop_t * loop_;
 	MockSocketImpl * socket_impl_;
-	Net::SocketAddress address_;
+	Net::SocketAddress address_ipv6_any_;
+	Net::SocketAddress address_ipv4_any_;
 };
 
 TEST_F(SocketImplTestSuite, open) {
@@ -97,7 +98,7 @@ TEST_F(SocketImplTestSuite, close) {
 }
 
 TEST_F(SocketImplTestSuite, bind) {
-	EXPECT_EQ(socket_impl_->Bind(address_), UV_UNKNOWN);
+	EXPECT_EQ(socket_impl_->Bind(address_ipv6_any_), UV_UNKNOWN);
 }
 
 TEST_F(SocketImplTestSuite, listen) {
@@ -105,11 +106,12 @@ TEST_F(SocketImplTestSuite, listen) {
 }
 
 TEST_F(SocketImplTestSuite, connect) {
-	EXPECT_EQ(socket_impl_->Connect(address_), UV_UNKNOWN);
+	EXPECT_EQ(socket_impl_->Connect(address_ipv6_any_), UV_UNKNOWN);
 }
 
 TEST_F(SocketImplTestSuite, accept) {
-	EXPECT_TRUE(socket_impl_->AcceptSocket(address_) == nullptr);
+	Net::SocketAddress so;
+	EXPECT_TRUE(socket_impl_->AcceptSocket(so) == nullptr);
 }
 
 TEST_F(SocketImplTestSuite, shutdown) {
@@ -162,11 +164,11 @@ public:
 };
 
 TEST_F(SocketImplOpenTestSuite, bind) {
-	EXPECT_EQ(socket_impl_->Bind(address_), 0);
+	EXPECT_EQ(socket_impl_->Bind(address_ipv4_any_), 0);
 }
 
 TEST_F(SocketImplOpenTestSuite, bind2) {
-	EXPECT_LT(socket_impl_->Bind(Net::SocketAddress(Net::IPAddress("127.0.0.1"), 6789), true), 0);
+	EXPECT_LT(socket_impl_->Bind(address_ipv4_any_, true), 0);
 }
 
 TEST_F(SocketImplOpenTestSuite, listen) {
@@ -174,7 +176,7 @@ TEST_F(SocketImplOpenTestSuite, listen) {
 }
 
 TEST_F(SocketImplOpenTestSuite, listen2) {
-	EXPECT_EQ(socket_impl_->Bind(address_), 0);
+	EXPECT_EQ(socket_impl_->Bind(address_ipv6_any_), 0);
 	EXPECT_EQ(socket_impl_->Listen(5), 0);
 }
 
@@ -184,20 +186,21 @@ TEST_F(SocketImplOpenTestSuite, listen3) {
 }
 
 TEST_F(SocketImplOpenTestSuite, connect) {
-	EXPECT_EQ(socket_impl_->Connect(address_), 0);
+	EXPECT_EQ(socket_impl_->Connect(Net::SocketAddress("127.0.0.1", 6789)), 0);
 }
 
 TEST_F(SocketImplOpenTestSuite, connect2) {
 #ifdef _WIN32
 	socket_impl_->delayed_error(UV_EALREADY);
 #else
-	EXPECT_EQ(socket_impl_->Connect(address_), 0);
+	EXPECT_EQ(socket_impl_->Connect(Net::SocketAddress("127.0.0.1", 6789)), 0);
 #endif
-	EXPECT_EQ(socket_impl_->Connect(address_), UV_EALREADY);
+	EXPECT_EQ(socket_impl_->Connect(Net::SocketAddress("127.0.0.1", 6789)), UV_EALREADY);
 }
 
 TEST_F(SocketImplOpenTestSuite, accept) {
-	EXPECT_TRUE(socket_impl_->AcceptSocket(address_) == nullptr);
+	Net::SocketAddress so;
+	EXPECT_TRUE(socket_impl_->AcceptSocket(so) == nullptr);
 }
 
 TEST_F(SocketImplOpenTestSuite, shutdown) {
@@ -211,7 +214,7 @@ TEST_F(SocketImplOpenTestSuite, established) {
 }
 
 TEST_F(SocketImplOpenTestSuite, write) {
-	EXPECT_EQ(socket_impl_->Bind(address_), 0);
+	EXPECT_EQ(socket_impl_->Bind(address_ipv6_any_), 0);
 	EXPECT_EQ(socket_impl_->Write(nullptr, 1), UV_ENOBUFS);
 	EXPECT_EQ(socket_impl_->Write(w_content_, 0), UV_ENOBUFS);
 	EXPECT_EQ(socket_impl_->Write(w_content_, (i32)std::strlen(w_content_)), UV_EPIPE);
@@ -345,8 +348,9 @@ public:
 	}
 
 	void Listen() {
-		socket_impl_->Bind(address_, true);
+		socket_impl_->Bind(address_ipv6_any_);
 		socket_impl_->Listen();
+		address_ = Net::SocketAddress("127.0.0.1", socket_impl_->LocalAddress().Port());
 	}
 
 	void Loop(i32 count = 30) {
@@ -365,6 +369,7 @@ public:
 	MockSocketImpl * client_socket_impl_;
 	MockUvData2 * server_data_;
 	MockUvData2 * client_data_;
+	Net::SocketAddress address_;
 };
 
 TEST_F(SocketImplCbNullTestSuite, cb) {
@@ -410,9 +415,7 @@ public:
 	virtual void SetUp() {
 		SocketImplCbNullTestSuite::SetUp();
 		SetUvData();
-		while (client_data_->call_connect_count_ <= 0 || server_data_->call_accpet_count_ <= 0) {
-			Loop(1);
-		}
+		Loop();
 	}
 
 	// Tears down the test fixture.

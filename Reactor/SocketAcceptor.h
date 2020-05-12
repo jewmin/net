@@ -38,6 +38,7 @@ public:
 
 	bool Open(const SocketAddress & address, i32 backlog = 128, bool ipv6_only = false);
 	void Close();
+	SocketAddress GetListenAddress() const;
 
 protected:
 	explicit SocketAcceptor(EventReactor * reactor);
@@ -54,6 +55,10 @@ private:
 	bool opened_;
 	ServerSocket socket_;
 };
+
+inline SocketAddress SocketAcceptor::GetListenAddress() const {
+	return socket_.Impl()->LocalAddress();
+}
 
 }
 

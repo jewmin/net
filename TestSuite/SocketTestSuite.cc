@@ -284,8 +284,8 @@ public:
 	// Sets up the test fixture.
 	virtual void SetUp() {
 		SocketServerTestSuite::SetUp();
-		server_address_ = Net::SocketAddress(Net::IPAddress("::"), 6789);
 		server_socket_->Open(loop_);
+		address_ipv6_any_ = Net::SocketAddress("::", 0);
 	}
 
 	// Tears down the test fixture.
@@ -294,11 +294,12 @@ public:
 		SocketServerTestSuite::TearDown();
 	}
 
-	Net::SocketAddress server_address_;
+	Net::SocketAddress address_ipv6_any_;
+	Net::SocketAddress address_ipv4_any_;
 };
 
 TEST_F(SocketServerOpenTestSuite, bind) {
-	EXPECT_EQ(server_socket_->Bind(server_address_, true, true), 0);
+	EXPECT_EQ(server_socket_->Bind(address_ipv6_any_, true, true), 0);
 }
 
 TEST_F(SocketServerOpenTestSuite, listen) {
@@ -397,7 +398,6 @@ public:
 	virtual void SetUp() {
 		SocketStreamTestSuite::SetUp();
 		std::strncpy(w_content_, "hello world", std::strlen("hello world"));
-		stream_address_ = Net::SocketAddress(Net::IPAddress("::1"), 6789);
 		stream_socket_->Open(loop_);
 	}
 
@@ -408,15 +408,14 @@ public:
 	}
 
 	i8 w_content_[12];
-	Net::SocketAddress stream_address_;
 };
 
 TEST_F(SocketStreamOpenTestSuite, bind) {
-	EXPECT_EQ(stream_socket_->Bind(stream_address_, true, true), 0);
+	EXPECT_EQ(stream_socket_->Bind(address_ipv6_any_, true, true), 0);
 }
 
 TEST_F(SocketStreamOpenTestSuite, connect) {
-	EXPECT_EQ(stream_socket_->Connect(stream_address_), 0);
+	EXPECT_EQ(stream_socket_->Connect(Net::SocketAddress("127.0.0.1", 6789)), 0);
 }
 
 TEST_F(SocketStreamOpenTestSuite, shutdown) {
@@ -430,7 +429,7 @@ TEST_F(SocketStreamOpenTestSuite, established) {
 }
 
 TEST_F(SocketStreamOpenTestSuite, write) {
-	EXPECT_EQ(stream_socket_->Bind(stream_address_, true, true), 0);
+	EXPECT_EQ(stream_socket_->Bind(address_ipv6_any_, true, true), 0);
 	EXPECT_EQ(stream_socket_->Write(w_content_, (i32)std::strlen(w_content_)), UV_EPIPE);
 }
 
@@ -439,11 +438,9 @@ public:
 	// Sets up the test fixture.
 	virtual void SetUp() {
 		SocketStreamOpenTestSuite::SetUp();
-		// EXPECT_EQ(server_socket_->Bind(server_address_, true, true), 0);
-		// EXPECT_EQ(server_socket_->Listen(), 0);
-		// EXPECT_EQ(stream_socket_->Connect(stream_address_), 0);
+		EXPECT_EQ(server_socket_->Bind(address_ipv6_any_), 0);
 		EXPECT_EQ(server_socket_->Listen(), 0);
-		EXPECT_EQ(stream_socket_->Connect(server_socket_->LocalAddress()), 0);
+		EXPECT_EQ(stream_socket_->Connect(Net::SocketAddress("127.0.0.1", server_socket_->LocalAddress().Port())), 0);
 	}
 
 	// Tears down the test fixture.
