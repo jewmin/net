@@ -376,11 +376,12 @@ TEST_F(ReactorPollTestSuite, socket) {
 TEST_F(ReactorPollTestSuite, recv) {
 	i32 size;
 	MockConnection connection;
-	EXPECT_ANY_THROW(connection.GetRecvData(size));
-	EXPECT_TRUE(client_->GetRecvData(size) == nullptr);
-	EXPECT_EQ(size, 0);
-	EXPECT_TRUE(connection_->GetRecvData(size) != nullptr);
-	EXPECT_EQ(size, w_content_len_);
+	EXPECT_ANY_THROW(connection.GetRecvData());
+	EXPECT_ANY_THROW(connection.GetRecvDataSize());
+	EXPECT_TRUE(client_->GetRecvData() == nullptr);
+	EXPECT_EQ(client_->GetRecvDataSize(), 0);
+	EXPECT_TRUE(connection_->GetRecvData() != nullptr);
+	EXPECT_EQ(connection_->GetRecvDataSize(), w_content_len_);
 }
 
 TEST_F(ReactorPollTestSuite, recv2) {

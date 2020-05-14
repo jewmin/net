@@ -54,7 +54,8 @@ public:
 
 	i32 Write(const i8 * data, i32 len);
 	i32 Read(i8 * data, i32 len);
-	i8 * GetRecvData(i32 & size) const;
+	i8 * GetRecvData() const;
+	i32 GetRecvDataSize() const;
 	void PopRecvData(i32 size);
 
 	ConnectState::eState GetConnectState() const;
@@ -113,11 +114,21 @@ inline void SocketConnection::SetSocket(const StreamSocket & socket) {
 	socket_ = socket;
 }
 
-inline i8 * SocketConnection::GetRecvData(i32 & size) const {
+inline i8 * SocketConnection::GetRecvData() const {
 	if (!io_) {
 		Log(kCrash, __FILE__, __LINE__, "GetRecvData() io_ == nullptr");
 	}
+	i32 size = 0;
 	return io_->in_buffer_->GetContiguousBlock(size);
+}
+
+inline i32 SocketConnection::GetRecvDataSize() const {
+	if (!io_) {
+		Log(kCrash, __FILE__, __LINE__, "GetRecvDataSize() io_ == nullptr");
+	}
+	i32 size = 0;
+	io_->in_buffer_->GetContiguousBlock(size);
+	return size;
 }
 
 inline void SocketConnection::PopRecvData(i32 size) {

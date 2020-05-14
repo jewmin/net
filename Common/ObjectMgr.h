@@ -34,86 +34,46 @@ namespace Net {
 template<class OBJECT>
 class ObjectMgr : public NetObject {
 public:
-	ObjectMgr(u32 object_max_count);
+	ObjectMgr();
 	virtual ~ObjectMgr();
 
 	u32 GetObjCount();
 	OBJECT * GetObj(i64 id);
 	i64 AddNewObj(OBJECT * object);
+	i64 AddNewObjById(i64 id, OBJECT * object);
 	OBJECT * RemoveObj(i64 id);
 	void VisitObj(void(*VisitFunc)(OBJECT * object, void * ud), void * ud);
 
-protected:
-	u8 FFS(u64 x);
-
 private:
-	u64 * object_bits_;
-	std::unordered_map<i64, OBJECT *> objects_;
-	const u32 kObjectBitsMaxSize;
-
-	static const u32 kBitShift = 6;
-	static const u32 kBitBytes = sizeof(u64);
-	static const u32 kBitCount = kBitBytes << 3;
-	static const u32 kBitMask = kBitCount - 1;
-	static const u64 kMaxValue = -1;
+	mutable std::atomic<i64> counter_;
+	std::unordered_map<i64, OBJECT *> * objects_;
 };
 
 template<class OBJECT>
-ObjectMgr<OBJECT>::ObjectMgr(u32 object_max_count) : object_bits_(nullptr), kObjectBitsMaxSize(object_max_count >> kBitShift) {
-	if (0 == kObjectBitsMaxSize) {
-		Log(kCrash, __FILE__, __LINE__, "ObjectMgr() kObjectBitsMaxSize == 0");
+ObjectMgr<OBJECT>::ObjectMgr() : counter_(0), objects_(new std::unordered_map<i64, OBJECT *>()) {
+	if (!objects_) {
+		Log(kCrash, __FILE__, __LINE__, "ObjectMgr() objects_ == nullptr");
 	}
 }
 
 template<class OBJECT>
 ObjectMgr<OBJECT>::~ObjectMgr() {
-	if (object_bits_) {
-		jc_free(object_bits_);
-	}
+	delete objects_;
 }
 
 template<class OBJECT>
 u32 ObjectMgr<OBJECT>::GetObjCount() {
-	return static_cast<u32>(objects_.size());
+	return static_cast<u32>(objects_->size());
 }
 
 template<class OBJECT>
 OBJECT * ObjectMgr<OBJECT>::GetObj(i64 id) {
-	auto got = objects_.find(id);
-	if (got == objects_.end()) {
+	auto got = objects_->find(id);
+	if (got == objects_->end()) {
 		return nullptr;
 	} else {
 		return got->second;
 	}
-}
-
-template<class OBJECT>
-inline u8 ObjectMgr<OBJECT>::FFS(u64 x) {
-	u8 num = 0;
-	if (0 == (x & 0xffffffff)) {
-		num += 32;
-		x >>= 32;
-	}
-	if (0 == (x & 0xffff)) {
-		num += 16;
-		x >>= 16;
-	}
-	if (0 == (x & 0xff)) {
-		num += 8;
-		x >>= 8;
-	}
-	if (0 == (x & 0xf)) {
-		num += 4;
-		x >>= 4;
-	}
-	if (0 == (x & 3)) {
-		num += 2;
-		x >>= 2;
-	}
-	if (0 == (x & 1)) {
-		num += 1;
-	}
-	return num;
 }
 
 template<class OBJECT>
@@ -122,30 +82,28 @@ i64 ObjectMgr<OBJECT>::AddNewObj(OBJECT * object) {
 		Log(kCrash, __FILE__, __LINE__, "AddNewObj() object == nullptr");
 	}
 
-	if (!object_bits_) {
-		object_bits_ = static_cast<u64 *>(jc_calloc(kObjectBitsMaxSize, kBitBytes));
-	}
-
-	i64 id = -1;
-	for (u32 i = 0; i < kObjectBitsMaxSize; ++i) {
-		if (kMaxValue == object_bits_[i]) {
-			continue;
-		}
-		u8 bit = 0;
-		if (0 != object_bits_[i]) {
-			bit = FFS(object_bits_[i] ^ kMaxValue);
-		}
-		object_bits_[i] |= static_cast<u64>(1) << bit;
-		id = (i << kBitShift) + bit;
-		break;
-	}
-
+	i64 id = counter_++;
 	if (id >= 0) {
 		if (GetObj(id)) {
 			Log(kCrash, __FILE__, __LINE__, "AddNewObj() id [", id, "] already exists");
 		}
-		objects_.insert({id, object});
+		objects_->insert({id, object});
 	}
+	return id;
+}
+
+template<class OBJECT>
+i64 ObjectMgr<OBJECT>::AddNewObjById(i64 id, OBJECT * object) {
+	if (id < 0) {
+		Log(kCrash, __FILE__, __LINE__, "AddNewObjById() id [", id, "] < 0");
+	}
+	if (!object) {
+		Log(kCrash, __FILE__, __LINE__, "AddNewObjById() object == nullptr");
+	}
+	if (GetObj(id)) {
+		Log(kCrash, __FILE__, __LINE__, "AddNewObjById() id [", id, "] already exists");
+	}
+	objects_->insert({id, object});
 	return id;
 }
 
@@ -157,17 +115,14 @@ OBJECT * ObjectMgr<OBJECT>::RemoveObj(i64 id) {
 
 	OBJECT * object = GetObj(id);
 	if (object) {
-		objects_.erase(id);
-		u32 idx = static_cast<u32>(id >> kBitShift);
-		u64 mask = static_cast<u64>(1) << (id & kBitMask);
-		object_bits_[idx] &= ~mask;
+		objects_->erase(id);
 	}
 	return object;
 }
 
 template<class OBJECT>
 void ObjectMgr<OBJECT>::VisitObj(void(*VisitFunc)(OBJECT * object, void * ud), void * ud) {
-	for (auto & it : objects_) {
+	for (auto & it : *objects_) {
 		VisitFunc(it.second, ud);
 	}
 }
