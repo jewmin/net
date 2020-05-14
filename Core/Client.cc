@@ -26,26 +26,24 @@
 
 namespace Net {
 
-Client::Client(const std::string & name, EventReactor * reactor, SocketConnector * connector, i32 max_out_buffer_size, i32 max_in_buffer_size, u32 object_max_count)
-	: ConnectionMgr(name, object_max_count), reactor_(reactor), connector_(connector)
+Client::Client(const std::string & name, EventReactor * reactor, SocketConnector * connector, i32 max_out_buffer_size, i32 max_in_buffer_size)
+	: ConnectionMgr(name), reactor_(reactor), connector_ref_(connector->WeakRef())
 	, max_out_buffer_size_(max_out_buffer_size), max_in_buffer_size_(max_in_buffer_size) {
-	if (connector_) {
-		connector_->Duplicate();
-	}
 }
 
 Client::~Client() {
-	if (connector_) {
-		connector_->Release();
-	}
+	connector_ref_->Release();
 }
 
 bool Client::Connect(const std::string & address, i32 port) {
-	if (!connector_) {
-		connector_ = new SocketConnector(reactor_);
-	}
 	Connection * connection = new Connection(this, max_out_buffer_size_, max_in_buffer_size_);
-	return connector_->Connect(connection, SocketAddress(IPAddress(address), static_cast<u16>(port)));
+	Register(connection);
+	SocketConnector * connector = dynamic_cast<SocketConnector *>(connector_ref_->Get());
+	if (connector) {
+		return connector->Connect(connection, SocketAddress(address, static_cast<u16>(port)));
+	} else {
+		return false;
+	}
 }
 
 }

@@ -33,14 +33,14 @@ namespace Net {
 
 class Client : public ConnectionMgr {
 public:
-	Client(const std::string & name, EventReactor * reactor, SocketConnector * connector, i32 max_out_buffer_size, i32 max_in_buffer_size, u32 object_max_count);
+	Client(const std::string & name, EventReactor * reactor, SocketConnector * connector, i32 max_out_buffer_size, i32 max_in_buffer_size);
 	virtual ~Client();
 
 	virtual bool Connect(const std::string & address, i32 port);
 
 private:
 	EventReactor * reactor_;
-	SocketConnector * connector_;
+	WeakReference * connector_ref_;
 	i32 max_out_buffer_size_;
 	i32 max_in_buffer_size_;
 };

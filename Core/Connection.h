@@ -34,19 +34,20 @@ class Connection : public SocketConnection {
 public:
 	Connection(ConnectionMgr * mgr, i32 max_out_buffer_size, i32 max_in_buffer_size);
 	virtual ~Connection();
-	virtual void Destroy() override;
-	virtual void OnConnected() override;
-	virtual void OnConnectFailed(i32 reason) override;
-	virtual void OnDisconnected(bool is_remote) override;
-	virtual void OnNewDataReceived() override;
-	virtual void OnSomeDataSent() override;
-	virtual void OnError(i32 reason) override;
 
 	ConnectionMgr * GetMgr() const;
 	i64 GetConnectionId() const;
 	void SetConnectionId(i64 id);
 	bool IsRegister2Mgr() const;
 	void SetRegister2Mgr(bool is_register2mgr);
+
+protected:
+	virtual void OnConnected() override;
+	virtual void OnConnectFailed(i32 reason) override;
+	virtual void OnDisconnected(bool is_remote) override;
+	virtual void OnNewDataReceived() override;
+	virtual void OnSomeDataSent() override;
+	virtual void OnError(i32 reason) override;
 
 private:
 	ConnectionMgr * mgr_;

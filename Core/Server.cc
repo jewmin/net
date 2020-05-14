@@ -38,19 +38,21 @@ SocketConnection * Server::Acceptor::CreateConnection() {
 	return new Connection(server_, server_->max_out_buffer_size_, server_->max_in_buffer_size_);
 }
 
-Server::Server(const std::string & name, EventReactor * reactor, i32 max_out_buffer_size, i32 max_in_buffer_size, u32 object_max_count)
-	: ConnectionMgr(name, object_max_count), acceptor_(new Acceptor(reactor, this))
+void Server::Acceptor::DestroyConnection(SocketConnection * connection) {
+	delete connection;
+}
+
+Server::Server(const std::string & name, EventReactor * reactor, i32 max_out_buffer_size, i32 max_in_buffer_size)
+	: ConnectionMgr(name), acceptor_(new Acceptor(reactor, this))
 	, max_out_buffer_size_(max_out_buffer_size), max_in_buffer_size_(max_in_buffer_size) {
 }
 
 Server::~Server() {
-	if (acceptor_) {
-		acceptor_->Destroy();
-	}
+	delete acceptor_;
 }
 
 bool Server::Listen(const std::string & address, i32 port, i32 backlog, bool ipv6_only) {
-	return acceptor_->Open(SocketAddress(IPAddress(address), static_cast<u16>(port)), backlog, ipv6_only);
+	return acceptor_->Open(SocketAddress(address, static_cast<u16>(port)), backlog, ipv6_only);
 }
 
 }

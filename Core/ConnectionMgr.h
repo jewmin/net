@@ -33,6 +33,7 @@
 namespace Net {
 
 class ConnectionMgr : public NetObject {
+	friend class Connection;
 public:
 	virtual ~ConnectionMgr();
 	void ShutDownAllConnections();
@@ -44,18 +45,11 @@ public:
 	Connection * GetConnection(i64 id);
 	void SetNotification(INotification * notification);
 
-	void OnConnected(Connection * connection);
-	void OnConnectFailed(Connection * connection, i32 reason);
-	void OnDisconnected(Connection * connection, bool is_remote);
-	void OnNewDataReceived(Connection * connection);
-	void OnSomeDataSent(Connection * connection);
-
 protected:
-	ConnectionMgr(const std::string & name, u32 object_max_count);
+	ConnectionMgr(const std::string & name);
 
-	virtual i64 Register(Connection * connection);
+	virtual void Register(Connection * connection);
 	virtual void UnRegister(Connection * connection);
-	void CleanDeathConnections();
 
 private:
 	static void DestroyConnection(Connection * connection, void * ud);
@@ -65,7 +59,6 @@ private:
 	std::string name_;
 	INotification * notification_;
 	ObjectMgr<Connection> * object_mgr_;
-	std::list<Connection *> * need_to_delete_list_;
 };
 
 inline std::string ConnectionMgr::GetName() const {

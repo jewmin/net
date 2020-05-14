@@ -27,49 +27,40 @@
 
 namespace Net {
 
-ConnectionMgr::ConnectionMgr(const std::string & name, u32 object_max_count)
-	: name_(name), notification_(nullptr), object_mgr_(new ObjectMgr<Connection>(object_max_count))
-	, need_to_delete_list_(new std::list<Connection *>()) {
+ConnectionMgr::ConnectionMgr(const std::string & name)
+	: name_(name), notification_(nullptr), object_mgr_(new ObjectMgr<Connection>()) {
+	if (!object_mgr_) {
+		Log(kCrash, __FILE__, __LINE__, "ConnectionMgr() object_mgr_ == nullptr");
+	}
 }
 
 ConnectionMgr::~ConnectionMgr() {
-	notification_ = nullptr;
-	CleanDeathConnections();
-	delete need_to_delete_list_;
 	object_mgr_->VisitObj(DestroyConnection, nullptr);
 	delete object_mgr_;
 }
 
-i64 ConnectionMgr::Register(Connection * connection) {
+void ConnectionMgr::Register(Connection * connection) {
 	if (!connection->IsRegister2Mgr()) {
-		i64 id = object_mgr_->AddNewObj(connection);
-		if (-1 == id) {
-			Log(kLog, __FILE__, __LINE__, "Register() error: id == -1");
-			connection->Shutdown(true);
-		} else {
+		i64 id = connection->GetConnectionId();
+		if (id < 0) {
+			id = object_mgr_->AddNewObj(connection);
 			connection->SetConnectionId(id);
-			connection->SetRegister2Mgr(true);
+		} else {
+			object_mgr_->AddNewObjById(id, connection);
 		}
+		connection->SetRegister2Mgr(true);
 	}
-	return connection->GetConnectionId();
 }
 
 void ConnectionMgr::UnRegister(Connection * connection) {
 	if (connection->IsRegister2Mgr()) {
 		connection->SetRegister2Mgr(false);
-		connection->Shutdown(false);
+		object_mgr_->RemoveObj(connection->GetConnectionId());
+		DestroyConnection(connection, nullptr);
 	}
 }
 
 void ConnectionMgr::Update() {
-	CleanDeathConnections();
-}
-
-void ConnectionMgr::CleanDeathConnections() {
-	for (auto & it : *need_to_delete_list_) {
-		it->Release();
-	}
-	need_to_delete_list_->clear();
 }
 
 void ConnectionMgr::ShutDownAllConnections() {
@@ -83,46 +74,8 @@ void ConnectionMgr::ShutDownOneConnection(i64 id) {
 	}
 }
 
-void ConnectionMgr::OnConnected(Connection * connection) {
-	if (Register(connection) >= 0 && notification_) {
-		if (notification_->OnConnected(connection) != 0) {
-			connection->Shutdown(true);
-		}
-	}
-}
-
-void ConnectionMgr::OnConnectFailed(Connection * connection, i32 reason) {
-	if (notification_) {
-		notification_->OnConnectFailed(connection, reason);
-	}
-	need_to_delete_list_->push_back(connection);
-}
-
-void ConnectionMgr::OnDisconnected(Connection * connection, bool is_remote) {
-	if (notification_) {
-		notification_->OnDisconnected(connection, is_remote);
-	}
-	UnRegister(connection);
-}
-
-void ConnectionMgr::OnNewDataReceived(Connection * connection) {
-	if (notification_) {
-		if (notification_->OnNewDataReceived(connection) != 0) {
-			connection->Shutdown(true);
-		}
-	}
-}
-
-void ConnectionMgr::OnSomeDataSent(Connection * connection) {
-	if (notification_) {
-		if (notification_->OnSomeDataSent(connection) != 0) {
-			connection->Shutdown(true);
-		}
-	}
-}
-
 void ConnectionMgr::DestroyConnection(Connection * connection, void * ud) {
-	connection->Destroy();
+	delete connection;
 }
 
 void ConnectionMgr::ShutdownConnection(Connection * connection, void * ud) {

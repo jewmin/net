@@ -39,13 +39,14 @@ class Server : public ConnectionMgr {
 
 	protected:
 		virtual SocketConnection * CreateConnection() override;
+		virtual void DestroyConnection(SocketConnection * connection) override;
 
 	private:
 		Server * server_;
 	};
 
 public:
-	Server(const std::string & name, EventReactor * reactor, i32 max_out_buffer_size, i32 max_in_buffer_size, u32 object_max_count);
+	Server(const std::string & name, EventReactor * reactor, i32 max_out_buffer_size, i32 max_in_buffer_size);
 	virtual ~Server();
 
 	virtual bool Listen(const std::string & address, i32 port, i32 backlog = 128, bool ipv6_only = false);
