@@ -45,6 +45,12 @@ public:
 	void VisitObj(void(*VisitFunc)(OBJECT * object, void * ud), void * ud);
 
 private:
+	ObjectMgr(ObjectMgr &&) = delete;
+	ObjectMgr(const ObjectMgr &) = delete;
+	ObjectMgr & operator=(ObjectMgr &&) = delete;
+	ObjectMgr & operator=(const ObjectMgr &) = delete;
+
+private:
 	mutable std::atomic<i64> counter_;
 	std::unordered_map<i64, OBJECT *> * objects_;
 };

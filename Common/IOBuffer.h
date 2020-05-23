@@ -83,6 +83,12 @@ protected:
 		}
 	}
 
+private:
+	IOBuffer(IOBuffer &&) = delete;
+	IOBuffer(const IOBuffer &) = delete;
+	IOBuffer & operator=(IOBuffer &&) = delete;
+	IOBuffer & operator=(const IOBuffer &) = delete;
+
 protected:
 	i8 * buffer_;
 	i32 buffer_length_;
