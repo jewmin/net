@@ -22,29 +22,41 @@
  * SOFTWARE.
  */
 
-#ifndef Net_Core_Client_INCLUDED
-#define Net_Core_Client_INCLUDED
-
-#include "Core/ConnectionMgr.h"
-#include "Reactor/EventReactor.h"
-#include "Reactor/SocketConnector.h"
+#include "Interface/Server.h"
+#include "Interface/Connection.h"
 
 namespace Net {
 
-class Client : public ConnectionMgr {
-public:
-	Client(const std::string & name, EventReactor * reactor, SocketConnector * connector, i32 max_out_buffer_size, i32 max_in_buffer_size);
-	virtual ~Client();
-
-	virtual bool Connect(const std::string & address, i32 port);
-
-private:
-	EventReactor * reactor_;
-	WeakReference * connector_ref_;
-	i32 max_out_buffer_size_;
-	i32 max_in_buffer_size_;
-};
-
+Server::Acceptor::Acceptor(EventReactor * reactor, Server * server)
+	: SocketAcceptor(reactor), server_(server) {
 }
 
-#endif
+Server::Acceptor::~Acceptor() {
+}
+
+SocketConnection * Server::Acceptor::CreateConnection() {
+	return new Connection(server_, server_->max_out_buffer_size_, server_->max_in_buffer_size_);
+}
+
+void Server::Acceptor::DestroyConnection(SocketConnection * connection) {
+	delete connection;
+}
+
+Server::Server(const std::string & name, EventReactor * reactor, i32 max_out_buffer_size, i32 max_in_buffer_size)
+	: ConnectionMgr(name), acceptor_(new Acceptor(reactor, this))
+	, max_out_buffer_size_(max_out_buffer_size), max_in_buffer_size_(max_in_buffer_size) {
+}
+
+Server::~Server() {
+	delete acceptor_;
+}
+
+bool Server::Listen(const std::string & address, i32 port, i32 backlog, bool ipv6_only) {
+	return acceptor_->Open(SocketAddress(address, static_cast<u16>(port)), backlog, ipv6_only);
+}
+
+void Server::Stop() {
+	acceptor_->Close();
+}
+
+}

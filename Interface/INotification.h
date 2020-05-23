@@ -22,28 +22,23 @@
  * SOFTWARE.
  */
 
-#include "Timer.h"
+#ifndef Net_Interface_INotification_INCLUDED
+#define Net_Interface_INotification_INCLUDED
 
-Foundation::Timer::Timer() : impl_(new TimerImpl()) {
+#include "Common/NetObject.h"
+#include "Interface/Connection.h"
+
+namespace Net {
+
+class INotification : public NetObject {
+public:
+	virtual void OnConnected(Connection * connection) = 0;
+	virtual void OnConnectFailed(Connection * connection, i32 reason) = 0;
+	virtual void OnDisconnected(Connection * connection, bool is_remote) = 0;
+	virtual void OnNewDataReceived(Connection * connection) = 0;
+	virtual void OnSomeDataSent(Connection * connection) = 0;
+};
+
 }
 
-Foundation::Timer::Timer(const Timer & rhs) : impl_(rhs.impl_) {
-	impl_->Duplicate();
-}
-
-Foundation::Timer & Foundation::Timer::operator=(const Timer & rhs) {
-	if (this != &rhs) {
-		if (impl_) {
-			impl_->Release();
-		}
-		impl_ = rhs.impl_;
-		if (impl_) {
-			impl_->Duplicate();
-		}
-	}
-	return *this;
-}
-
-Foundation::Timer::~Timer() {
-	impl_->Release();
-}
+#endif

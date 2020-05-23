@@ -22,13 +22,13 @@
  * SOFTWARE.
  */
 
-#ifndef Net_Core_ConnectionMgr_INCLUDED
-#define Net_Core_ConnectionMgr_INCLUDED
+#ifndef Net_Interface_ConnectionMgr_INCLUDED
+#define Net_Interface_ConnectionMgr_INCLUDED
 
 #include "Common/NetObject.h"
 #include "Common/ObjectMgr.h"
-#include "Core/INotification.h"
-#include "Core/Connection.h"
+#include "Interface/INotification.h"
+#include "Interface/Connection.h"
 
 namespace Net {
 
@@ -36,10 +36,12 @@ class ConnectionMgr : public NetObject {
 	friend class Connection;
 public:
 	virtual ~ConnectionMgr();
+	void Update();
 	void ShutDownAllConnections();
-	void ShutDownOneConnection(i64 id);
-	virtual void Update();
+	void ShutDownOneConnection(i64 id, bool now = false);
 
+	i64 GetMgrId() const;
+	void SetMgrId(i64 mgr_id);
 	std::string GetName() const;
 	u32 GetConnectionCount() const;
 	Connection * GetConnection(i64 id);
@@ -48,6 +50,7 @@ public:
 protected:
 	ConnectionMgr(const std::string & name);
 
+	void CleanDeathConnections();
 	virtual void Register(Connection * connection);
 	virtual void UnRegister(Connection * connection);
 
@@ -56,10 +59,26 @@ private:
 	static void ShutdownConnection(Connection * connection, void * ud);
 
 private:
+	ConnectionMgr(ConnectionMgr &&) = delete;
+	ConnectionMgr(const ConnectionMgr &) = delete;
+	ConnectionMgr & operator=(ConnectionMgr &&) = delete;
+	ConnectionMgr & operator=(const ConnectionMgr &) = delete;
+
+private:
+	i64 mgr_id_;
 	std::string name_;
 	INotification * notification_;
 	ObjectMgr<Connection> * object_mgr_;
+	std::list<Connection *> * need_delete_list_;
 };
+
+inline i64 ConnectionMgr::GetMgrId() const {
+	return mgr_id_;
+}
+
+inline void ConnectionMgr::SetMgrId(i64 mgr_id) {
+	mgr_id_ = mgr_id;
+}
 
 inline std::string ConnectionMgr::GetName() const {
 	return name_;

@@ -80,6 +80,14 @@ typedef unsigned short		u16;
 typedef unsigned int		u32;
 typedef unsigned long long	u64;
 
+// 定义ip地址，1个字节对齐
+#pragma pack(1)
+typedef struct {
+	i8 ip[48];
+	u16 port;
+} address_t;
+#pragma pack()
+
 // 定义内存分配原子函数
 typedef void * (*jc_malloc_func)(size_t size);
 typedef void * (*jc_realloc_func)(void * ptr, size_t size);
@@ -91,6 +99,16 @@ typedef void (*log_message_writer)(const i8 * msg, i32 length);
 
 // 定义日志崩溃处理函数
 typedef void (*log_abort)();
+
+// 定义套接字回调函数
+typedef void (*on_connected_func)(i64 mgr_id, i64 connection_id);
+typedef void (*on_connect_failed_func)(i64 mgr_id, i64 connection_id, i32 reason);
+typedef void (*on_disconnected_func)(i64 mgr_id, i64 connection_id, bool is_remote);
+typedef void (*on_received_func)(i64 mgr_id, i64 connection_id, const i8 * data, i32 size);
+typedef void (*on_sent_func)(i64 mgr_id, i64 connection_id);
+
+// 定义捕捉信号回调函数
+typedef void (*on_signal_func)(int signum);
 
 // 动态库开放函数，采用C语言函数
 #ifdef __cplusplus
@@ -118,6 +136,27 @@ extern "C" {
 NET_EXTERN bool jc_replace_allocator(jc_malloc_func malloc_func, jc_realloc_func realloc_func, jc_calloc_func calloc_func, jc_free_func free_func);
 NET_EXTERN bool jc_replace_logger(log_message_writer log_func);
 NET_EXTERN bool jc_replace_abort(log_abort abort_func);
+NET_EXTERN void jc_replace_signal(on_signal_func signal_func);
+NET_EXTERN void jc_replace_callback(on_connected_func on_connected, on_connect_failed_func on_connect_failed, on_disconnected_func on_disconnected, on_received_func on_received, on_sent_func on_sent);
+
+NET_EXTERN void jc_init();
+NET_EXTERN void jc_unit();
+NET_EXTERN void jc_poll();
+
+NET_EXTERN i64 jc_create_server(const i8 * name, i32 max_out_buffer_size, i32 max_in_buffer_size);
+NET_EXTERN bool jc_server_listen(i64 server_id, const i8 * address, i32 port);
+NET_EXTERN bool jc_end_server(i64 server_id);
+NET_EXTERN void jc_delete_server(i64 server_id);
+
+NET_EXTERN i64 jc_create_client(const i8 * name, i32 max_out_buffer_size, i32 max_in_buffer_size);
+NET_EXTERN i64 jc_client_connect(i64 client_id, const i8 * address, i32 port);
+NET_EXTERN void jc_delete_client(i64 client_id);
+
+NET_EXTERN i32 jc_send_data(i64 mgr_id, i64 connection_id, const i8 * data, i32 data_len);
+NET_EXTERN void jc_shutdown_all_connections(i64 mgr_id);
+NET_EXTERN void jc_shutdown_one_connection(i64 mgr_id, i64 connection_id);
+NET_EXTERN void jc_shutdown_one_connection_now(i64 mgr_id, i64 connection_id);
+NET_EXTERN address_t jc_get_one_connection_remote_address(i64 mgr_id, i64 connection_id);
 
 #ifdef __cplusplus
 }

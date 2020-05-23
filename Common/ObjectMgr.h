@@ -57,9 +57,6 @@ private:
 
 template<class OBJECT>
 ObjectMgr<OBJECT>::ObjectMgr() : counter_(0), objects_(new std::unordered_map<i64, OBJECT *>()) {
-	if (!objects_) {
-		Log(kCrash, __FILE__, __LINE__, "ObjectMgr() objects_ == nullptr");
-	}
 }
 
 template<class OBJECT>

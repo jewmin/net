@@ -88,28 +88,19 @@ SET(Reactor
 	${PROJECT_SOURCE_DIR}/Reactor/SocketConnector.h
 	${PROJECT_SOURCE_DIR}/Reactor/SocketConnector.cc
 )
-SET(Core
-	${PROJECT_SOURCE_DIR}/Core/INotification.h
-	${PROJECT_SOURCE_DIR}/Core/Client.h
-	${PROJECT_SOURCE_DIR}/Core/Client.cc
-	${PROJECT_SOURCE_DIR}/Core/Connection.h
-	${PROJECT_SOURCE_DIR}/Core/Connection.cc
-	${PROJECT_SOURCE_DIR}/Core/Server.h
-	${PROJECT_SOURCE_DIR}/Core/Server.cc
-	${PROJECT_SOURCE_DIR}/Core/ConnectionMgr.h
-	${PROJECT_SOURCE_DIR}/Core/ConnectionMgr.cc
-)
 SET(Interface
-	${PROJECT_SOURCE_DIR}/Interface/ApplicationContext.h
-	${PROJECT_SOURCE_DIR}/Interface/ApplicationContext.cc
-	${PROJECT_SOURCE_DIR}/Interface/Interface.h
+	${PROJECT_SOURCE_DIR}/Interface/INotification.h
+	${PROJECT_SOURCE_DIR}/Interface/Client.h
+	${PROJECT_SOURCE_DIR}/Interface/Client.cc
+	${PROJECT_SOURCE_DIR}/Interface/Connection.h
+	${PROJECT_SOURCE_DIR}/Interface/Connection.cc
+	${PROJECT_SOURCE_DIR}/Interface/Server.h
+	${PROJECT_SOURCE_DIR}/Interface/Server.cc
+	${PROJECT_SOURCE_DIR}/Interface/ConnectionMgr.h
+	${PROJECT_SOURCE_DIR}/Interface/ConnectionMgr.cc
+	${PROJECT_SOURCE_DIR}/Interface/AppService.h
+	${PROJECT_SOURCE_DIR}/Interface/AppService.cc
 	${PROJECT_SOURCE_DIR}/Interface/Interface.cc
-)
-SET(Timer
-	${PROJECT_SOURCE_DIR}/Timer/Timer.h
-	${PROJECT_SOURCE_DIR}/Timer/Timer.cc
-	${PROJECT_SOURCE_DIR}/Timer/TimerImpl.h
-	${PROJECT_SOURCE_DIR}/Timer/TimerImpl.cc
 )
 
 SET(all_srcs
@@ -118,9 +109,7 @@ SET(all_srcs
 	${Address}
 	${Sockets}
 	${Reactor}
-	${Core}
-	# ${Interface}
-	# ${Timer}
+	${Interface}
 )
 # MESSAGE(${all_srcs})
 
@@ -129,9 +118,7 @@ SOURCE_GROUP(Common FILES ${Common})
 SOURCE_GROUP(Address FILES ${Address})
 SOURCE_GROUP(Sockets FILES ${Sockets})
 SOURCE_GROUP(Reactor FILES ${Reactor})
-SOURCE_GROUP(Core FILES ${Core})
-# SOURCE_GROUP(Interface FILES ${Interface})
-# SOURCE_GROUP(Timer FILES ${Timer})
+SOURCE_GROUP(Interface FILES ${Interface})
 
 # 设置输出目录
 SET(CMAKE_DEBUG_POSTFIX "d")

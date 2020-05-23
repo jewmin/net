@@ -22,41 +22,42 @@
  * SOFTWARE.
  */
 
-#ifndef Net_Core_Server_INCLUDED
-#define Net_Core_Server_INCLUDED
-
-#include "Core/ConnectionMgr.h"
-#include "Reactor/EventReactor.h"
-#include "Reactor/SocketAcceptor.h"
+#include "Interface/Client.h"
 
 namespace Net {
 
-class Server : public ConnectionMgr {
-	class Acceptor : public SocketAcceptor {
-	public:
-		Acceptor(EventReactor * reactor, Server * server);
-		virtual ~Acceptor();
-
-	protected:
-		virtual SocketConnection * CreateConnection() override;
-		virtual void DestroyConnection(SocketConnection * connection) override;
-
-	private:
-		Server * server_;
-	};
-
-public:
-	Server(const std::string & name, EventReactor * reactor, i32 max_out_buffer_size, i32 max_in_buffer_size);
-	virtual ~Server();
-
-	virtual bool Listen(const std::string & address, i32 port, i32 backlog = 128, bool ipv6_only = false);
-
-private:
-	SocketAcceptor * acceptor_;
-	i32 max_out_buffer_size_;
-	i32 max_in_buffer_size_;
-};
-
+Client::Client(const std::string & name, EventReactor * reactor, SocketConnector * connector, i32 max_out_buffer_size, i32 max_in_buffer_size)
+	: ConnectionMgr(name), reactor_(reactor), local_connector_(nullptr), connector_ref_(nullptr)
+	, max_out_buffer_size_(max_out_buffer_size), max_in_buffer_size_(max_in_buffer_size) {
+	if (connector) {
+		connector_ref_ = connector->WeakRef();
+	}
 }
 
-#endif
+Client::~Client() {
+	if (connector_ref_) {
+		connector_ref_->Release();
+	}
+	if (local_connector_) {
+		delete local_connector_;
+	}
+}
+
+i64 Client::Connect(const std::string & address, i32 port) {
+	if (!connector_ref_) {
+		local_connector_ = new SocketConnector(reactor_);
+		connector_ref_ = local_connector_->WeakRef();
+	}
+
+	Connection * connection = new Connection(this, max_out_buffer_size_, max_in_buffer_size_);
+	Register(connection);
+
+	SocketConnector * connector = dynamic_cast<SocketConnector *>(connector_ref_->Get());
+	if (connector && connector->Connect(connection, SocketAddress(address, static_cast<u16>(port)))) {
+		return connection->GetConnectionId();
+	} else {
+		return -1;
+	}
+}
+
+}

@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#include "Core/Connection.h"
-#include "Core/ConnectionMgr.h"
+#include "Interface/Connection.h"
+#include "Interface/ConnectionMgr.h"
 #include "Common/Logger.h"
 
 namespace Net {
@@ -41,9 +41,7 @@ Connection::~Connection() {
 void Connection::OnConnected() {
 	mgr_->Register(this);
 	if (mgr_->notification_) {
-		if (0 != mgr_->notification_->OnConnected(this)) {
-			Shutdown(true);
-		}
+		mgr_->notification_->OnConnected(this);
 	}
 }
 
@@ -63,25 +61,21 @@ void Connection::OnDisconnected(bool is_remote) {
 
 void Connection::OnNewDataReceived() {
 	if (mgr_->notification_) {
-		if (0 != mgr_->notification_->OnNewDataReceived(this)) {
-			Shutdown(false);
-		}
+		mgr_->notification_->OnNewDataReceived(this);
 	}
 }
 
 void Connection::OnSomeDataSent() {
 	if (mgr_->notification_) {
-		if (0 != mgr_->notification_->OnSomeDataSent(this)) {
-			Shutdown(false);
-		}
+		mgr_->notification_->OnSomeDataSent(this);
 	}
 }
 
 void Connection::OnError(i32 reason) {
 	if (UV_EOF == reason) {
-		Log(kLog, __FILE__, __LINE__, connection_id_, "收到对端EOF, 正常断开");
+		Log(kLog, __FILE__, __LINE__, "[", connection_id_, "] 收到对端EOF, 正常断开");
 	} else {
-		Log(kLog, __FILE__, __LINE__, connection_id_, "尝试读写数据时, 产生了错误", uv_err_name(reason), uv_strerror(reason));
+		Log(kLog, __FILE__, __LINE__, "[", connection_id_, "] 尝试读写数据时, 产生了错误", uv_err_name(reason));
 	}
 }
 

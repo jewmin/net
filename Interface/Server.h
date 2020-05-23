@@ -22,22 +22,40 @@
  * SOFTWARE.
  */
 
-#ifndef Net_Core_INotification_INCLUDED
-#define Net_Core_INotification_INCLUDED
+#ifndef Net_Interface_Server_INCLUDED
+#define Net_Interface_Server_INCLUDED
 
-#include "Common/NetObject.h"
-#include "Core/Connection.h"
+#include "Interface/ConnectionMgr.h"
+#include "Reactor/EventReactor.h"
+#include "Reactor/SocketAcceptor.h"
 
 namespace Net {
 
-class INotification : public NetObject {
+class Server : public ConnectionMgr {
+	class Acceptor : public SocketAcceptor {
+	public:
+		Acceptor(EventReactor * reactor, Server * server);
+		virtual ~Acceptor();
+
+	protected:
+		virtual SocketConnection * CreateConnection() override;
+		virtual void DestroyConnection(SocketConnection * connection) override;
+
+	private:
+		Server * server_;
+	};
+
 public:
-	virtual i32 OnConnected(Connection * connection) = 0;
-	virtual i32 OnConnectFailed(Connection * connection, i32 reason) = 0;
-	virtual i32 OnDisconnected(Connection * connection, bool is_remote) = 0;
-	virtual i32 OnNewDataReceived(Connection * connection) = 0;
-	virtual i32 OnSomeDataSent(Connection * connection) = 0;
-	virtual i32 OnUpdate(Connection * connection) = 0;
+	Server(const std::string & name, EventReactor * reactor, i32 max_out_buffer_size, i32 max_in_buffer_size);
+	virtual ~Server();
+
+	virtual bool Listen(const std::string & address, i32 port, i32 backlog = 128, bool ipv6_only = false);
+	virtual void Stop();
+
+private:
+	SocketAcceptor * acceptor_;
+	i32 max_out_buffer_size_;
+	i32 max_in_buffer_size_;
 };
 
 }

@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef Net_Core_Connection_INCLUDED
-#define Net_Core_Connection_INCLUDED
+#ifndef Net_Interface_Connection_INCLUDED
+#define Net_Interface_Connection_INCLUDED
 
 #include "Reactor/SocketConnection.h"
 

@@ -374,7 +374,6 @@ TEST_F(ReactorPollTestSuite, socket) {
 }
 
 TEST_F(ReactorPollTestSuite, recv) {
-	i32 size;
 	MockConnection connection;
 	EXPECT_ANY_THROW(connection.GetRecvData());
 	EXPECT_ANY_THROW(connection.GetRecvDataSize());

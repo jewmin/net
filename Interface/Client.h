@@ -22,45 +22,30 @@
  * SOFTWARE.
  */
 
-#include "TimerImpl.h"
+#ifndef Net_Interface_Client_INCLUDED
+#define Net_Interface_Client_INCLUDED
 
-Foundation::TimerImpl::TimerImpl() : handle_(nullptr) {
+#include "Interface/ConnectionMgr.h"
+#include "Reactor/EventReactor.h"
+#include "Reactor/SocketConnector.h"
+
+namespace Net {
+
+class Client : public ConnectionMgr {
+public:
+	Client(const std::string & name, EventReactor * reactor, SocketConnector * connector, i32 max_out_buffer_size, i32 max_in_buffer_size);
+	virtual ~Client();
+
+	virtual i64 Connect(const std::string & address, i32 port);
+
+private:
+	EventReactor * reactor_;
+	SocketConnector * local_connector_;
+	WeakReference * connector_ref_;
+	i32 max_out_buffer_size_;
+	i32 max_in_buffer_size_;
+};
+
 }
 
-Foundation::TimerImpl::~TimerImpl() {
-	Close();
-}
-
-void Foundation::TimerImpl::Open(uv_loop_t * loop, void * data) {
-	if (!handle_) {
-		handle_ = static_cast<uv_timer_t *>(malloc(sizeof(uv_timer_t)));
-		uv_timer_init(loop, handle_);
-		uv_unref(reinterpret_cast<uv_handle_t *>(handle_));
-	}
-	handle_->data = data;
-}
-
-void Foundation::TimerImpl::Close(uv_close_cb cb) {
-	if (handle_) {
-		if (!uv_is_closing(reinterpret_cast<uv_handle_t *>(handle_))) {
-			uv_close(reinterpret_cast<uv_handle_t *>(handle_), cb);
-		}
-		handle_ = nullptr;
-	}
-}
-
-int Foundation::TimerImpl::SetTimeout(int timeout, int repeat, uv_timer_cb cb) {
-	int status = UV_UNKNOWN;
-	if (handle_) {
-		status = uv_timer_start(handle_, cb, timeout, repeat);
-	}
-	return status;
-}
-
-int Foundation::TimerImpl::Cancel() {
-	int status = UV_UNKNOWN;
-	if (handle_) {
-		status = uv_timer_stop(handle_);
-	}
-	return status;
-}
+#endif

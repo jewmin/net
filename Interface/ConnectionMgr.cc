@@ -22,21 +22,32 @@
  * SOFTWARE.
  */
 
-#include "Core/ConnectionMgr.h"
+#include "Interface/ConnectionMgr.h"
 #include "Common/Logger.h"
 
 namespace Net {
 
 ConnectionMgr::ConnectionMgr(const std::string & name)
-	: name_(name), notification_(nullptr), object_mgr_(new ObjectMgr<Connection>()) {
-	if (!object_mgr_) {
-		Log(kCrash, __FILE__, __LINE__, "ConnectionMgr() object_mgr_ == nullptr");
-	}
+	: mgr_id_(-1), name_(name), notification_(nullptr), object_mgr_(new ObjectMgr<Connection>())
+	, need_delete_list_(new std::list<Connection *>()) {
 }
 
 ConnectionMgr::~ConnectionMgr() {
+	CleanDeathConnections();
+	delete need_delete_list_;
 	object_mgr_->VisitObj(DestroyConnection, nullptr);
 	delete object_mgr_;
+}
+
+void ConnectionMgr::Update() {
+	CleanDeathConnections();
+}
+
+void ConnectionMgr::CleanDeathConnections() {
+	for (auto & it : *need_delete_list_) {
+		delete it;
+	}
+	need_delete_list_->clear();
 }
 
 void ConnectionMgr::Register(Connection * connection) {
@@ -56,21 +67,18 @@ void ConnectionMgr::UnRegister(Connection * connection) {
 	if (connection->IsRegister2Mgr()) {
 		connection->SetRegister2Mgr(false);
 		object_mgr_->RemoveObj(connection->GetConnectionId());
-		DestroyConnection(connection, nullptr);
+		need_delete_list_->push_back(connection);
 	}
-}
-
-void ConnectionMgr::Update() {
 }
 
 void ConnectionMgr::ShutDownAllConnections() {
 	object_mgr_->VisitObj(ShutdownConnection, nullptr);
 }
 
-void ConnectionMgr::ShutDownOneConnection(i64 id) {
+void ConnectionMgr::ShutDownOneConnection(i64 id, bool now) {
 	Connection * connection = GetConnection(id);
 	if (connection) {
-		connection->Shutdown(false);
+		connection->Shutdown(now);
 	}
 }
 
