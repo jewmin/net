@@ -29,11 +29,10 @@ namespace Net {
 
 ConnectionMgr::ConnectionMgr(const std::string & name)
 	: mgr_id_(-1), name_(name), notification_(nullptr), object_mgr_(new ObjectMgr<Connection>())
-	, need_delete_list_(new std::list<Connection *>()) {
+	, need_delete_list_(new std::list<i64>()) {
 }
 
 ConnectionMgr::~ConnectionMgr() {
-	CleanDeathConnections();
 	delete need_delete_list_;
 	object_mgr_->VisitObj(DestroyConnection, nullptr);
 	delete object_mgr_;
@@ -44,8 +43,12 @@ void ConnectionMgr::Update() {
 }
 
 void ConnectionMgr::CleanDeathConnections() {
+	Connection * connection = nullptr;
 	for (auto & it : *need_delete_list_) {
-		delete it;
+		connection = object_mgr_->RemoveObj(it);
+		if (connection) {
+			DestroyConnection(connection, nullptr);
+		}
 	}
 	need_delete_list_->clear();
 }
@@ -66,8 +69,7 @@ void ConnectionMgr::Register(Connection * connection) {
 void ConnectionMgr::UnRegister(Connection * connection) {
 	if (connection->IsRegister2Mgr()) {
 		connection->SetRegister2Mgr(false);
-		object_mgr_->RemoveObj(connection->GetConnectionId());
-		need_delete_list_->push_back(connection);
+		need_delete_list_->push_back(connection->GetConnectionId());
 	}
 }
 

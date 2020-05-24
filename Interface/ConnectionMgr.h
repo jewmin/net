@@ -69,7 +69,7 @@ private:
 	std::string name_;
 	INotification * notification_;
 	ObjectMgr<Connection> * object_mgr_;
-	std::list<Connection *> * need_delete_list_;
+	std::list<i64> * need_delete_list_;
 };
 
 inline i64 ConnectionMgr::GetMgrId() const {
