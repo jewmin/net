@@ -1,73 +1,59 @@
-#include "Interface/Interface.h"
+#include "Net.h"
 #ifdef USE_VLD
 #include "vld.h"
 #endif
 
-static u64 clientId = 0;
-static u32 connId = 0;
+static i64 clientId = 0;
+static i64 connId = 0;
 static bool quit = false;
 
-void MyOnUpdateFunc() {
-	// printf("一次Tick\n");
-}
-
 void MyOnSignalFunc(int signum) {
-	printf("收到关机信号 %d\n", signum);
+	std::printf("收到关机信号 %d\n", signum);
 	quit = true;
 }
 
-void MyOnLogFunc(int level, const char * msg) {
-	printf("打印日志 %d %s\n", level, msg);
+void MyOnConnectedFunc(i64 mgr_id, i64 connection_id) {
+	address_t address = jc_get_one_connection_remote_address(mgr_id, connection_id);
+	std::printf("连接成功 %lld %lld %s:%d\n", mgr_id, connection_id, address.ip, address.port);
+	jc_send_data(mgr_id, connection_id, "hello", sizeof("hello"));
 }
 
-void MyOnConnectedFunc(u64 mgrId, u32 id) {
-	address_t address = GetOneConnectionRemoteAddress(mgrId, id);
-	printf("连接成功 %llu %u %s:%d\n", mgrId, id, address.address, address.port);
-	if (mgrId == clientId && id == connId) {
-		SendRawMsg(mgrId, id, "raw", sizeof("raw"));
-	} else {
-		SendMsg(mgrId, id, 123, "hello", sizeof("hello"));
-	}
+void MyOnConnectFailedFunc(i64 mgr_id, i64 connection_id, int reason) {
+	std::printf("连接失败 %lld %lld %d\n", mgr_id, connection_id, reason);
+	clientId = mgr_id;
+	connId = jc_client_connect(clientId, "::1", 6789);
 }
 
-void MyOnConnectFailedFunc(u64 mgrId, u32 id, int reason) {
-	printf("连接失败 %llu %u %d\n", mgrId, id, reason);
-	clientId = mgrId;
-	connId = ClientConnect(clientId, "127.0.0.1", 6789);
-	SetRawRecv(clientId, connId, true);
+void MyOnDisconnectedFunc(i64 mgr_id, i64 connection_id, bool isRemote) {
+	std::printf("断开连接 %lld %lld %d\n", mgr_id, connection_id, isRemote);
 }
 
-void MyOnDisconnectedFunc(u64 mgrId, u32 id, bool isRemote) {
-	printf("断开连接 %llu %u %d\n", mgrId, id, isRemote);
+void MyOnRecvMsgFunc(i64 mgr_id, i64 connection_id, const char * data, int size) {
+	std::printf("收到数据 %lld %lld, %s, %d\n", mgr_id, connection_id, data, size);
+	jc_shutdown_one_connection(mgr_id, connection_id);
 }
 
-void MyOnRecvMsgFunc(u64 mgrId, u32 id, int msgId, const char * data, int size) {
-	printf("收到协议数据 %llu, %u, %d, %s, %d\n", mgrId, id, msgId, data, size);
-	ShutdownConnectionNow(mgrId, id);
-}
-
-void MyOnRecvRawMsgFunc(u64 mgrId, u32 id, const char * data, int size) {
-	printf("收到原始数据 %llu, %u, %s, %d\n", mgrId, id, data, size);
-	ShutdownConnection(mgrId, id);
+void MyOnSendMsgFunc(i64 mgr_id, i64 connection_id) {
+	std::printf("发送数据 %lld %lld\n", mgr_id, connection_id);
 }
 
 int main(int argc, const char * * argv) {
-	Init(MyOnUpdateFunc, MyOnSignalFunc, MyOnLogFunc);
-	SetCallback(MyOnConnectedFunc, MyOnConnectFailedFunc, MyOnDisconnectedFunc, MyOnRecvMsgFunc, MyOnRecvRawMsgFunc);
-	u64 server = CreateServer("DllServer", 102400, 102400);
-	ServerListen(server, "0.0.0.0", 6789);
-	u64 client1 = CreateClient("DllClient", 102400, 102400);
-	u64 client2 = CreateClient("DllClient", 102400, 102400);
-	ClientConnect(client1, "127.0.0.1", 6789);
-	ClientConnect(client2, "127.0.0.1", 8888);
+	jc_init();
+	jc_replace_signal(MyOnSignalFunc);
+	jc_replace_callback(MyOnConnectedFunc, MyOnConnectFailedFunc, MyOnDisconnectedFunc, MyOnRecvMsgFunc, MyOnSendMsgFunc);
+	i64 server = jc_create_server("DllServer", 102400, 102400);
+	jc_server_listen(server, "::", 6789);
+	i64 client1 = jc_create_client("DllClientIPv4", 102400, 102400);
+	i64 client2 = jc_create_client("DllClientIPv6", 102400, 102400);
+	jc_client_connect(client1, "127.0.0.1", 6789);
+	jc_client_connect(client2, "::1", 8888);
 	while (!quit) {
-		Loop();
+		jc_poll();
 	}
-	EndServer(server);
-	DeleteServer(server);
-	DeleteClient(client1);
-	ShutdownAllConnection(client2);
-	DeleteClient(client2);
-	Unit();
+	jc_end_server(server);
+	jc_shutdown_all_connections(server);
+	jc_delete_server(server);
+	jc_delete_client(client1);
+	jc_unit();
 	return 0;
 }

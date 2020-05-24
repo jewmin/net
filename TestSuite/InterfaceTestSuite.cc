@@ -176,3 +176,14 @@ TEST_F(InterfaceTestSuite2, send) {
 		jc_poll();
 	}
 }
+
+TEST(InterfaceNullTestSuite, error) {
+	EXPECT_EQ(jc_create_server("error server", 64, 64), -1);
+	EXPECT_EQ(jc_server_listen(0, "127.0.0.1", 6789), false);
+	EXPECT_EQ(jc_end_server(0), false);
+
+	EXPECT_EQ(jc_create_client("error client", 64, 64), -1);
+	EXPECT_EQ(jc_client_connect(0, "127.0.0.1", 6789), -1);
+
+	EXPECT_EQ(jc_send_data(0, 0, "hello", sizeof("hello")), UV_EPERM);
+}

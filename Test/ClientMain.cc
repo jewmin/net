@@ -3,19 +3,22 @@
 #include "vld.h"
 #endif
 
-int main(int argc, const char * * argv) {
-	int client_count = 1;
-	int packet_count = 1;
-	int packet_size = 64;
+bool get_parameters(int argc, const char * * argv, i32 & client_count, i32 & packet_count, i32 & packet_size, bool & log_detail) {
+	client_count = 1;
+	packet_count = 1;
+	packet_size = 64;
+	log_detail = false;
+
 	for (int i = 1; i < argc; ++i) {
 		bool remove_flag = false;
 		const std::string arg_string = argv[i];
 		if (arg_string == "-h" || arg_string == "--help" || arg_string == "/?") {
-			printf("Usage: BenchClient [-c client_count] [-p packet_count] [-s packet_size]\n");
-			printf("-c client_count: How many clients are running at the same time, default:1\n");
-			printf("-p packet_count: How many packages are sent per client, default:1\n");
-			printf("-s packet_size : How many bytes each package contains, default:64\n");
-			exit(0);
+			std::printf("Usage: BenchClient [-c client_count] [-p packet_count] [-s packet_size] [--log]\n");
+			std::printf("-c client_count: 客户端并发数量，默认 1\n");
+			std::printf("-p packet_count: 每个客户端发送数据包数量，默认 1\n");
+			std::printf("-s packet_size : 每个数据包大小，默认 64字节\n");
+			std::printf("--log          : 是否输出更多日志，默认 否\n");
+			return false;
 		} else if (arg_string == "-c") {
 			client_count = std::atoi(argv[i + 1]);
 			remove_flag = true;
@@ -24,6 +27,9 @@ int main(int argc, const char * * argv) {
 			remove_flag = true;
 		} else if (arg_string == "-s") {
 			packet_size = std::atoi(argv[i + 1]);
+			remove_flag = true;
+		} else if (arg_string == "--log") {
+			log_detail = true;
 			remove_flag = true;
 		}
 		if (remove_flag) {
@@ -34,8 +40,18 @@ int main(int argc, const char * * argv) {
 			i--;
 		}
 	}
-	BenchClient client(client_count, packet_count, packet_size);
-	client.Run("127.0.0.1", 8888);
-	client.ShowStatus();
+	return true;
+}
+
+int main(int argc, const char * * argv) {
+	i32 client_count;
+	i32 packet_count;
+	i32 packet_size;
+	bool log_detail;
+	if (get_parameters(argc, argv, client_count, packet_count, packet_size, log_detail)) {
+		BenchClient client(client_count, packet_count, packet_size, log_detail);
+		client.Run("127.0.0.1", 8888);
+		client.ShowStatus();
+	}
 	return 0;
 }

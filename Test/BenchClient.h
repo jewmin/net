@@ -1,41 +1,43 @@
+
 #ifndef Benchmark_BenchClient_INCLUDED
 #define Benchmark_BenchClient_INCLUDED
 
 #include "Net.h"
-#include "Core/IEvent.h"
-#include "Core/SocketWrapper.h"
 #include "Reactor/SocketConnector.h"
+#include "Interface/INotification.h"
+#include "Interface/Connection.h"
 
-class BenchClient : public Net::IEvent {
+class BenchClient : public Net::INotification {
 public:
-	BenchClient(int clientCount, int packetCount, int packetSize);
-	~BenchClient();
-	void Run(const std::string & address, int port);
+	BenchClient(i32 clientCount, i32 packetCount, i32 packetSize, bool logDetail);
+	virtual ~BenchClient();
+	void Run(const std::string & address, i32 port);
 	void ShowStatus();
 
 protected:
-	virtual int OnConnected(Net::SocketWrapper * wrapper);
-	virtual int OnConnectFailed(Net::SocketWrapper * wrapper, int reason);
-	virtual int OnDisconnected(Net::SocketWrapper * wrapper, bool isRemote);
-	virtual int OnNewDataReceived(Net::SocketWrapper * wrapper);
-	virtual int OnSomeDataSent(Net::SocketWrapper * wrapper);
+	virtual void OnConnected(Net::Connection * connection) override;
+	virtual void OnConnectFailed(Net::Connection * connection, i32 reason) override;
+	virtual void OnDisconnected(Net::Connection * connection, bool is_remote) override;
+	virtual void OnNewDataReceived(Net::Connection * connection) override;
+	virtual void OnSomeDataSent(Net::Connection * connection) override;
 
 private:
-	int GetMessageSize(Net::SocketWrapper * wrapper) const;
-	void ProcessCommand(Net::SocketWrapper * wrapper) const;
+	i32 GetMessageSize(Net::Connection * connection) const;
+	void ProcessCommand(Net::Connection * connection) const;
 
 private:
 	Net::EventReactor * reactor_;
 	Net::SocketConnector * connector_;
 	bool quit_;
-	int client_count_;
-	int packet_count_;
-	int packet_size_;
-	int connected_counter_;
-	int connect_failed_counter_;
-	int disconnected_counter_;
-	char * buffer_;
-	std::map<u64, int> client_packet_map_;
+	bool log_detail_;
+	i32 client_count_;
+	i32 packet_count_;
+	i32 packet_size_;
+	i32 connected_counter_;
+	i32 connect_failed_counter_;
+	i32 disconnected_counter_;
+	i8 * msg_buffer_;
+	std::map<i64, i32> client_packet_map_;
 };
 
 #endif

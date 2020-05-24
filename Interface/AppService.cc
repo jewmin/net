@@ -136,7 +136,9 @@ void AppService::OnDisconnected(Connection * connection, bool is_remote) {
 void AppService::OnNewDataReceived(Connection * connection) {
 	if (on_received_) {
 		on_received_(connection->GetMgr()->GetMgrId(), connection->GetConnectionId(), connection->GetRecvData(), connection->GetRecvDataSize());
-		connection->PopRecvData(connection->GetRecvDataSize());
+		if (ConnectState::kConnected == connection->GetConnectState() || ConnectState::kDisconnecting == connection->GetConnectState()) {
+			connection->PopRecvData(connection->GetRecvDataSize());
+		}
 	}
 }
 
