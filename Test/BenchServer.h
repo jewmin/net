@@ -26,6 +26,7 @@ private:
 
 	static void SignalCb(uv_signal_t * handle, int signum);
 	static void CloseCb(uv_handle_t * handle);
+	static void TimerCb(uv_timer_t * handle);
 
 private:
 	Net::EventReactor * reactor_;

@@ -418,7 +418,17 @@ TEST_F(ReactorPollTestSuite, write2) {
 		it->GetSocket()->Close();
 	}
 	Poll(1);
-	EXPECT_EQ(connection_->Write(w_content_, w_content_len_), w_content_len_);
+	EXPECT_EQ(connection_->Write(w_content_, w_content_len_), UV_ENOTCONN);
+	Poll();
+}
+
+TEST_F(ReactorPollTestSuite, write_cb) {
+	MockConnection connection;
+	connection.GetSocket()->Open(reactor_->GetUvLoop());
+	connection.GetSocket()->SetUvData(&connection);
+	EXPECT_EQ(connection.GetSocket()->Connect(Net::SocketAddress("127.0.0.1", 6789)), 0);
+	EXPECT_EQ(connection.GetSocket()->Write(w_content_, w_content_len_), w_content_len_);
+	connection.GetSocket()->Close();
 	Poll();
 }
 
@@ -430,6 +440,22 @@ TEST_F(ReactorPollTestSuite, read) {
 	buff[w_content_len_] = 0;
 	EXPECT_STREQ(buff, w_content_);
 	EXPECT_EQ(client_->Read(buff, sizeof(buff)), 0);
+}
+
+class MockConnectionNoBuf : public Net::SocketConnection {
+public:
+	MockConnectionNoBuf() : Net::SocketConnection(50, 50) {}
+	virtual void AllocCallback(uv_buf_t * buf) override {}
+};
+
+TEST_F(ReactorPollTestSuite, read_cb) {
+	MockConnectionNoBuf connection;
+	EXPECT_EQ(connector_->Connect(&connection, acceptor_address_), true);
+	Poll();
+	for (auto & it : acceptor_->connection_list_) {
+		it->Write(w_content_, w_content_len_);
+	}
+	Poll();
 }
 
 TEST_F(ReactorPollTestSuite, shutdown) {

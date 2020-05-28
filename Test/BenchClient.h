@@ -24,6 +24,12 @@ protected:
 private:
 	i32 GetMessageSize(Net::Connection * connection) const;
 	void ProcessCommand(Net::Connection * connection) const;
+	void Quit();
+	void CloseTimer();
+
+	static void timer_cb(uv_timer_t * handle);
+	static void close_cb(uv_handle_t * handle);
+	static void SignalCb(uv_signal_t * handle, int signum);
 
 private:
 	Net::EventReactor * reactor_;
@@ -38,6 +44,7 @@ private:
 	i32 disconnected_counter_;
 	i8 * msg_buffer_;
 	std::map<i64, i32> client_packet_map_;
+	uv_timer_t * quit_timer_;
 };
 
 #endif

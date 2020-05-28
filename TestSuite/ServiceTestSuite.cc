@@ -55,7 +55,7 @@ public:
 	}
 	virtual void OnSomeDataSent(Net::Connection * connection) {
 		MockNotification::OnSomeDataSent(connection);
-		connection->Shutdown(false);
+		// connection->Shutdown(false);
 	}
 };
 
@@ -124,7 +124,7 @@ public:
 TEST_F(ConnectionMgrTestSuite, mgr) {
 	EXPECT_EQ(mgr_->GetMgrId(), -1);
 	EXPECT_STREQ(mgr_->GetName().c_str(), "testMgr");
-	EXPECT_EQ(mgr_->GetConnectionCount(), 0);
+	EXPECT_EQ(mgr_->GetConnectionCount(), 0u);
 	EXPECT_TRUE(mgr_->GetConnection(1) == nullptr);
 
 	mgr_->SetMgrId(100);
@@ -190,7 +190,7 @@ TEST_F(ConnectionTestSuite, reg) {
 	connection->SetConnectionId(20);
 	mgr_->Register(connection);
 	EXPECT_EQ(connection->GetConnectionId(), 20);
-	EXPECT_EQ(mgr_->GetConnectionCount(), 11);
+	EXPECT_EQ(mgr_->GetConnectionCount(), 11u);
 	EXPECT_TRUE(mgr_->GetConnection(20) == connection);
 }
 
@@ -198,12 +198,12 @@ TEST_F(ConnectionTestSuite, double_reg) {
 	Net::Connection * connection = new Net::Connection(mgr_, 64, 64);
 	mgr_->Register(connection);
 	EXPECT_EQ(connection->GetConnectionId(), 10);
-	EXPECT_EQ(mgr_->GetConnectionCount(), 11);
+	EXPECT_EQ(mgr_->GetConnectionCount(), 11u);
 	EXPECT_TRUE(mgr_->GetConnection(10) == connection);
 
 	mgr_->Register(connection);
 	EXPECT_EQ(connection->GetConnectionId(), 10);
-	EXPECT_EQ(mgr_->GetConnectionCount(), 11);
+	EXPECT_EQ(mgr_->GetConnectionCount(), 11u);
 	EXPECT_TRUE(mgr_->GetConnection(10) == connection);
 }
 
@@ -212,16 +212,16 @@ TEST_F(ConnectionTestSuite, unreg) {
 	mgr_->UnRegister(connection);
 	mgr_->Update();
 	delete connection;
-	EXPECT_EQ(mgr_->GetConnectionCount(), 10);
+	EXPECT_EQ(mgr_->GetConnectionCount(), 10u);
 }
 
 TEST_F(ConnectionTestSuite, unreg_succ) {
 	Net::Connection * connection = new Net::Connection(mgr_, 64, 64);
 	mgr_->Register(connection);
-	EXPECT_EQ(mgr_->GetConnectionCount(), 11);
+	EXPECT_EQ(mgr_->GetConnectionCount(), 11u);
 	mgr_->UnRegister(connection);
 	mgr_->Update();
-	EXPECT_EQ(mgr_->GetConnectionCount(), 10);
+	EXPECT_EQ(mgr_->GetConnectionCount(), 10u);
 }
 
 TEST_F(ConnectionTestSuite, unreg_throw) {
@@ -230,7 +230,7 @@ TEST_F(ConnectionTestSuite, unreg_throw) {
 	mgr_->UnRegister(connection);
 	EXPECT_ANY_THROW(mgr_->Update());
 	delete connection;
-	EXPECT_EQ(mgr_->GetConnectionCount(), 10);
+	EXPECT_EQ(mgr_->GetConnectionCount(), 10u);
 }
 
 TEST_F(ConnectionTestSuite, unreg_null) {
@@ -239,7 +239,7 @@ TEST_F(ConnectionTestSuite, unreg_null) {
 	connection->SetRegister2Mgr(true);
 	mgr_->UnRegister(connection);
 	mgr_->Update();
-	EXPECT_EQ(mgr_->GetConnectionCount(), 10);
+	EXPECT_EQ(mgr_->GetConnectionCount(), 10u);
 	delete connection;
 }
 
@@ -303,6 +303,7 @@ TEST_F(ClientTestSuite, connect_not_connector) {
 	EXPECT_EQ(client.Connect("127.0.0.1", 6789), 0);
 }
 
+#ifdef _WIN32
 TEST_F(ClientTestSuite, connect_address_error) {
 	EXPECT_EQ(client_->Connect("0.0.0.0", 0), -1);
 }
@@ -312,6 +313,7 @@ TEST_F(ClientTestSuite, connect_cb) {
 	EXPECT_EQ(client_->Connect("::", 0), -1);
 	EXPECT_EQ(notification_.call_connect_failed_, 1);
 }
+#endif
 
 class ServerTestSuite : public ClientTestSuite {
 public:
@@ -358,8 +360,8 @@ TEST_F(ServerTestSuite, loop) {
 	EXPECT_EQ(server_->Listen("0.0.0.0", 6789), true);
 	EXPECT_EQ(client_->Connect("127.0.0.1", 6789), 0);
 	Run();
-	EXPECT_EQ(server_->GetConnectionCount(), 1);
-	EXPECT_EQ(client_->GetConnectionCount(), 1);
+	EXPECT_EQ(server_->GetConnectionCount(), 1u);
+	EXPECT_EQ(client_->GetConnectionCount(), 1u);
 	EXPECT_EQ(notification_.call_connected_, 2);
 }
 
@@ -369,8 +371,8 @@ TEST_F(ServerTestSuite, loop_shutdown) {
 	EXPECT_EQ(server_->Listen("0.0.0.0", 6789), true);
 	EXPECT_EQ(client_->Connect("127.0.0.1", 6789), 0);
 	Run();
-	EXPECT_EQ(server_->GetConnectionCount(), 0);
-	EXPECT_EQ(client_->GetConnectionCount(), 0);
+	EXPECT_EQ(server_->GetConnectionCount(), 0u);
+	EXPECT_EQ(client_->GetConnectionCount(), 0u);
 	EXPECT_EQ(notification_.call_connected_, 1);
 	EXPECT_EQ(notification_.call_disconnected_, 1);
 	EXPECT_EQ(notification_cd_.call_connected_, 1);
@@ -383,12 +385,12 @@ TEST_F(ServerTestSuite, loop_rw) {
 	EXPECT_EQ(server_->Listen("0.0.0.0", 6789), true);
 	EXPECT_EQ(client_->Connect("127.0.0.1", 6789), 0);
 	Run();
-	EXPECT_EQ(server_->GetConnectionCount(), 0);
-	EXPECT_EQ(client_->GetConnectionCount(), 0);
+	EXPECT_EQ(server_->GetConnectionCount(), 0u);
+	EXPECT_EQ(client_->GetConnectionCount(), 0u);
 	EXPECT_EQ(notification_rw_.call_connected_, 2);
 	EXPECT_EQ(notification_rw_.call_disconnected_, 2);
-	EXPECT_GE(notification_rw_.call_some_data_sent_, 1);
-	EXPECT_EQ(notification_rw_.call_new_data_received_, 1);
+	EXPECT_EQ(notification_rw_.call_some_data_sent_, 2);
+	EXPECT_EQ(notification_rw_.call_new_data_received_, 2);
 }
 
 class MockAppService : public Net::AppService {
@@ -419,7 +421,7 @@ public:
 		ServerTestSuite::TearDown();
 	}
 	static void OnConnected(i64 mgr_id, i64 connection_id) {
-		auto & it = all_connections_->find(mgr_id);
+		auto it = all_connections_->find(mgr_id);
 		if (it == all_connections_->end()) {
 			std::set<i64> * new_set = new std::set<i64>();
 			new_set->emplace(connection_id);
@@ -429,13 +431,13 @@ public:
 		}
 	}
 	static void OnConnectFailed(i64 mgr_id, i64 connection_id, i32 reason) {
-		auto & it = all_connections_->find(mgr_id);
+		auto it = all_connections_->find(mgr_id);
 		if (it != all_connections_->end()) {
 			it->second->erase(connection_id);
 		}
 	}
 	static void OnDisconnected(i64 mgr_id, i64 connection_id, bool is_remote) {
-		auto & it = all_connections_->find(mgr_id);
+		auto it = all_connections_->find(mgr_id);
 		if (it != all_connections_->end()) {
 			it->second->erase(connection_id);
 		}

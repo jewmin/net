@@ -143,6 +143,6 @@ TEST(RefCountedObjectTestSuite, weak7) {
 	ref->Release();
 	ref2->Release();
 	// 多调用了一次Release，会造成内存非法访问
-	ref->Release();
+	// ref->Release();
 	delete object;
 }

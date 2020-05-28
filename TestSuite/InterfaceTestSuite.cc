@@ -60,11 +60,11 @@ protected:
 		instance = nullptr;
 	}
 
-	void OnSignalFunc(int signum) {
+	virtual void OnSignalFunc(int signum) {
 		std::printf("Receive a shutdown signal %d\n", signum);
 		quit = true;
 	}
-	void OnConnectedFunc(i64 mgr_id, i64 connection_id) {
+	virtual void OnConnectedFunc(i64 mgr_id, i64 connection_id) {
 		if (mgr_id == client_id) {
 			std::printf("Successful connection to service %lld, %lld\n", mgr_id, connection_id);
 			EXPECT_EQ(connection_id, client_conn_id);
@@ -73,12 +73,12 @@ protected:
 			server_conn_id = connection_id;
 		}
 	}
-	void OnConnectFailedFunc(i64 mgr_id, i64 connection_id, i32 reason) {
+	virtual void OnConnectFailedFunc(i64 mgr_id, i64 connection_id, i32 reason) {
 		std::printf("Failed to connect to the service %lld, %lld, %d\n", mgr_id, connection_id, reason);
 		EXPECT_EQ(mgr_id, client_id);
 		EXPECT_EQ(connection_id, client_conn_id);
 	}
-	void OnDisconnectedFunc(i64 mgr_id, i64 connection_id, bool is_remote) {
+	virtual void OnDisconnectedFunc(i64 mgr_id, i64 connection_id, bool is_remote) {
 		if (mgr_id == client_id) {
 			std::printf("Disconnect from the service %lld, %lld\n", mgr_id, connection_id);
 			EXPECT_EQ(connection_id, client_conn_id);
@@ -86,10 +86,10 @@ protected:
 			std::printf("Disconnecting the peer %lld, %lld\n", mgr_id, connection_id);
 		}
 	}
-	void OnRecvMsgFunc(i64 mgr_id, i64 connection_id, const i8 * data, i32 size) {
+	virtual void OnRecvMsgFunc(i64 mgr_id, i64 connection_id, const i8 * data, i32 size) {
 		std::printf("Receive protocol data from the peer %lld, %lld, %s, %d\n", mgr_id, connection_id, data, size);
 	}
-	void OnSendMsgFunc(i64 mgr_id, i64 connection_id) {
+	virtual void OnSendMsgFunc(i64 mgr_id, i64 connection_id) {
 		std::printf("Sent protocol data %lld, %lld\n", mgr_id, connection_id);
 	}
 
@@ -159,10 +159,10 @@ TEST_F(InterfaceTestSuite, shutdown) {
 
 class InterfaceTestSuite2 : public InterfaceTestSuite {
 public:
-	void OnConnectedFunc(i64 mgr_id, i64 connection_id) {
+	virtual void OnConnectedFunc(i64 mgr_id, i64 connection_id) {
 		address_t address = jc_get_one_connection_remote_address(mgr_id, connection_id);
 		std::printf("connected %s:%d", address.ip, address.port);
-		EXPECT_EQ(sizeof(data), jc_send_data(mgr_id, connection_id, data, sizeof(data)));
+		EXPECT_EQ((i32)sizeof(data), jc_send_data(mgr_id, connection_id, data, sizeof(data)));
 	}
 };
 

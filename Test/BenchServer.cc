@@ -28,6 +28,10 @@ void BenchServer::Run(const std::string & address, i32 port) {
 	uv_signal_start_oneshot(sig_handler2, SignalCb, SIGTERM);
 	uv_handle_set_data(reinterpret_cast<uv_handle_t *>(sig_handler2), this);
 
+	uv_timer_t * show_timer = static_cast<uv_timer_t *>(jc_malloc(sizeof(uv_timer_t)));
+	uv_timer_init(reactor_->GetUvLoop(), show_timer);
+	show_timer->data = this;
+	uv_timer_start(show_timer, TimerCb, 3000, 3000);
 
 	server_->Listen(address, port);
 	auto start = std::chrono::system_clock::now();
@@ -40,6 +44,7 @@ void BenchServer::Run(const std::string & address, i32 port) {
 
 	uv_close(reinterpret_cast<uv_handle_t *>(sig_handler), CloseCb);
 	uv_close(reinterpret_cast<uv_handle_t *>(sig_handler2), CloseCb);
+	uv_close(reinterpret_cast<uv_handle_t *>(show_timer), CloseCb);
 }
 
 void BenchServer::ShowStatus() {
@@ -49,6 +54,10 @@ void BenchServer::ShowStatus() {
 	Net::Log(Net::kLog, __FILE__, __LINE__, "耗时(微秒):", use_time_);
 	Net::Log(Net::kLog, __FILE__, __LINE__, "收到数据包:", packet_counter_);
 	Net::Log(Net::kLog, __FILE__, __LINE__, "收到数据包总大小(字节):", recv_packet_size_);
+
+	if (use_time_ == 0) {
+		return;
+	}
 
 	double bits = (double)recv_packet_size_ * 1000000 / (double)use_time_;
 	char unit = 0;
@@ -122,7 +131,7 @@ void BenchServer::ProcessCommand(Net::Connection * connection) const {
 	if (log_detail_) {
 		PackHeader ph = {0};
 		std::memcpy(&ph, connection->GetRecvData(), PACK_HEADER_LEN);
-		const char * data = connection->GetRecvData() + PACK_HEADER_LEN;
+		// const char * data = connection->GetRecvData() + PACK_HEADER_LEN;
 		const int data_len = ph.data_len;
 		Net::Log(Net::kLog, __FILE__, __LINE__, "Socket [", connection->GetConnectionId(), "] Package Length", data_len);
 	}
@@ -137,4 +146,11 @@ void BenchServer::SignalCb(uv_signal_t * handle, int signum) {
 
 void BenchServer::CloseCb(uv_handle_t * handle) {
 	jc_free(handle);
+}
+
+void BenchServer::TimerCb(uv_timer_t * handle) {
+	BenchServer * server = static_cast<BenchServer *>(handle->data);
+	if (server) {
+		server->ShowStatus();
+	}
 }
