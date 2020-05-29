@@ -3,17 +3,17 @@
 #include "vld.h"
 #endif
 
-bool get_parameters(int argc, const char * * argv, i32 & client_count, i32 & packet_count, i32 & packet_size, bool & log_detail) {
+bool get_parameters(int argc, const char * * argv, std::string & host, i32 & port, i32 & client_count, i32 & packet_count, i32 & packet_size, bool & log_detail) {
 	client_count = 1;
 	packet_count = 1;
 	packet_size = 64;
 	log_detail = false;
 
-	for (int i = 1; i < argc; ++i) {
+	for (int i = 0; i < argc; ++i) {
 		bool remove_flag = false;
 		const std::string arg_string = argv[i];
-		if (arg_string == "-h" || arg_string == "--help" || arg_string == "/?") {
-			std::printf("Usage: BenchClient [-c client_count] [-p packet_count] [-s packet_size] [--log]\n");
+		if (argc < 3 || arg_string == "-h" || arg_string == "--help" || arg_string == "/?") {
+			std::printf("Usage: BenchClient host port [-c client_count] [-p packet_count] [-s packet_size] [--log]\n");
 			std::printf("-c client_count: 客户端并发数量，默认 1\n");
 			std::printf("-p packet_count: 每个客户端发送数据包数量，默认 1\n");
 			std::printf("-s packet_size : 每个数据包大小，默认 64字节\n");
@@ -31,6 +31,10 @@ bool get_parameters(int argc, const char * * argv, i32 & client_count, i32 & pac
 		} else if (arg_string == "--log") {
 			log_detail = true;
 			remove_flag = true;
+		} else if (i == 1) {
+			host = arg_string;
+		} else if (i == 2) {
+			port = std::atoi(argv[i]);
 		}
 		if (remove_flag) {
 			for (int j = i; j != argc; j++) {
@@ -44,13 +48,15 @@ bool get_parameters(int argc, const char * * argv, i32 & client_count, i32 & pac
 }
 
 int main(int argc, const char * * argv) {
+	std::string host;
+	i32 port;
 	i32 client_count;
 	i32 packet_count;
 	i32 packet_size;
 	bool log_detail;
-	if (get_parameters(argc, argv, client_count, packet_count, packet_size, log_detail)) {
+	if (get_parameters(argc, argv, host, port, client_count, packet_count, packet_size, log_detail)) {
 		BenchClient client(client_count, packet_count, packet_size, log_detail);
-		client.Run("127.0.0.1", 8888);
+		client.Run(host, port);
 		client.ShowStatus();
 	}
 	return 0;

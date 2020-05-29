@@ -2,49 +2,30 @@
 #ifndef Benchmark_BenchClient_INCLUDED
 #define Benchmark_BenchClient_INCLUDED
 
-#include "Net.h"
-#include "Reactor/SocketConnector.h"
-#include "Interface/INotification.h"
-#include "Interface/Connection.h"
+#include "BenchCommon.h"
+#include "Interface/Client.h"
 
-class BenchClient : public Net::INotification {
+class BenchClient : public BenchCommon {
 public:
-	BenchClient(i32 clientCount, i32 packetCount, i32 packetSize, bool logDetail);
+	BenchClient(i32 client_count, i32 packet_count, i32 packet_size, bool log_detail);
 	virtual ~BenchClient();
-	void Run(const std::string & address, i32 port);
-	void ShowStatus();
+	virtual void Run(const std::string & address, i32 port) override;
+	virtual void ShowStatus() override;
 
 protected:
 	virtual void OnConnected(Net::Connection * connection) override;
 	virtual void OnConnectFailed(Net::Connection * connection, i32 reason) override;
 	virtual void OnDisconnected(Net::Connection * connection, bool is_remote) override;
-	virtual void OnNewDataReceived(Net::Connection * connection) override;
 	virtual void OnSomeDataSent(Net::Connection * connection) override;
 
 private:
-	i32 GetMessageSize(Net::Connection * connection) const;
-	void ProcessCommand(Net::Connection * connection) const;
-	void Quit();
-	void CloseTimer();
-
-	static void timer_cb(uv_timer_t * handle);
-	static void close_cb(uv_handle_t * handle);
-	static void SignalCb(uv_signal_t * handle, int signum);
-
-private:
-	Net::EventReactor * reactor_;
 	Net::SocketConnector * connector_;
-	bool quit_;
-	bool log_detail_;
 	i32 client_count_;
 	i32 packet_count_;
 	i32 packet_size_;
-	i32 connected_counter_;
-	i32 connect_failed_counter_;
-	i32 disconnected_counter_;
 	i8 * msg_buffer_;
-	std::map<i64, i32> client_packet_map_;
-	uv_timer_t * quit_timer_;
+	std::unordered_map<intptr_t, i32> c2p_mapping_;
+	std::list<Net::Client *> clients_;
 };
 
 #endif
