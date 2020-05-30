@@ -32,8 +32,7 @@ namespace Net {
 enum LogMode { kLog, kCrash };
 
 class Logger;
-
-class LogItem {
+class NET_EXTERN LogItem {
 	friend class Logger;
 	enum Tag { kStr, kPtr, kSigned, kUnsigned, kEnd };
 
@@ -58,7 +57,7 @@ private:
 	} data_;
 };
 
-void Log(LogMode mode, const i8 * filename, i32 line, LogItem a, LogItem b = LogItem(), LogItem c = LogItem(), LogItem d = LogItem());
+NET_EXTERN void Log(LogMode mode, const i8 * filename, i32 line, LogItem a, LogItem b = LogItem(), LogItem c = LogItem(), LogItem d = LogItem());
 
 }
 

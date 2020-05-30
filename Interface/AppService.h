@@ -32,7 +32,7 @@
 
 namespace Net {
 
-class AppService : public INotification {
+class NET_EXTERN AppService : public INotification {
 	class Signal : public NetObject {
 	public:
 		Signal(AppService * service, i32 signum);

@@ -30,7 +30,7 @@
 
 namespace Net {
 
-class INotification : public NetObject {
+class NET_EXTERN INotification : public NetObject {
 public:
 	virtual void OnConnected(Connection * connection) = 0;
 	virtual void OnConnectFailed(Connection * connection, i32 reason) = 0;

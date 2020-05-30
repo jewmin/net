@@ -30,7 +30,7 @@
 
 namespace Net {
 
-class ServerSocket : public Socket {
+class NET_EXTERN ServerSocket : public Socket {
 public:
 	ServerSocket();
 	ServerSocket(const Socket & rhs);

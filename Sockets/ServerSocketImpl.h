@@ -30,7 +30,7 @@
 
 namespace Net {
 
-class ServerSocketImpl : public SocketImpl {
+class NET_EXTERN ServerSocketImpl : public SocketImpl {
 public:
 	ServerSocketImpl();
 	virtual ~ServerSocketImpl();

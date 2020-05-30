@@ -120,17 +120,22 @@ extern "C" {
 #	if defined(BUILDING_NET_SHARED)
 		/* Building shared library. */
 #		define NET_EXTERN __declspec(dllexport)
+#		define NET_EXTERN_TEMPLATE __declspec(dllexport)
 #	elif defined(USING_NET_SHARED)
 		/* Using shared library. */
 #		define NET_EXTERN __declspec(dllimport)
+#		define NET_EXTERN_TEMPLATE /* nothing */
 #	else
 		/* Building static library. */
 #		define NET_EXTERN /* nothing */
+#		define NET_EXTERN_TEMPLATE /* nothing */
 #	endif
 #elif __GNUC__ >= 4
 #	define NET_EXTERN __attribute__((visibility("default")))
+#	define NET_EXTERN_TEMPLATE __attribute__((visibility("default")))
 #else
 #	define NET_EXTERN /* nothing */
+#	define NET_EXTERN_TEMPLATE /* nothing */
 #endif
 
 NET_EXTERN bool jc_replace_allocator(jc_malloc_func malloc_func, jc_realloc_func realloc_func, jc_calloc_func calloc_func, jc_free_func free_func);

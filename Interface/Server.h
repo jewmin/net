@@ -31,7 +31,7 @@
 
 namespace Net {
 
-class Server : public ConnectionMgr {
+class NET_EXTERN Server : public ConnectionMgr {
 	class Acceptor : public SocketAcceptor {
 	public:
 		Acceptor(EventReactor * reactor, Server * server);

@@ -29,7 +29,7 @@
 
 namespace Net {
 
-class StraightBuffer : public IOBuffer {
+class NET_EXTERN StraightBuffer : public IOBuffer {
 public:
 	StraightBuffer();
 	virtual ~StraightBuffer();

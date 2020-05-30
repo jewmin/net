@@ -29,7 +29,7 @@
 
 namespace Net {
 
-class SocketAddress : public NetObject {
+class NET_EXTERN SocketAddress : public NetObject {
 public:
 	SocketAddress();
 	explicit SocketAddress(u16 port);
@@ -62,11 +62,8 @@ private:
 	void Destroy();
 	i8 * Storage();
 
-	union {
-		i8 buffer[sizeof(IPv6SocketAddressImpl)];
-	private:
-		std::aligned_storage<sizeof(IPv6SocketAddressImpl)>::type aligner;
-	} memory_;
+private:
+	i8 memory_[sizeof(IPv6SocketAddressImpl)];
 };
 
 inline IPAddress SocketAddress::Host() const {
@@ -98,11 +95,11 @@ inline std::string SocketAddress::ToString() const {
 }
 
 inline SocketAddressImpl * SocketAddress::Impl() const {
-	return reinterpret_cast<SocketAddressImpl *>(const_cast<i8 *>(memory_.buffer));
+	return reinterpret_cast<SocketAddressImpl *>(const_cast<i8 *>(memory_));
 }
 
 inline i8 * SocketAddress::Storage() {
-	return memory_.buffer;
+	return memory_;
 }
 
 }

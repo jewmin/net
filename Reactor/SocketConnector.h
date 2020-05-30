@@ -31,7 +31,7 @@
 namespace Net {
 
 class SocketConnection;
-class SocketConnector : public EventHandler {
+class NET_EXTERN SocketConnector : public EventHandler {
 	class Context : public UvData {
 	public:
 		Context(SocketConnector * connector, SocketConnection * connection);

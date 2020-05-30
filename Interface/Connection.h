@@ -30,7 +30,7 @@
 namespace Net {
 
 class ConnectionMgr;
-class Connection : public SocketConnection {
+class NET_EXTERN Connection : public SocketConnection {
 public:
 	Connection(ConnectionMgr * mgr, i32 max_out_buffer_size, i32 max_in_buffer_size);
 	virtual ~Connection();

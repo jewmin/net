@@ -25,11 +25,12 @@
 #ifndef Net_Sockets_Socket_INCLUDED
 #define Net_Sockets_Socket_INCLUDED
 
+#include "Common/NetObject.h"
 #include "Sockets/SocketImpl.h"
 
 namespace Net {
 
-class Socket {
+class NET_EXTERN Socket : public NetObject {
 public:
 	Socket();
 	Socket(const Socket & rhs);

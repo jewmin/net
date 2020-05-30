@@ -29,7 +29,7 @@
 
 namespace Net {
 
-class BipBuffer : public IOBuffer {
+class NET_EXTERN BipBuffer : public IOBuffer {
 public:
 	BipBuffer();
 	virtual ~BipBuffer();

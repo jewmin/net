@@ -30,7 +30,7 @@
 
 namespace Net {
 
-class EventHandler : public UvData {
+class NET_EXTERN EventHandler : public UvData {
 	friend class EventReactor;
 
 public:

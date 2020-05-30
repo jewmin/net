@@ -31,7 +31,7 @@
 
 namespace Net {
 
-class Client : public ConnectionMgr {
+class NET_EXTERN Client : public ConnectionMgr {
 public:
 	Client(const std::string & name, EventReactor * reactor, SocketConnector * connector, i32 max_out_buffer_size, i32 max_in_buffer_size);
 	virtual ~Client();

@@ -40,7 +40,7 @@ S Trim(const S & str) {
 	return S(str, first, last - first + 1);
 }
 
-class IPAddress : public NetObject {
+class NET_EXTERN IPAddress : public NetObject {
 public:
 	IPAddress();
 	explicit IPAddress(const std::string & ip);
@@ -74,11 +74,7 @@ private:
 	i8 * Storage();
 
 private:
-	union {
-		i8 buffer[sizeof(IPv6AddressImpl)];
-	private:
-		std::aligned_storage<sizeof(IPv6AddressImpl)>::type aligner;
-	} memory_;
+	i8 memory_[sizeof(IPv6AddressImpl)];
 };
 
 inline std::string IPAddress::ToString() const {
@@ -106,11 +102,11 @@ inline u32 IPAddress::Scope() const {
 }
 
 inline IPAddressImpl * IPAddress::Impl() const {
-	return reinterpret_cast<IPAddressImpl *>(const_cast<i8 *>(memory_.buffer));
+	return reinterpret_cast<IPAddressImpl *>(const_cast<i8 *>(memory_));
 }
 
 inline i8 * IPAddress::Storage() {
-	return memory_.buffer;
+	return memory_;
 }
 
 }

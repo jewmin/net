@@ -28,9 +28,11 @@
 #include "Common/NetObject.h"
 #include "Common/Logger.h"
 
+template struct NET_EXTERN std::atomic<i32>;
+
 namespace Net {
 
-class RefCounter {
+class NET_EXTERN RefCounter {
 public:
 	RefCounter() : counter_(1) {}
 	~RefCounter() {}
@@ -51,7 +53,7 @@ private:
 	mutable std::atomic<i32> counter_;
 };
 
-class RefCountedObject : public NetObject {
+class NET_EXTERN RefCountedObject : public NetObject {
 public:
 	virtual ~RefCountedObject() {}
 
@@ -73,7 +75,7 @@ private:
 };
 
 class StrongRefObject;
-class WeakReference : public RefCountedObject {
+class NET_EXTERN WeakReference : public RefCountedObject {
 	friend class StrongRefObject;
 public:
 	virtual ~WeakReference() {}
@@ -87,7 +89,7 @@ private:
 	StrongRefObject * object_;
 };
 
-class StrongRefObject : public NetObject {
+class NET_EXTERN StrongRefObject : public NetObject {
 public:
 	StrongRefObject() : weak_reference_(nullptr) {}
 	virtual ~StrongRefObject() { ClearWeakReferences(); }

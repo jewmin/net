@@ -30,7 +30,7 @@
 
 namespace Net {
 
-class IPAddressImpl : public NetObject {
+class NET_EXTERN IPAddressImpl : public NetObject {
 public:
 	virtual ~IPAddressImpl();
 
@@ -51,7 +51,7 @@ private:
 	IPAddressImpl & operator=(const IPAddressImpl &) = delete;
 };
 
-class IPv4AddressImpl : public IPAddressImpl {
+class NET_EXTERN IPv4AddressImpl : public IPAddressImpl {
 public:
 	IPv4AddressImpl();
 	explicit IPv4AddressImpl(const void * addr);
@@ -74,7 +74,7 @@ private:
 	struct in_addr addr_;
 };
 
-class IPv6AddressImpl : public IPAddressImpl {
+class NET_EXTERN IPv6AddressImpl : public IPAddressImpl {
 public:
 	IPv6AddressImpl();
 	IPv6AddressImpl(const void * addr, u32 scope);

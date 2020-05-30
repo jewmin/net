@@ -29,10 +29,12 @@
 #include "Common/Allocator.h"
 #include "Common/Logger.h"
 
+template struct NET_EXTERN std::atomic<i64>;
+
 namespace Net {
 
 template<class OBJECT>
-class ObjectMgr : public NetObject {
+class NET_EXTERN_TEMPLATE ObjectMgr : public NetObject {
 public:
 	ObjectMgr();
 	virtual ~ObjectMgr();

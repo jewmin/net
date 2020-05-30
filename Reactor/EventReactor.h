@@ -30,7 +30,7 @@
 namespace Net {
 
 class EventHandler;
-class EventReactor : public NetObject {
+class NET_EXTERN EventReactor : public NetObject {
 public:
 	EventReactor();
 	virtual ~EventReactor();

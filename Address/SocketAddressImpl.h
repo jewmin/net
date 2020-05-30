@@ -29,7 +29,7 @@
 
 namespace Net {
 
-class SocketAddressImpl : public NetObject {
+class NET_EXTERN SocketAddressImpl : public NetObject {
 public:
 	virtual ~SocketAddressImpl();
 
@@ -51,7 +51,7 @@ private:
 	SocketAddressImpl & operator=(const SocketAddressImpl &) = delete;
 };
 
-class IPv4SocketAddressImpl : public SocketAddressImpl {
+class NET_EXTERN IPv4SocketAddressImpl : public SocketAddressImpl {
 public:
 	IPv4SocketAddressImpl();
 	explicit IPv4SocketAddressImpl(const struct sockaddr_in * addr);
@@ -69,7 +69,7 @@ private:
 	struct sockaddr_in addr_;
 };
 
-class IPv6SocketAddressImpl : public SocketAddressImpl {
+class NET_EXTERN IPv6SocketAddressImpl : public SocketAddressImpl {
 public:
 	IPv6SocketAddressImpl();
 	explicit IPv6SocketAddressImpl(const struct sockaddr_in6 * addr);

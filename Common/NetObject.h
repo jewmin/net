@@ -29,7 +29,7 @@
 
 namespace Net {
 
-class NetObject {
+class NET_EXTERN NetObject {
 public:
 	NetObject();
 	virtual ~NetObject();

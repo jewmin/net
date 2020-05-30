@@ -27,10 +27,18 @@
 
 #include "Net.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // 定义基本内存分配函数，所有内存分配都走这里
-void * jc_malloc(size_t size);
-void * jc_realloc(void * ptr, size_t size);
-void * jc_calloc(size_t count, size_t size);
-void jc_free(void * ptr);
+NET_EXTERN void * jc_malloc(size_t size);
+NET_EXTERN void * jc_realloc(void * ptr, size_t size);
+NET_EXTERN void * jc_calloc(size_t count, size_t size);
+NET_EXTERN void jc_free(void * ptr);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

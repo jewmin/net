@@ -33,7 +33,7 @@
 
 namespace Net {
 
-class SocketConnection : public EventHandler {
+class NET_EXTERN SocketConnection : public EventHandler {
 	friend bool SocketConnector::Connect(SocketConnection * connection, const SocketAddress & address);
 	class SocketIO : public NetObject {
 	public:

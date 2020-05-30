@@ -32,7 +32,7 @@
 
 namespace Net {
 
-class SocketAcceptor : public EventHandler {
+class NET_EXTERN SocketAcceptor : public EventHandler {
 public:
 	virtual ~SocketAcceptor();
 

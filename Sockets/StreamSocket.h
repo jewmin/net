@@ -29,7 +29,7 @@
 
 namespace Net {
 
-class StreamSocket : public Socket {
+class NET_EXTERN StreamSocket : public Socket {
 	friend class ServerSocket;
 
 public:

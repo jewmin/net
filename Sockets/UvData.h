@@ -30,7 +30,7 @@
 namespace Net {
 
 class SocketImpl;
-class UvData : public StrongRefObject {
+class NET_EXTERN UvData : public StrongRefObject {
 	friend class SocketImpl;
 
 public:

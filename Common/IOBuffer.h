@@ -30,7 +30,7 @@
 
 namespace Net {
 
-class IOBuffer : public NetObject {
+class NET_EXTERN IOBuffer : public NetObject {
 public:
 	IOBuffer() : buffer_(nullptr), buffer_length_(0) {}
 	virtual ~IOBuffer() { DeAllocate(); }

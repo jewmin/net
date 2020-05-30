@@ -32,7 +32,7 @@
 
 namespace Net {
 
-class SocketImpl : public RefCountedObject {
+class NET_EXTERN SocketImpl : public RefCountedObject {
 public:
 	virtual ~SocketImpl();
 
