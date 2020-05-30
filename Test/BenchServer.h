@@ -12,9 +12,13 @@ public:
 	virtual void OnDisconnected(Net::Connection * connection, bool is_remote) override;
 	using BenchCommon::ShowStatus;
 
+protected:
+	static void TimerCb(uv_timer_t * handle);
+
 private:
 	bool auto_close_;
 	Net::Server * server_;
+	uv_timer_t * timer_;
 };
 
 #endif

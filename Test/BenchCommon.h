@@ -25,10 +25,8 @@ protected:
 	i32 GetMessageSize(Net::Connection * connection) const;
 	void ProcessCommand(Net::Connection * connection) const;
 
-private:
 	uv_signal_t * CreateSignal(i32 signum);
 	void DeleteSignal(uv_signal_t * handle);
-
 	static void SignalCb(uv_signal_t * handle, int signum);
 	static void CloseCb(uv_handle_t * handle);
 
