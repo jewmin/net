@@ -138,6 +138,12 @@ extern "C" {
 #	define NET_EXTERN_TEMPLATE /* nothing */
 #endif
 
+
+#ifdef _WIN32
+template struct NET_EXTERN std::atomic<i32>;
+template struct NET_EXTERN std::atomic<i64>;
+#endif
+
 NET_EXTERN bool jc_replace_allocator(jc_malloc_func malloc_func, jc_realloc_func realloc_func, jc_calloc_func calloc_func, jc_free_func free_func);
 NET_EXTERN bool jc_replace_logger(log_message_writer log_func);
 NET_EXTERN bool jc_replace_abort(log_abort abort_func);

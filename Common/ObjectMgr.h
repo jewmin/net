@@ -29,8 +29,6 @@
 #include "Common/Allocator.h"
 #include "Common/Logger.h"
 
-template struct NET_EXTERN std::atomic<i64>;
-
 namespace Net {
 
 template<class OBJECT>

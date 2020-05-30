@@ -28,8 +28,6 @@
 #include "Common/NetObject.h"
 #include "Common/Logger.h"
 
-template struct NET_EXTERN std::atomic<i32>;
-
 namespace Net {
 
 class NET_EXTERN RefCounter {

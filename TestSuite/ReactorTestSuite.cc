@@ -314,8 +314,13 @@ TEST_F(ReactorPollTestSuite, accept_cb4) {
 TEST_F(ReactorPollTestSuite, connect) {
 	MockConnection connection;
 	EXPECT_EQ(connector_->Connect(&connection, acceptor_address_), true);
+#ifdef _WIN32
 	EXPECT_EQ(connector_->Connect(client_, acceptor_address_), false);
 	EXPECT_EQ(client_->call_connect_failed_, 1);
+#else
+	EXPECT_EQ(connector_->Connect(client_, acceptor_address_), true);
+	EXPECT_EQ(client_->call_connect_failed_, 0);
+#endif
 }
 
 TEST_F(ReactorPollTestSuite, connect_cb) {

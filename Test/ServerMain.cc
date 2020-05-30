@@ -13,7 +13,7 @@ bool get_parameters(int argc, const char * * argv, std::string & host, i32 & por
 		if (argc < 3 || arg_string == "-h" || arg_string == "--help" || arg_string == "/?") {
 			std::printf("Usage: BenchServer host port [--log]\n");
 			std::printf("--log          : 是否输出更多日志，默认 否\n");
-			std::printf("--auto          : 是否自动退出，默认 否\n");
+			std::printf("--auto         : 是否自动退出，默认 否\n");
 			return false;
 		} else if (arg_string == "--log") {
 			log_detail = true;
