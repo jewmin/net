@@ -418,7 +418,11 @@ TEST_F(ReactorPollTestSuite, write2) {
 		it->GetSocket()->Close();
 	}
 	Poll(1);
+#ifdef _WIN32
+	EXPECT_EQ(connection_->Write(w_content_, w_content_len_), w_content_len_);
+#else
 	EXPECT_EQ(connection_->Write(w_content_, w_content_len_), UV_ENOTCONN);
+#endif
 	Poll();
 }
 
@@ -427,7 +431,11 @@ TEST_F(ReactorPollTestSuite, write_cb) {
 	connection.GetSocket()->Open(reactor_->GetUvLoop());
 	connection.GetSocket()->SetUvData(&connection);
 	EXPECT_EQ(connection.GetSocket()->Connect(Net::SocketAddress("127.0.0.1", 6789)), 0);
+#ifdef _WIN32
+	EXPECT_EQ(connection.GetSocket()->Write(w_content_, w_content_len_), UV_EPIPE);
+#else
 	EXPECT_EQ(connection.GetSocket()->Write(w_content_, w_content_len_), w_content_len_);
+#endif
 	connection.GetSocket()->Close();
 	Poll();
 }

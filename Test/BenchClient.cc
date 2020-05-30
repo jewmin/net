@@ -22,6 +22,9 @@ BenchClient::BenchClient(i32 client_count, i32 packet_count, i32 packet_size, bo
 }
 
 BenchClient::~BenchClient() {
+	for (auto & it : clients_) {
+		delete it;
+	}
 	delete connector_;
 	jc_free(msg_buffer_);
 }
