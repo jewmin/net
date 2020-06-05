@@ -30,7 +30,7 @@
 
 namespace Net {
 
-class NET_EXTERN RefCounter {
+class NET_EXTERN RefCounter : public NetObject {
 public:
 	RefCounter() : counter_(1) {}
 	~RefCounter() {}
