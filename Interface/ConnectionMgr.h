@@ -42,7 +42,7 @@ public:
 
 	i64 GetMgrId() const;
 	void SetMgrId(i64 mgr_id);
-	std::string * GetName() const;
+	const std::string GetName() const;
 	u32 GetConnectionCount() const;
 	Connection * GetConnection(i64 id);
 	void SetNotification(INotification * notification);
@@ -66,7 +66,7 @@ private:
 
 private:
 	i64 mgr_id_;
-	std::string * name_;
+	const std::string name_;
 	INotification * notification_;
 	ObjectMgr<Connection> * object_mgr_;
 	std::list<i64> * need_delete_list_;
@@ -80,7 +80,7 @@ inline void ConnectionMgr::SetMgrId(i64 mgr_id) {
 	mgr_id_ = mgr_id;
 }
 
-inline std::string * ConnectionMgr::GetName() const {
+inline const std::string ConnectionMgr::GetName() const {
 	return name_;
 }
 

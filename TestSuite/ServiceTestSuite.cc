@@ -123,7 +123,7 @@ public:
 
 TEST_F(ConnectionMgrTestSuite, mgr) {
 	EXPECT_EQ(mgr_->GetMgrId(), -1);
-	EXPECT_STREQ(mgr_->GetName()->c_str(), "testMgr");
+	EXPECT_STREQ(mgr_->GetName().c_str(), "testMgr");
 	EXPECT_EQ(mgr_->GetConnectionCount(), 0u);
 	EXPECT_TRUE(mgr_->GetConnection(1) == nullptr);
 

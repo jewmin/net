@@ -114,7 +114,7 @@ AppService::~AppService() {
 }
 
 void AppService::OnConnected(Connection * connection) {
-	Log(kLog, __FILE__, __LINE__, connection->GetMgr()->GetName()->c_str(), "连上了一个新连接 [", connection->GetConnectionId(), "]");
+	Log(kLog, __FILE__, __LINE__, connection->GetMgr()->GetName().c_str(), "连上了一个新连接 [", connection->GetConnectionId(), "]");
 	if (on_connected_) {
 		on_connected_(connection->GetMgr()->GetMgrId(), connection->GetConnectionId());
 	}
@@ -127,7 +127,7 @@ void AppService::OnConnectFailed(Connection * connection, i32 reason) {
 }
 
 void AppService::OnDisconnected(Connection * connection, bool is_remote) {
-	Log(kLog, __FILE__, __LINE__, connection->GetMgr()->GetName()->c_str(), "断开了一个连接 [", connection->GetConnectionId(), "]");
+	Log(kLog, __FILE__, __LINE__, connection->GetMgr()->GetName().c_str(), "断开了一个连接 [", connection->GetConnectionId(), "]");
 	if (on_disconnected_) {
 		on_disconnected_(connection->GetMgr()->GetMgrId(), connection->GetConnectionId(), is_remote);
 	}
@@ -203,7 +203,7 @@ i64 AppService::CreateServer(const std::string & name, i32 max_out_buffer_size, 
 bool AppService::ServerListen(i64 server_id, const std::string & address, i32 port) {
 	Server * server = dynamic_cast<Server *>(socket_mgr_->GetObj(server_id));
 	if (server) {
-		Log(kLog, __FILE__, __LINE__, server->GetName()->c_str(), "监听端口", address.c_str(), port);
+		Log(kLog, __FILE__, __LINE__, server->GetName().c_str(), "监听端口", address.c_str(), port);
 		return server->Listen(address, port);
 	}
 	return false;
@@ -212,7 +212,7 @@ bool AppService::ServerListen(i64 server_id, const std::string & address, i32 po
 bool AppService::EndServer(i64 server_id) {
 	Server * server = dynamic_cast<Server *>(socket_mgr_->GetObj(server_id));
 	if (server) {
-		Log(kLog, __FILE__, __LINE__, "终止服务", server->GetName()->c_str());
+		Log(kLog, __FILE__, __LINE__, "终止服务", server->GetName().c_str());
 		server->Stop();
 		return true;
 	}
@@ -238,7 +238,7 @@ i64 AppService::CreateClient(const std::string & name, i32 max_out_buffer_size, 
 i64 AppService::ClientConnect(i64 client_id, const std::string & address, i32 port) {
 	Client * client = dynamic_cast<Client *>(socket_mgr_->GetObj(client_id));
 	if (client) {
-		Log(kLog, __FILE__, __LINE__, client->GetName()->c_str(), "发起连接", address.c_str(), port);
+		Log(kLog, __FILE__, __LINE__, client->GetName().c_str(), "发起连接", address.c_str(), port);
 		return client->Connect(address, port);
 	}
 	return -1;

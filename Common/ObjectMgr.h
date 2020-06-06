@@ -32,7 +32,7 @@
 namespace Net {
 
 template<class OBJECT>
-class NET_EXTERN_TEMPLATE ObjectMgr : public NetObject {
+class ObjectMgr : public NetObject {
 public:
 	ObjectMgr();
 	virtual ~ObjectMgr();
