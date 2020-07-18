@@ -37,9 +37,11 @@ static bool kQuit = false;					// 事件循环退出
 static std::set<ClientUvData *> kClients;	// 所有套接字
 static i32 kIndex = 1;						// 套接字索引
 
+enum ConnectState { kConnecting, kConnected, kDisconnecting, kDisconnected };
+
 class ClientUvData : public Net::UvData {
 public:
-	ClientUvData(i32 packet_count) : packet_count_(packet_count), buffer_(nullptr), used_(0), index_(kIndex++) {
+	ClientUvData(i32 packet_count) : packet_count_(packet_count), buffer_(nullptr), used_(0), index_(kIndex++), status_(kDisconnected) {
 		socket_.Open(uv_default_loop());
 		socket_.SetUvData(this);
 		buffer_ = static_cast<i8 *>(jc_malloc(kBufferSize));
@@ -87,26 +89,31 @@ public:
 		if (status == 0) {
 			if ((status = socket_.Established()) == 0) {
 				++kConnectedCount;
+				status_ = kConnected;
 				if ((status = socket_.Write(kMsgBuffer, kPacketSize)) > 0) {
 					++kWriteCount;
 				} else {
 					std::printf("ConnectCallback %d %d %s\n", index_, status, uv_strerror(status));
+					status_ = kDisconnecting;
 					socket_.Shutdown();
 				}
 			} else {
 				std::printf("ConnectCallback %d %d %s\n", index_, status, uv_strerror(status));
 				++kConnectFailedCount;
 				CheckQuit();
+				status_ = kDisconnected;
 				socket_.Close();
 			}
 		} else {
 			std::printf("ConnectCallback %d %d %s\n", index_, status, uv_strerror(status));
 			++kConnectFailedCount;
 			CheckQuit();
+			status_ = kDisconnected;
 			socket_.Close();
 		}
 	}
 	virtual void ShutdownCallback(i32 status, void * arg) override {
+		status_ = kDisconnected;
 		socket_.Close();
 	}
 	virtual void AllocCallback(uv_buf_t * buf) override {
@@ -135,23 +142,29 @@ public:
 			} while (!done);
 		} else if (status < 0) {
 			std::printf("ReadCallback %d %d %s\n", index_, status, uv_strerror(status));
+			status_ = kDisconnected;
 			socket_.Close();
 		}
 	}
 	virtual void WrittenCallback(i32 status, void * arg) override {
 		if (status == 0) {
 			if (--packet_count_ > 0) {
-				if ((status = socket_.Write(kMsgBuffer, kPacketSize)) > 0) {
-					++kWriteCount;
-				} else if (status < 0) {
-					std::printf("WrittenCallback %d %d %s\n", index_, status, uv_strerror(status));
-					socket_.Shutdown();
+				if (status_ == kConnected) {
+					if ((status = socket_.Write(kMsgBuffer, kPacketSize)) > 0) {
+						++kWriteCount;
+					} else if (status < 0) {
+						std::printf("WrittenCallback %d %d %s\n", index_, status, uv_strerror(status));
+						status_ = kDisconnecting;
+						socket_.Shutdown();
+					}
 				}
 			} else {
+				status_ = kDisconnecting;
 				socket_.Shutdown();
 			}
 		} else {
 			std::printf("WrittenCallback %d %d %s\n", index_, status, uv_strerror(status));
+			status_ = kDisconnected;
 			socket_.Close();
 		}
 	}
@@ -162,6 +175,7 @@ public:
 	i8 * buffer_;
 	i32 used_;
 	i32 index_;
+	i32 status_;
 };
 
 bool get_parameters(int argc, const char * * argv, std::string & host, i32 & port, i32 & client_count, i32 & packet_count, i32 & packet_size, bool & log_detail) {
@@ -233,6 +247,7 @@ int main(int argc, const char * * argv) {
 	for (i32 i = 0; i < kClientCount; ++i) {
 		ClientUvData * client = new ClientUvData(packet_count);
 		if ((status = client->socket_.Connect(Net::SocketAddress(host, port))) == 0) {
+			client->status_ = kConnecting;
 			kClients.insert(client);
 		} else {
 			std::printf("Connect %d %d %s\n", kIndex, status, uv_strerror(status));
@@ -258,6 +273,7 @@ int main(int argc, const char * * argv) {
 	kClients.clear();
 	uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 	jc_free(kMsgBuffer);
+	uv_loop_close(uv_default_loop());
 	// 状态打印
 	std::printf("计划连接数/成功连接数/失败连接数/关闭连接数 %d/%d/%d/%d\n", kClientCount, kConnectedCount, kConnectFailedCount, kDisconnectedCount);
 	std::printf("计划发包数/成功发包数 %d/%d\n", packet_count * kClientCount, kWriteCount);

@@ -190,7 +190,7 @@ TEST_F(ReactorTestSuite, address2) {
 class ReactorPollTestSuite : public ReactorTestSuite {
 public:
 	ReactorPollTestSuite() {
-		std::strncpy(w_content_, "hello world", std::strlen("hello world"));
+		std::memcpy(w_content_, "hello world", std::strlen("hello world"));
 		w_content_len_ = static_cast<i32>(std::strlen("hello world"));
 		w_content_[w_content_len_] = 0;
 	}

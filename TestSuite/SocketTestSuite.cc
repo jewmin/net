@@ -397,7 +397,7 @@ public:
 	// Sets up the test fixture.
 	virtual void SetUp() {
 		SocketStreamTestSuite::SetUp();
-		std::strncpy(w_content_, "hello world", std::strlen("hello world"));
+		std::memcpy(w_content_, "hello world", std::strlen("hello world"));
 		stream_socket_->Open(loop_);
 	}
 
