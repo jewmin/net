@@ -85,19 +85,22 @@ public:
 	}
 	virtual void ConnectCallback(i32 status, void * arg) override {
 		if (status == 0) {
-			if (socket_.Established() == 0) {
+			if ((status = socket_.Established()) == 0) {
 				++kConnectedCount;
-				if (socket_.Write(kMsgBuffer, kPacketSize) > 0) {
+				if ((status = socket_.Write(kMsgBuffer, kPacketSize)) > 0) {
 					++kWriteCount;
 				} else {
+					std::printf("ConnectCallback %d %d %s\n", index_, status, uv_strerror(status));
 					socket_.Shutdown();
 				}
 			} else {
+				std::printf("ConnectCallback %d %d %s\n", index_, status, uv_strerror(status));
 				++kConnectFailedCount;
 				CheckQuit();
 				socket_.Close();
 			}
 		} else {
+			std::printf("ConnectCallback %d %d %s\n", index_, status, uv_strerror(status));
 			++kConnectFailedCount;
 			CheckQuit();
 			socket_.Close();
@@ -131,17 +134,24 @@ public:
 				}
 			} while (!done);
 		} else if (status < 0) {
+			std::printf("ReadCallback %d %d %s\n", index_, status, uv_strerror(status));
 			socket_.Close();
 		}
 	}
 	virtual void WrittenCallback(i32 status, void * arg) override {
 		if (status == 0) {
-			if (--packet_count_ > 0 && socket_.Write(kMsgBuffer, kPacketSize) > 0) {
-				++kWriteCount;
+			if (--packet_count_ > 0) {
+				if ((status = socket_.Write(kMsgBuffer, kPacketSize)) > 0) {
+					++kWriteCount;
+				} else if (status < 0) {
+					std::printf("WrittenCallback %d %d %s\n", index_, status, uv_strerror(status));
+					socket_.Shutdown();
+				}
 			} else {
 				socket_.Shutdown();
 			}
 		} else {
+			std::printf("WrittenCallback %d %d %s\n", index_, status, uv_strerror(status));
 			socket_.Close();
 		}
 	}
@@ -219,11 +229,13 @@ int main(int argc, const char * * argv) {
 	std::memcpy(kMsgBuffer, &ph, PACK_HEADER_LEN);
 	std::memcpy(kMsgBuffer + PACK_HEADER_LEN, "BEGIN", strlen("BEGIN"));
 	std::memcpy(kMsgBuffer + kPacketSize - strlen("END"), "END", strlen("END"));
+	i32 status = 0;
 	for (i32 i = 0; i < kClientCount; ++i) {
 		ClientUvData * client = new ClientUvData(packet_count);
-		if (client->socket_.Connect(Net::SocketAddress(host, port)) == 0) {
+		if ((status = client->socket_.Connect(Net::SocketAddress(host, port))) == 0) {
 			kClients.insert(client);
 		} else {
+			std::printf("Connect %d %d %s\n", kIndex, status, uv_strerror(status));
 			++kConnectFailedCount;
 		}
 	}

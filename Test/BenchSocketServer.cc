@@ -78,9 +78,11 @@ public:
 	void Send(const i32 message_size) {
 		i8 * msg = static_cast<i8 *>(jc_malloc(message_size));
 		std::memcpy(msg, buffer_, message_size);
-		if (socket_.Write(msg, message_size, msg) > 0) {
+		i32 status = 0;
+		if ((status = socket_.Write(msg, message_size, msg)) > 0) {
 			++kWriteCount;
 		} else {
+			std::printf("Send %d %d %s\n", index_, status, uv_strerror(status));
 			socket_.Shutdown();
 		}
 	}
@@ -119,12 +121,14 @@ public:
 				}
 			} while (!done);
 		} else if (status < 0) {
+			std::printf("ReadCallback %d %d %s\n", index_, status, uv_strerror(status));
 			socket_.Close();
 		}
 	}
 	virtual void WrittenCallback(i32 status, void * arg) override {
 		jc_free(arg);
 		if (status < 0) {
+			std::printf("WrittenCallback %d %d %s\n", index_, status, uv_strerror(status));
 			socket_.Close();
 		}
 	}
@@ -149,10 +153,11 @@ public:
 			Net::StreamSocket client;
 			if (socket_.AcceptSocket(client)) {
 				ClientUvData * connection = new ClientUvData(client);
-				if (connection->socket_.Established() == 0) {
+				if ((status = connection->socket_.Established()) == 0) {
 					++kConnectedCount;
 					kClients.insert(connection);
 				} else {
+					std::printf("AcceptCallback %d %d %s\n", kIndex, status, uv_strerror(status));
 					++kConnectFailedCount;
 					connection->socket_.Close();
 				}
@@ -160,6 +165,7 @@ public:
 				++kConnectFailedCount;
 			}
 		} else {
+			std::printf("AcceptCallback %d %d %s\n", kIndex, status, uv_strerror(status));
 			socket_.Close();
 		}
 	}
@@ -221,7 +227,7 @@ int main(int argc, const char * * argv) {
 		uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 		return 1;
 	}
-	if (server->socket_.Listen() < 0) {
+	if (server->socket_.Listen(512) < 0) {
 		uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 		return 1;
 	}
