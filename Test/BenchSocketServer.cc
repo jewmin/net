@@ -32,6 +32,7 @@ static i32 kReadPacketSize = 0;				// 收包字节数
 static i32 kBufferSize = 65536;				// 缓冲区大小
 static bool kLogDetail = false;				// 是否打印日志
 static bool kAutoClose = false;				// 是否自动退出
+static bool kEcho = false;					// 是否回包
 static bool kQuit = false;					// 事件循环退出
 static std::set<ClientUvData *> kClients;	// 所有套接字
 static i32 kIndex = 1;						// 套接字索引
@@ -75,7 +76,9 @@ public:
 			const int data_len = ph.data_len;
 			std::printf("Package Length %d %d\n", index_, data_len);
 		}
-		Send(message_size);
+		if (kEcho) {
+			Send(message_size);
+		}
 	}
 	void Send(const i32 message_size) {
 		if (status_ == kConnected) {
@@ -189,9 +192,10 @@ public:
 	Net::ServerSocket socket_;
 };
 
-bool get_parameters(int argc, const char * * argv, std::string & host, i32 & port, bool & log_detail, bool & auto_close) {
+bool get_parameters(int argc, const char * * argv, std::string & host, i32 & port, bool & log_detail, bool & auto_close, bool & echo) {
 	log_detail = false;
 	auto_close = false;
+	echo = false;
 	for (int i = 0; i < argc; ++i) {
 		bool remove_flag = false;
 		const std::string arg_string = argv[i];
@@ -199,12 +203,16 @@ bool get_parameters(int argc, const char * * argv, std::string & host, i32 & por
 			std::printf("Usage: BenchServer host port [--log]\n");
 			std::printf("--log          : 是否输出更多日志，默认 否\n");
 			std::printf("--auto         : 是否自动退出，默认 否\n");
+			std::printf("--echo         : 是否回包，默认 否\n");
 			return false;
 		} else if (arg_string == "--log") {
 			log_detail = true;
 			remove_flag = true;
-		}  else if (arg_string == "--auto") {
+		} else if (arg_string == "--auto") {
 			auto_close = true;
+			remove_flag = true;
+		} else if (arg_string == "--echo") {
+			echo = true;
 			remove_flag = true;
 		} else if (i == 1) {
 			host = arg_string;
@@ -229,9 +237,11 @@ void signal_cb(uv_signal_t * handle, int signum) {
 int main(int argc, const char * * argv) {
 	std::string host;
 	i32 port;
-	if (!get_parameters(argc, argv, host, port, kLogDetail, kAutoClose)) {
+	if (!get_parameters(argc, argv, host, port, kLogDetail, kAutoClose, kEcho)) {
 		return 1;
 	}
+	signal(SIGPIPE, SIG_IGN);
+	auto start = std::chrono::system_clock::now();
 	// 初始化
 	ServerUvData * server = new ServerUvData();
 	if (server->socket_.Bind(Net::SocketAddress(host, port)) < 0) {
@@ -262,8 +272,16 @@ int main(int argc, const char * * argv) {
 	kClients.clear();
 	uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 	uv_loop_close(uv_default_loop());
+	auto end = std::chrono::system_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 	// 状态打印
 	std::printf("成功连接数/失败连接数/关闭连接数 %d/%d/%d\n", kConnectedCount, kConnectFailedCount, kDisconnectedCount);
 	std::printf("成功收包大小 %d\n", kReadPacketSize);
+	std::printf("回包数 %d\n", kWriteCount);
+#ifdef _WIN32
+	std::printf("耗时(微秒) %lld\n", duration.count());
+#else
+	std::printf("耗时(微秒) %ld\n", duration.count());
+#endif
 	return 0;
 }

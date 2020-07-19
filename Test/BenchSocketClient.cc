@@ -232,6 +232,7 @@ int main(int argc, const char * * argv) {
 	if (!get_parameters(argc, argv, host, port, kClientCount, packet_count, kPacketSize, kLogDetail)) {
 		return 1;
 	}
+	auto start = std::chrono::system_clock::now();
 	// 初始化
 	kMsgBuffer = static_cast<i8 *>(jc_malloc(kPacketSize));
 	PackHeader ph = {0};
@@ -274,9 +275,16 @@ int main(int argc, const char * * argv) {
 	uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 	jc_free(kMsgBuffer);
 	uv_loop_close(uv_default_loop());
+	auto end = std::chrono::system_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 	// 状态打印
 	std::printf("计划连接数/成功连接数/失败连接数/关闭连接数 %d/%d/%d/%d\n", kClientCount, kConnectedCount, kConnectFailedCount, kDisconnectedCount);
 	std::printf("计划发包数/成功发包数 %d/%d\n", packet_count * kClientCount, kWriteCount);
 	std::printf("计划发包大小/成功发包大小/成功收包大小 %d/%d/%d\n", packet_count * kPacketSize * kClientCount, kPacketSize * kWriteCount, kReadPacketSize);
+#ifdef _WIN32
+	std::printf("耗时(微秒) %lld\n", duration.count());
+#else
+	std::printf("耗时(微秒) %ld\n", duration.count());
+#endif
 	return 0;
 }
