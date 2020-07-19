@@ -59,7 +59,7 @@ public:
 	// Sets up the test fixture.
 	virtual void SetUp() {
 		UvDataTestSuite::SetUp();
-		std::strncpy(w_content_, "hello world", std::strlen("hello world"));
+		std::memcpy(w_content_, "hello world", std::strlen("hello world"));
 		loop_ = static_cast<uv_loop_t *>(jc_malloc(sizeof(*loop_)));
 		uv_loop_init(loop_);
 		socket_impl_ = new MockSocketImpl();

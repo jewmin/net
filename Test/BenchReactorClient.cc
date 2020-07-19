@@ -44,7 +44,7 @@ enum ConnectState { kConnecting, kConnected, kDisconnecting, kDisconnected };
 
 class ClientUvData : public Net::SocketConnection {
 public:
-	ClientUvData(i32 packet_count) : Net::SocketConnection(65536, 65536), packet_count_(packet_count), index_(kIndex++) {
+	ClientUvData(i32 packet_count) : Net::SocketConnection(kBufferSize, kBufferSize), packet_count_(packet_count), index_(kIndex++) {
 	}
 	virtual ~ClientUvData() {
 	}
