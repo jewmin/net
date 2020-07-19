@@ -28,7 +28,7 @@ static i32 kConnectedCount = 0;				// 成功连接数
 static i32 kConnectFailedCount = 0;			// 失败连接数
 static i32 kDisconnectedCount = 0;			// 关闭连接数
 static i32 kWriteCount = 0;					// 成功发包数
-static i32 kReadPacketSize = 0;				// 收包字节数
+static i64 kReadPacketSize = 0;				// 收包字节数
 static i32 kBufferSize = 65536;				// 缓冲区大小
 static bool kLogDetail = false;				// 是否打印日志
 static bool kAutoClose = false;				// 是否自动退出
@@ -240,7 +240,9 @@ int main(int argc, const char * * argv) {
 	if (!get_parameters(argc, argv, host, port, kLogDetail, kAutoClose, kEcho)) {
 		return 1;
 	}
+#ifndef _WIN32
 	signal(SIGPIPE, SIG_IGN);
+#endif
 	auto start = std::chrono::system_clock::now();
 	// 初始化
 	ServerUvData * server = new ServerUvData();
@@ -276,7 +278,7 @@ int main(int argc, const char * * argv) {
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 	// 状态打印
 	std::printf("成功连接数/失败连接数/关闭连接数 %d/%d/%d\n", kConnectedCount, kConnectFailedCount, kDisconnectedCount);
-	std::printf("成功收包大小 %d\n", kReadPacketSize);
+	std::printf("成功收包大小 %lld\n", kReadPacketSize);
 	std::printf("回包数 %d\n", kWriteCount);
 #ifdef _WIN32
 	std::printf("耗时(微秒) %lld\n", duration.count());

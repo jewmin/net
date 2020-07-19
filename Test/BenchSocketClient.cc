@@ -27,7 +27,7 @@ static i32 kConnectedCount = 0;				// 成功连接数
 static i32 kConnectFailedCount = 0;			// 失败连接数
 static i32 kDisconnectedCount = 0;			// 关闭连接数
 static i32 kWriteCount = 0;					// 成功发包数
-static i32 kReadPacketSize = 0;				// 收包字节数
+static i64 kReadPacketSize = 0;				// 收包字节数
 static i8 * kMsgBuffer = nullptr;			// 数据包
 static i32 kClientCount = 0;				// 计划连接数
 static i32 kPacketSize = 0;					// 计划数据包大小
@@ -280,7 +280,7 @@ int main(int argc, const char * * argv) {
 	// 状态打印
 	std::printf("计划连接数/成功连接数/失败连接数/关闭连接数 %d/%d/%d/%d\n", kClientCount, kConnectedCount, kConnectFailedCount, kDisconnectedCount);
 	std::printf("计划发包数/成功发包数 %d/%d\n", packet_count * kClientCount, kWriteCount);
-	std::printf("计划发包大小/成功发包大小/成功收包大小 %d/%d/%d\n", packet_count * kPacketSize * kClientCount, kPacketSize * kWriteCount, kReadPacketSize);
+	std::printf("计划发包大小/成功发包大小/成功收包大小 %lld/%lld/%lld\n", packet_count * static_cast<i64>(kPacketSize) * kClientCount, static_cast<i64>(kPacketSize) * kWriteCount, kReadPacketSize);
 #ifdef _WIN32
 	std::printf("耗时(微秒) %lld\n", duration.count());
 #else
