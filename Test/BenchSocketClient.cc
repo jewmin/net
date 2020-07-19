@@ -232,6 +232,9 @@ int main(int argc, const char * * argv) {
 	if (!get_parameters(argc, argv, host, port, kClientCount, packet_count, kPacketSize, kLogDetail)) {
 		return 1;
 	}
+#ifndef _WIN32
+	signal(SIGPIPE, SIG_IGN);
+#endif
 	auto start = std::chrono::system_clock::now();
 	// 初始化
 	kMsgBuffer = static_cast<i8 *>(jc_malloc(kPacketSize));
