@@ -6,19 +6,17 @@
 
 class BenchServer : public BenchCommon {
 public:
-	BenchServer(bool log_detail, bool auto_close);
+	BenchServer(bool log_detail, bool auto_close, bool echo);
 	virtual ~BenchServer();
 	virtual void Run(const std::string & address, i32 port) override;
+	virtual void OnConnected(Net::Connection * connection) override;
 	virtual void OnDisconnected(Net::Connection * connection, bool is_remote) override;
-	using BenchCommon::ShowStatus;
-
-protected:
-	static void TimerCb(uv_timer_t * handle);
+	virtual void ProcessCommand(Net::Connection * connection, const i32 message_size) override;
 
 private:
 	bool auto_close_;
+	bool echo_;
 	Net::Server * server_;
-	uv_timer_t * timer_;
 };
 
 #endif

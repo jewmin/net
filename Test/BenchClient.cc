@@ -44,39 +44,37 @@ void BenchClient::Run(const std::string & address, i32 port) {
 }
 
 void BenchClient::ShowStatus() {
-	Net::Log(Net::kLog, __FILE__, __LINE__, "要连接数:", client_count_);
-	Net::Log(Net::kLog, __FILE__, __LINE__, "要发包数:", packet_count_);
-	Net::Log(Net::kLog, __FILE__, __LINE__, "要发的数据包大小:", packet_size_);
-	BenchCommon::ShowStatus();
+	std::printf("计划连接数/成功连接数/失败连接数/关闭连接数 %d/%d/%d/%d\n", client_count_, connected_counter_, connect_failed_counter_, disconnected_counter_);
+	std::printf("计划发包数/成功发包数 %d/%d\n", packet_count_ * client_count_, write_counter_);
+	std::printf("计划发包大小/成功发包大小/成功收包大小 %lld/%lld/%lld\n", packet_count_ * static_cast<i64>(packet_size_) * client_count_, static_cast<i64>(packet_size_) * write_counter_, recv_packet_size_);
+	std::printf("耗时(微秒) %lld\n", use_time_);
 }
 
 void BenchClient::OnConnected(Net::Connection * connection) {
 	++connected_counter_;
 	c2p_mapping_.insert({reinterpret_cast<intptr_t>(connection), 0});
-	connection->Write(msg_buffer_, packet_size_);
+	Send(connection, msg_buffer_, packet_size_);
 }
 
 void BenchClient::OnConnectFailed(Net::Connection * connection, i32 reason) {
 	++connect_failed_counter_;
-	if (disconnected_counter_ + connect_failed_counter_ == client_count_) {
+	if (disconnected_counter_ + connect_failed_counter_ >= client_count_) {
 		quit_ = true;
 	}
 }
 
 void BenchClient::OnDisconnected(Net::Connection * connection, bool is_remote) {
 	++disconnected_counter_;
-	if (disconnected_counter_ + connect_failed_counter_ == client_count_) {
+	if (disconnected_counter_ + connect_failed_counter_ >= client_count_) {
 		quit_ = true;
 	}
 }
 
 void BenchClient::OnSomeDataSent(Net::Connection * connection) {
-	recv_packet_size_ += packet_size_;
-	++recv_packet_count_;
 	auto it = c2p_mapping_.find(reinterpret_cast<intptr_t>(connection));
 	if (it != c2p_mapping_.end()) {
 		if (++it->second < packet_count_) {
-			connection->Write(msg_buffer_, packet_size_);
+			Send(connection, msg_buffer_, packet_size_);
 		} else {
 			connection->Shutdown(false);
 		}

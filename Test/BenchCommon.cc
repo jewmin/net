@@ -5,7 +5,7 @@
 
 BenchCommon::BenchCommon(bool log_detail)
 	: reactor_(new Net::EventReactor()), quit_(false), log_detail_(log_detail)
-	, recv_packet_size_(0), recv_packet_count_(0)
+	, recv_packet_size_(0), write_counter_(0)
 	, connected_counter_(0), connect_failed_counter_(0), disconnected_counter_(0)
 	, sig_int_(nullptr), sig_term_(nullptr), use_time_(0) {
 }
@@ -29,33 +29,19 @@ void BenchCommon::Poll() {
 }
 
 void BenchCommon::ShowStatus() {
-	Net::Log(Net::kLog, __FILE__, __LINE__, "成功连接数:", connected_counter_);
-	Net::Log(Net::kLog, __FILE__, __LINE__, "失败连接数:", connect_failed_counter_);
-	Net::Log(Net::kLog, __FILE__, __LINE__, "关闭连接数:", disconnected_counter_);
-	Net::Log(Net::kLog, __FILE__, __LINE__, "耗时(微秒):", use_time_);
-	Net::Log(Net::kLog, __FILE__, __LINE__, "发送/收到数据包:", recv_packet_count_);
-	Net::Log(Net::kLog, __FILE__, __LINE__, "发送/收到数据包总大小(字节):", recv_packet_size_);
-	if (use_time_ > 0) {
-		double bytes = (double)recv_packet_size_ * 1000000 / (double)use_time_;
-		double mbytes = bytes / 1048576;
-		double qps = (double)recv_packet_count_ * 1000000 / (double)use_time_;
-		std::printf("Network traffic: %.2lf(%.2lfM), QPS: %.lf\n", bytes, mbytes, qps);
-	}
+	std::printf("成功连接数/失败连接数/关闭连接数 %d/%d/%d\n", connected_counter_, connect_failed_counter_, disconnected_counter_);
+	std::printf("成功收包大小 %lld\n", recv_packet_size_);
+	std::printf("回包数 %d\n", write_counter_);
+	std::printf("耗时(微秒) %lld\n", use_time_);
 }
 
 void BenchCommon::OnConnected(Net::Connection * connection) {
-	++connected_counter_;
 }
 
 void BenchCommon::OnConnectFailed(Net::Connection * connection, i32 reason) {
-	++connect_failed_counter_;
 }
 
 void BenchCommon::OnDisconnected(Net::Connection * connection, bool is_remote) {
-	++disconnected_counter_;
-	if (disconnected_counter_ == connected_counter_) {
-		quit_ = true;
-	}
 }
 
 void BenchCommon::OnNewDataReceived(Net::Connection * connection) {
@@ -66,15 +52,11 @@ void BenchCommon::OnNewDataReceived(Net::Connection * connection) {
 		if (size >= GetMinimumMessageSize()) {
 			const i32 message_size = GetMessageSize(connection);
 			if (size == message_size) {
-				ProcessCommand(connection);
+				ProcessCommand(connection, message_size);
 				connection->PopRecvData(message_size);
-				recv_packet_size_ += message_size;
-				++recv_packet_count_;
 			} else if (size > message_size) {
-				ProcessCommand(connection);
+				ProcessCommand(connection, message_size);
 				connection->PopRecvData(message_size);
-				recv_packet_size_ += message_size;
-				++recv_packet_count_;
 				done = false;
 			}
 		}
@@ -89,11 +71,9 @@ i32 BenchCommon::GetMinimumMessageSize() const {
 }
 
 i32 BenchCommon::GetMessageSize(Net::Connection * connection) const {
-	const i8 * data = connection->GetRecvData();
-	const i32 size = connection->GetRecvDataSize();
-	if (size > static_cast<i32>(PACK_HEADER_LEN)) {
+	if (connection->GetRecvDataSize() > static_cast<i32>(PACK_HEADER_LEN)) {
 		PackHeader ph = {0};
-		std::memcpy(&ph, data, PACK_HEADER_LEN);
+		std::memcpy(&ph, connection->GetRecvData(), PACK_HEADER_LEN);
 		if (PACK_BEGIN_FLAG == ph.pack_begin_flag && PACK_END_FLAG == ph.pack_end_flag) {
 			u16 crc_data = MAKE_CRC_DATA(PACK_BEGIN_FLAG, PACK_END_FLAG, ph.data_len);
 			if (crc_data == ph.crc_data) {
@@ -104,12 +84,23 @@ i32 BenchCommon::GetMessageSize(Net::Connection * connection) const {
 	return 0;
 }
 
-void BenchCommon::ProcessCommand(Net::Connection * connection) const {
+void BenchCommon::ProcessCommand(Net::Connection * connection, const i32 message_size) {
+	recv_packet_size_ += message_size;
 	if (log_detail_) {
 		PackHeader ph = {0};
 		std::memcpy(&ph, connection->GetRecvData(), PACK_HEADER_LEN);
 		const int data_len = ph.data_len;
-		Net::Log(Net::kLog, __FILE__, __LINE__, "Socket [", connection->GetConnectionId(), "] Package Length", data_len);
+		std::printf("Package Length %lld %d\n", connection->GetConnectionId(), data_len);
+	}
+}
+
+void BenchCommon::Send(Net::Connection * connection, const i8 * data, i32 len) {
+	i32 status = connection->Write(data, len);
+	if (status > 0) {
+		++write_counter_;
+	} else {
+		std::printf("Send %lld %d %s\n", connection->GetConnectionId(), status, uv_strerror(status));
+		connection->Shutdown(false);
 	}
 }
 

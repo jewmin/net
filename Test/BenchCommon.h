@@ -8,12 +8,14 @@
 #include "Interface/INotification.h"
 
 class BenchCommon : public Net::INotification {
+public:
+	virtual ~BenchCommon();
+	virtual void ShowStatus();
+
 protected:
 	BenchCommon(bool log_detail);
-	virtual ~BenchCommon();
 
 	virtual void Run(const std::string & address, i32 port) = 0;
-	virtual void ShowStatus();
 	virtual void OnConnected(Net::Connection * connection) override;
 	virtual void OnConnectFailed(Net::Connection * connection, i32 reason) override;
 	virtual void OnDisconnected(Net::Connection * connection, bool is_remote) override;
@@ -23,7 +25,8 @@ protected:
 	void Poll();
 	i32 GetMinimumMessageSize() const;
 	i32 GetMessageSize(Net::Connection * connection) const;
-	void ProcessCommand(Net::Connection * connection) const;
+	virtual void ProcessCommand(Net::Connection * connection, const i32 message_size);
+	void Send(Net::Connection * connection, const i8 * data, i32 len);
 
 	uv_signal_t * CreateSignal(i32 signum);
 	void DeleteSignal(uv_signal_t * handle);
@@ -35,7 +38,7 @@ protected:
 	bool quit_;
 	bool log_detail_;
 	i64 recv_packet_size_;
-	i64 recv_packet_count_;
+	i32 write_counter_;
 	i32 connected_counter_;
 	i32 connect_failed_counter_;
 	i32 disconnected_counter_;
