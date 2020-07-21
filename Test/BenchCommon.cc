@@ -17,6 +17,9 @@ BenchCommon::~BenchCommon() {
 }
 
 void BenchCommon::Poll() {
+#ifndef _WIN32
+	signal(SIGPIPE, SIG_IGN);
+#endif
 	sig_int_ = CreateSignal(SIGINT);
 	sig_term_ = CreateSignal(SIGTERM);
 	auto start = std::chrono::system_clock::now();
