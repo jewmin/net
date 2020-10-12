@@ -1,3 +1,6 @@
 [submodule "3rd/libuv"]
 	path = 3rd/libuv
 	url = https://github.com/libuv/libuv.git
+[submodule "logger"]
+	path = logger
+	url = https://github.com/jewmin/logger.git
