@@ -25,11 +25,14 @@
 #ifndef Net_Address_SocketAddressImpl_INCLUDED
 #define Net_Address_SocketAddressImpl_INCLUDED
 
+#include "Common.h"
+#include "CObject.h"
+#include "SDString.h"
 #include "Address/IPAddress.h"
 
 namespace Net {
 
-class NET_EXTERN SocketAddressImpl : public NetObject {
+class COMMON_EXTERN SocketAddressImpl : public Common::CObject {
 public:
 	virtual ~SocketAddressImpl();
 
@@ -39,7 +42,7 @@ public:
 	virtual const struct sockaddr * Addr() const = 0;
 	virtual i32 AF() const = 0;
 	virtual AddressFamily::eFamily Family() const = 0;
-	virtual std::string ToString() const = 0;
+	virtual Common::SDString ToString() const = 0;
 
 protected:
 	SocketAddressImpl();
@@ -51,7 +54,7 @@ private:
 	SocketAddressImpl & operator=(const SocketAddressImpl &) = delete;
 };
 
-class NET_EXTERN IPv4SocketAddressImpl : public SocketAddressImpl {
+class COMMON_EXTERN IPv4SocketAddressImpl : public SocketAddressImpl {
 public:
 	IPv4SocketAddressImpl();
 	explicit IPv4SocketAddressImpl(const struct sockaddr_in * addr);
@@ -63,13 +66,13 @@ public:
 	virtual const struct sockaddr * Addr() const override;
 	virtual i32 AF() const override;
 	virtual AddressFamily::eFamily Family() const override;
-	virtual std::string ToString() const override;
+	virtual Common::SDString ToString() const override;
 	
 private:
 	struct sockaddr_in addr_;
 };
 
-class NET_EXTERN IPv6SocketAddressImpl : public SocketAddressImpl {
+class COMMON_EXTERN IPv6SocketAddressImpl : public SocketAddressImpl {
 public:
 	IPv6SocketAddressImpl();
 	explicit IPv6SocketAddressImpl(const struct sockaddr_in6 * addr);
@@ -81,7 +84,7 @@ public:
 	virtual const struct sockaddr * Addr() const override;
 	virtual i32 AF() const override;
 	virtual AddressFamily::eFamily Family() const override;
-	virtual std::string ToString() const override;
+	virtual Common::SDString ToString() const override;
 
 private:
 	struct sockaddr_in6 addr_;

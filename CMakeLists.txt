@@ -30,91 +30,69 @@ MESSAGE(STATUS "PROJECT_SOURCE_DIR:" ${PROJECT_SOURCE_DIR})
 
 # 添加源文件
 # SET(Common
-# 	${PROJECT_SOURCE_DIR}/Common/Logger.h
-# 	${PROJECT_SOURCE_DIR}/Common/Logger.cc
-# 	${PROJECT_SOURCE_DIR}/Common/Allocator.h
-# 	${PROJECT_SOURCE_DIR}/Common/Allocator.cc
-# 	${PROJECT_SOURCE_DIR}/Common/NetObject.h
-# 	${PROJECT_SOURCE_DIR}/Common/NetObject.cc
-# 	${PROJECT_SOURCE_DIR}/Common/RefCountedObject.h
-# 	${PROJECT_SOURCE_DIR}/Common/IOBuffer.h
-# 	${PROJECT_SOURCE_DIR}/Common/BipBuffer.h
-# 	${PROJECT_SOURCE_DIR}/Common/BipBuffer.cc
-# 	${PROJECT_SOURCE_DIR}/Common/StraightBuffer.h
-# 	${PROJECT_SOURCE_DIR}/Common/StraightBuffer.cc
-# 	${PROJECT_SOURCE_DIR}/Common/ObjectMgr.h
-# )
-# SET(Address
-# 	${PROJECT_SOURCE_DIR}/Address/AddressFamily.h
-# 	${PROJECT_SOURCE_DIR}/Address/IPAddress.h
-# 	${PROJECT_SOURCE_DIR}/Address/IPAddress.cc
-# 	${PROJECT_SOURCE_DIR}/Address/IPAddressImpl.h
-# 	${PROJECT_SOURCE_DIR}/Address/IPAddressImpl.cc
-# 	${PROJECT_SOURCE_DIR}/Address/SocketAddress.h
-# 	${PROJECT_SOURCE_DIR}/Address/SocketAddress.cc
-# 	${PROJECT_SOURCE_DIR}/Address/SocketAddressImpl.h
-# 	${PROJECT_SOURCE_DIR}/Address/SocketAddressImpl.cc
+# 	${PROJECT_SOURCE_DIR}/include/Common/IOBuffer.h
+# 	${PROJECT_SOURCE_DIR}/include/Common/BipBuffer.h
+# 	${PROJECT_SOURCE_DIR}/src/Common/BipBuffer.cc
+# 	${PROJECT_SOURCE_DIR}/include/Common/StraightBuffer.h
+# 	${PROJECT_SOURCE_DIR}/src/Common/StraightBuffer.cc
+# 	${PROJECT_SOURCE_DIR}/include/Common/ObjectMgr.h
 # )
 # SET(Sockets
-# 	${PROJECT_SOURCE_DIR}/Sockets/UvData.h
-# 	${PROJECT_SOURCE_DIR}/Sockets/ServerSocket.h
-# 	${PROJECT_SOURCE_DIR}/Sockets/ServerSocket.cc
-# 	${PROJECT_SOURCE_DIR}/Sockets/ServerSocketImpl.h
-# 	${PROJECT_SOURCE_DIR}/Sockets/ServerSocketImpl.cc
-# 	${PROJECT_SOURCE_DIR}/Sockets/Socket.h
-# 	${PROJECT_SOURCE_DIR}/Sockets/Socket.cc
-# 	${PROJECT_SOURCE_DIR}/Sockets/SocketImpl.h
-# 	${PROJECT_SOURCE_DIR}/Sockets/SocketImpl.cc
-# 	${PROJECT_SOURCE_DIR}/Sockets/StreamSocket.h
-# 	${PROJECT_SOURCE_DIR}/Sockets/StreamSocket.cc
-# 	${PROJECT_SOURCE_DIR}/Sockets/StreamSocketImpl.h
-# 	${PROJECT_SOURCE_DIR}/Sockets/StreamSocketImpl.cc
+# 	${PROJECT_SOURCE_DIR}/include/Sockets/UvData.h
+# 	${PROJECT_SOURCE_DIR}/include/Sockets/ServerSocket.h
+# 	${PROJECT_SOURCE_DIR}/src/Sockets/ServerSocket.cc
+# 	${PROJECT_SOURCE_DIR}/include/Sockets/ServerSocketImpl.h
+# 	${PROJECT_SOURCE_DIR}/src/Sockets/ServerSocketImpl.cc
+# 	${PROJECT_SOURCE_DIR}/include/Sockets/Socket.h
+# 	${PROJECT_SOURCE_DIR}/src/Sockets/Socket.cc
+# 	${PROJECT_SOURCE_DIR}/include/Sockets/SocketImpl.h
+# 	${PROJECT_SOURCE_DIR}/src/Sockets/SocketImpl.cc
+# 	${PROJECT_SOURCE_DIR}/include/Sockets/StreamSocket.h
+# 	${PROJECT_SOURCE_DIR}/src/Sockets/StreamSocket.cc
+# 	${PROJECT_SOURCE_DIR}/include/Sockets/StreamSocketImpl.h
+# 	${PROJECT_SOURCE_DIR}/src/Sockets/StreamSocketImpl.cc
 # )
 # SET(Reactor
-# 	${PROJECT_SOURCE_DIR}/Reactor/ConnectState.h
-# 	${PROJECT_SOURCE_DIR}/Reactor/EventHandler.h
-# 	${PROJECT_SOURCE_DIR}/Reactor/EventHandler.cc
-# 	${PROJECT_SOURCE_DIR}/Reactor/EventReactor.h
-# 	${PROJECT_SOURCE_DIR}/Reactor/EventReactor.cc
-# 	${PROJECT_SOURCE_DIR}/Reactor/SocketAcceptor.h
-# 	${PROJECT_SOURCE_DIR}/Reactor/SocketAcceptor.cc
-# 	${PROJECT_SOURCE_DIR}/Reactor/SocketConnection.h
-# 	${PROJECT_SOURCE_DIR}/Reactor/SocketConnection.cc
-# 	${PROJECT_SOURCE_DIR}/Reactor/SocketConnector.h
-# 	${PROJECT_SOURCE_DIR}/Reactor/SocketConnector.cc
+# 	${PROJECT_SOURCE_DIR}/include/Reactor/ConnectState.h
+# 	${PROJECT_SOURCE_DIR}/include/Reactor/EventHandler.h
+# 	${PROJECT_SOURCE_DIR}/src/Reactor/EventHandler.cc
+# 	${PROJECT_SOURCE_DIR}/include/Reactor/EventReactor.h
+# 	${PROJECT_SOURCE_DIR}/src/Reactor/EventReactor.cc
+# 	${PROJECT_SOURCE_DIR}/include/Reactor/SocketAcceptor.h
+# 	${PROJECT_SOURCE_DIR}/src/Reactor/SocketAcceptor.cc
+# 	${PROJECT_SOURCE_DIR}/include/Reactor/SocketConnection.h
+# 	${PROJECT_SOURCE_DIR}/src/Reactor/SocketConnection.cc
+# 	${PROJECT_SOURCE_DIR}/include/Reactor/SocketConnector.h
+# 	${PROJECT_SOURCE_DIR}/src/Reactor/SocketConnector.cc
 # )
 # SET(Interface
-# 	${PROJECT_SOURCE_DIR}/Interface/INotification.h
-# 	${PROJECT_SOURCE_DIR}/Interface/Client.h
-# 	${PROJECT_SOURCE_DIR}/Interface/Client.cc
-# 	${PROJECT_SOURCE_DIR}/Interface/Connection.h
-# 	${PROJECT_SOURCE_DIR}/Interface/Connection.cc
-# 	${PROJECT_SOURCE_DIR}/Interface/Server.h
-# 	${PROJECT_SOURCE_DIR}/Interface/Server.cc
-# 	${PROJECT_SOURCE_DIR}/Interface/ConnectionMgr.h
-# 	${PROJECT_SOURCE_DIR}/Interface/ConnectionMgr.cc
-# 	${PROJECT_SOURCE_DIR}/Interface/AppService.h
-# 	${PROJECT_SOURCE_DIR}/Interface/AppService.cc
-# 	${PROJECT_SOURCE_DIR}/Interface/Interface.cc
+# 	${PROJECT_SOURCE_DIR}/include/Interface/INotification.h
+# 	${PROJECT_SOURCE_DIR}/include/Interface/Client.h
+# 	${PROJECT_SOURCE_DIR}/src/Interface/Client.cc
+# 	${PROJECT_SOURCE_DIR}/include/Interface/Connection.h
+# 	${PROJECT_SOURCE_DIR}/src/Interface/Connection.cc
+# 	${PROJECT_SOURCE_DIR}/include/Interface/Server.h
+# 	${PROJECT_SOURCE_DIR}/src/Interface/Server.cc
+# 	${PROJECT_SOURCE_DIR}/include/Interface/ConnectionMgr.h
+# 	${PROJECT_SOURCE_DIR}/src/Interface/ConnectionMgr.cc
+# 	${PROJECT_SOURCE_DIR}/include/Interface/AppService.h
+# 	${PROJECT_SOURCE_DIR}/src/Interface/AppService.cc
+# 	${PROJECT_SOURCE_DIR}/src/Interface/Interface.cc
 # )
 
-# SET(all_srcs
-# 	${PROJECT_SOURCE_DIR}/Net.h
-# 	${Common}
-# 	${Address}
-# 	${Sockets}
-# 	${Reactor}
-# 	${Interface}
-# )
 SET(srcs
 	${PROJECT_SOURCE_DIR}/include/NetworkException.h
 	${PROJECT_SOURCE_DIR}/include/Address/AddressFamily.h
 	${PROJECT_SOURCE_DIR}/include/Address/IPAddressImpl.h
 	${PROJECT_SOURCE_DIR}/include/Address/IPAddress.h
+	${PROJECT_SOURCE_DIR}/include/Address/SocketAddressImpl.h
+	${PROJECT_SOURCE_DIR}/include/Address/SocketAddress.h
 
 	${PROJECT_SOURCE_DIR}/src/NetworkException.cc
 	${PROJECT_SOURCE_DIR}/src/Address/IPAddressImpl.cc
 	${PROJECT_SOURCE_DIR}/src/Address/IPAddress.cc
+	${PROJECT_SOURCE_DIR}/src/Address/SocketAddressImpl.cc
+	${PROJECT_SOURCE_DIR}/src/Address/SocketAddress.cc
 )
 
 # 生成目录结构

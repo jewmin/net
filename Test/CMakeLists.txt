@@ -7,6 +7,7 @@ PROJECT(net_test VERSION 2.0)
 # 添加源文件
 SET(srcs
 	${PROJECT_SOURCE_DIR}/Main.cc
+	${PROJECT_SOURCE_DIR}/NetworkExpectionTestSuite.cc
 	# ${PROJECT_SOURCE_DIR}/AllocatorTestSuite.cc
 	# ${PROJECT_SOURCE_DIR}/LoggerTestSuite.cc
 	# ${PROJECT_SOURCE_DIR}/RefCountedObjectTestSuite.cc
@@ -14,7 +15,7 @@ SET(srcs
 	# ${PROJECT_SOURCE_DIR}/NetObjectTestSuite.cc
 	# ${PROJECT_SOURCE_DIR}/ObjectMgrTestSuite.cc
 	${PROJECT_SOURCE_DIR}/IPAddressTestSuite.cc
-	# ${PROJECT_SOURCE_DIR}/SocketAddressTestSuite.cc
+	${PROJECT_SOURCE_DIR}/SocketAddressTestSuite.cc
 	# ${PROJECT_SOURCE_DIR}/SocketImplTestSuite.cc
 	# ${PROJECT_SOURCE_DIR}/SocketTestSuite.cc
 	# ${PROJECT_SOURCE_DIR}/ReactorTestSuite.cc

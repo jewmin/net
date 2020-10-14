@@ -23,44 +23,44 @@ public:
 
 TEST_F(SocketAddressImplTestSuite, ipv4_ctor) {
 	Net::IPv4SocketAddressImpl ipv4;
-	EXPECT_STREQ(ipv4.Host().ToString().c_str(), "0.0.0.0");
+	EXPECT_STREQ(*ipv4.Host().ToString(), "0.0.0.0");
 	EXPECT_EQ(ipv4.Port(), 0);
 	EXPECT_EQ(ipv4.Length(), sizeof(ipv4_addr_));
 	EXPECT_LT(std::memcmp(ipv4.Addr(), ipv4_impl_->Addr(), ipv4.Length()), 0);
 	EXPECT_EQ(ipv4.AF(), AF_INET);
 	EXPECT_EQ(ipv4.Family(), Net::AddressFamily::IPv4);
-	EXPECT_STREQ(ipv4.ToString().c_str(), "0.0.0.0:0");
+	EXPECT_STREQ(*ipv4.ToString(), "0.0.0.0:0");
 }
 
 TEST_F(SocketAddressImplTestSuite, ipv6_ctor) {
 	Net::IPv6SocketAddressImpl ipv6;
-	EXPECT_STREQ(ipv6.Host().ToString().c_str(), "::");
+	EXPECT_STREQ(*ipv6.Host().ToString(), "::");
 	EXPECT_EQ(ipv6.Port(), 0);
 	EXPECT_EQ(ipv6.Length(), sizeof(ipv6_addr_));
 	EXPECT_LT(std::memcmp(ipv6.Addr(), ipv6_impl_->Addr(), ipv6.Length()), 0);
 	EXPECT_EQ(ipv6.AF(), AF_INET6);
 	EXPECT_EQ(ipv6.Family(), Net::AddressFamily::IPv6);
-	EXPECT_STREQ(ipv6.ToString().c_str(), "[::]:0");
+	EXPECT_STREQ(*ipv6.ToString(), "[::]:0");
 }
 
 TEST_F(SocketAddressImplTestSuite, ipv4_display) {
-	EXPECT_STREQ(ipv4_impl_->Host().ToString().c_str(), "192.168.1.100");
+	EXPECT_STREQ(*ipv4_impl_->Host().ToString(), "192.168.1.100");
 	EXPECT_EQ(ipv4_impl_->Port(), 6789);
 	EXPECT_EQ(ipv4_impl_->Length(), sizeof(ipv4_addr_));
 	EXPECT_EQ(std::memcmp(ipv4_impl_->Addr(), &ipv4_addr_, ipv4_impl_->Length()), 0);
 	EXPECT_EQ(ipv4_impl_->AF(), AF_INET);
 	EXPECT_EQ(ipv4_impl_->Family(), Net::AddressFamily::IPv4);
-	EXPECT_STREQ(ipv4_impl_->ToString().c_str(), "192.168.1.100:6789");
+	EXPECT_STREQ(*ipv4_impl_->ToString(), "192.168.1.100:6789");
 }
 
 TEST_F(SocketAddressImplTestSuite, ipv6_display) {
-	EXPECT_STREQ(ipv6_impl_->Host().ToString().c_str(), "fe80::6101:927f:1dde:cb33");
+	EXPECT_STREQ(*ipv6_impl_->Host().ToString(), "fe80::6101:927f:1dde:cb33");
 	EXPECT_EQ(ipv6_impl_->Port(), 6789);
 	EXPECT_EQ(ipv6_impl_->Length(), sizeof(ipv6_addr_));
 	EXPECT_EQ(std::memcmp(ipv6_impl_->Addr(), &ipv6_addr_, ipv6_impl_->Length()), 0);
 	EXPECT_EQ(ipv6_impl_->AF(), AF_INET6);
 	EXPECT_EQ(ipv6_impl_->Family(), Net::AddressFamily::IPv6);
-	EXPECT_STREQ(ipv6_impl_->ToString().c_str(), "[fe80::6101:927f:1dde:cb33]:6789");
+	EXPECT_STREQ(*ipv6_impl_->ToString(), "[fe80::6101:927f:1dde:cb33]:6789");
 }
 
 class SocketAddressTestSuite : public SocketAddressImplTestSuite {
@@ -89,7 +89,7 @@ TEST_F(SocketAddressTestSuite, ctor) {
 	EXPECT_LT(std::memcmp(ip.Addr(), &ipv4_addr_, ip.Length()), 0);
 	EXPECT_EQ(ip.AF(), AF_INET);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
-	EXPECT_STREQ(ip.ToString().c_str(), "0.0.0.0:0");
+	EXPECT_STREQ(*ip.ToString(), "0.0.0.0:0");
 }
 
 TEST_F(SocketAddressTestSuite, ctor0) {
@@ -100,7 +100,7 @@ TEST_F(SocketAddressTestSuite, ctor0) {
 	EXPECT_LT(std::memcmp(ip.Addr(), &ipv4_addr_, ip.Length()), 0);
 	EXPECT_EQ(ip.AF(), AF_INET);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
-	EXPECT_STREQ(ip.ToString().c_str(), "0.0.0.0:6789");
+	EXPECT_STREQ(*ip.ToString(), "0.0.0.0:6789");
 }
 
 TEST_F(SocketAddressTestSuite, ctor11) {
@@ -111,7 +111,7 @@ TEST_F(SocketAddressTestSuite, ctor11) {
 	EXPECT_EQ(std::memcmp(ip.Addr(), &ipv6_addr_, ip.Length()), 0);
 	EXPECT_EQ(ip.AF(), AF_INET6);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv6);
-	EXPECT_STREQ(ip.ToString().c_str(), "[fe80::6101:927f:1dde:cb33]:6789");
+	EXPECT_STREQ(*ip.ToString(), "[fe80::6101:927f:1dde:cb33]:6789");
 }
 
 TEST_F(SocketAddressTestSuite, ctor1) {
@@ -122,7 +122,7 @@ TEST_F(SocketAddressTestSuite, ctor1) {
 	EXPECT_EQ(std::memcmp(ip.Addr(), &ipv4_addr_, ip.Length()), 0);
 	EXPECT_EQ(ip.AF(), AF_INET);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
-	EXPECT_STREQ(ip.ToString().c_str(), "192.168.1.100:6789");
+	EXPECT_STREQ(*ip.ToString(), "192.168.1.100:6789");
 }
 
 TEST_F(SocketAddressTestSuite, ctor2) {
@@ -133,7 +133,7 @@ TEST_F(SocketAddressTestSuite, ctor2) {
 	EXPECT_EQ(std::memcmp(ip.Addr(), ip_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.AF(), ip_->AF());
 	EXPECT_EQ(ip.Family(), ip_->Family());
-	EXPECT_STREQ(ip.ToString().c_str(), "192.168.1.100:6789");
+	EXPECT_STREQ(*ip.ToString(), "192.168.1.100:6789");
 }
 
 TEST_F(SocketAddressTestSuite, ctor3) {
@@ -144,7 +144,7 @@ TEST_F(SocketAddressTestSuite, ctor3) {
 	EXPECT_EQ(std::memcmp(ip.Addr(), ip6_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.AF(), ip6_->AF());
 	EXPECT_EQ(ip.Family(), ip6_->Family());
-	EXPECT_STREQ(ip.ToString().c_str(), "[fe80::6101:927f:1dde:cb33]:6789");
+	EXPECT_STREQ(*ip.ToString(), "[fe80::6101:927f:1dde:cb33]:6789");
 }
 
 TEST_F(SocketAddressTestSuite, ctor4) {
@@ -160,7 +160,7 @@ TEST_F(SocketAddressTestSuite, ctor5) {
 	EXPECT_EQ(std::memcmp(ip.Addr(), ip_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.AF(), ip_->AF());
 	EXPECT_EQ(ip.Family(), ip_->Family());
-	EXPECT_STREQ(ip.ToString().c_str(), "192.168.1.100:6789");
+	EXPECT_STREQ(*ip.ToString(), "192.168.1.100:6789");
 }
 
 TEST_F(SocketAddressTestSuite, ctor6) {
@@ -171,7 +171,7 @@ TEST_F(SocketAddressTestSuite, ctor6) {
 	EXPECT_EQ(std::memcmp(ip.Addr(), ip6_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.AF(), ip6_->AF());
 	EXPECT_EQ(ip.Family(), ip6_->Family());
-	EXPECT_STREQ(ip.ToString().c_str(), "[fe80::6101:927f:1dde:cb33]:6789");
+	EXPECT_STREQ(*ip.ToString(), "[fe80::6101:927f:1dde:cb33]:6789");
 }
 
 TEST_F(SocketAddressTestSuite, ctor7) {
@@ -183,7 +183,7 @@ TEST_F(SocketAddressTestSuite, ctor7) {
 	EXPECT_EQ(std::memcmp(ip.Addr(), ip_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.AF(), ip_->AF());
 	EXPECT_EQ(ip.Family(), ip_->Family());
-	EXPECT_STREQ(ip.ToString().c_str(), "192.168.1.100:6789");
+	EXPECT_STREQ(*ip.ToString(), "192.168.1.100:6789");
 }
 
 TEST_F(SocketAddressTestSuite, ctor8) {
@@ -195,7 +195,7 @@ TEST_F(SocketAddressTestSuite, ctor8) {
 	EXPECT_EQ(std::memcmp(ip.Addr(), ip6_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.AF(), ip6_->AF());
 	EXPECT_EQ(ip.Family(), ip6_->Family());
-	EXPECT_STREQ(ip.ToString().c_str(), "[fe80::6101:927f:1dde:cb33]:6789");
+	EXPECT_STREQ(*ip.ToString(), "[fe80::6101:927f:1dde:cb33]:6789");
 }
 
 TEST_F(SocketAddressTestSuite, ctor9) {

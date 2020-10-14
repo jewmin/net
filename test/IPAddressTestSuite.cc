@@ -77,14 +77,14 @@ TEST_F(IPAddressImplTestSuite, ipv4_parse) {
 	EXPECT_STREQ(*Net::IPv4AddressImpl::Parse("").ToString(), "0.0.0.0");
 	EXPECT_STREQ(*Net::IPv4AddressImpl::Parse("192.168.1.100").ToString(), "192.168.1.100");
 	EXPECT_STREQ(*Net::IPv4AddressImpl::Parse("error ip").ToString(), "0.0.0.0");
-	EXPECT_STREQ(*Net::IPv4AddressImpl::Parse("   192.168.1.100   ").ToString(), "0.0.0.0");
+	EXPECT_STREQ(*Net::IPv4AddressImpl::Parse("   192.168.1.100   ").ToString(), "192.168.1.100");
 }
 
 TEST_F(IPAddressImplTestSuite, ipv6_parse) {
 	EXPECT_STREQ(*Net::IPv6AddressImpl::Parse("").ToString(), "::");
 	EXPECT_STREQ(*Net::IPv6AddressImpl::Parse("fe80::6101:927f:1dde:cb33").ToString(), "fe80::6101:927f:1dde:cb33");
 	EXPECT_STREQ(*Net::IPv6AddressImpl::Parse("error ip").ToString(), "::");
-	EXPECT_STREQ(*Net::IPv6AddressImpl::Parse("   fe80::6101:927f:1dde:cb33   ").ToString(), "::");
+	EXPECT_STREQ(*Net::IPv6AddressImpl::Parse("   fe80::6101:927f:1dde:cb33   ").ToString(), "fe80::6101:927f:1dde:cb33");
 #ifdef _WIN32
 	EXPECT_STREQ(*Net::IPv6AddressImpl::Parse("fe80::6101:927f:1dde:cb33%1").ToString(), "fe80::6101:927f:1dde:cb33");
 #else

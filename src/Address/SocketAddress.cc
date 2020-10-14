@@ -23,7 +23,7 @@
  */
 
 #include "Address/SocketAddress.h"
-#include "Common/Logger.h"
+#include "NetworkException.h"
 
 namespace Net {
 
@@ -35,7 +35,7 @@ SocketAddress::SocketAddress(u16 port) {
 	Init(IPAddress(), port);
 }
 
-SocketAddress::SocketAddress(const std::string & ip, u16 port) {
+SocketAddress::SocketAddress(const i8 * ip, u16 port) {
 	Init(IPAddress(ip), port);
 }
 
@@ -49,25 +49,25 @@ SocketAddress::SocketAddress(const struct sockaddr * addr, socklen_t length) {
 	} else if (length == sizeof(struct sockaddr_in6) && AF_INET6 == addr->sa_family) {
 		NewIPv6(reinterpret_cast<const struct sockaddr_in6 *>(addr));
 	} else {
-		Log(kCrash, __FILE__, __LINE__, "invalid address length or family");
+		throw NetworkException("invalid address length or family");
 	}
 }
 
-SocketAddress::SocketAddress(const SocketAddress & rhs) {
-	if (IPAddress::IPv4 == rhs.Family()) {
-		NewIPv4(reinterpret_cast<const struct sockaddr_in *>(rhs.Addr()));
-	} else if (IPAddress::IPv6 == rhs.Family()) {
-		NewIPv6(reinterpret_cast<const struct sockaddr_in6 *>(rhs.Addr()));
+SocketAddress::SocketAddress(const SocketAddress & other) {
+	if (IPAddress::IPv4 == other.Family()) {
+		NewIPv4(reinterpret_cast<const struct sockaddr_in *>(other.Addr()));
+	} else if (IPAddress::IPv6 == other.Family()) {
+		NewIPv6(reinterpret_cast<const struct sockaddr_in6 *>(other.Addr()));
 	}
 }
 
-SocketAddress & SocketAddress::operator=(const SocketAddress & rhs) {
-	if (this != &rhs) {
+SocketAddress & SocketAddress::operator=(const SocketAddress & other) {
+	if (this != std::addressof(other)) {
 		Destroy();
-		if (IPAddress::IPv4 == rhs.Family()) {
-			NewIPv4(reinterpret_cast<const struct sockaddr_in *>(rhs.Addr()));
-		} else if (IPAddress::IPv6 == rhs.Family()) {
-			NewIPv6(reinterpret_cast<const struct sockaddr_in6 *>(rhs.Addr()));
+		if (IPAddress::IPv4 == other.Family()) {
+			NewIPv4(reinterpret_cast<const struct sockaddr_in *>(other.Addr()));
+		} else if (IPAddress::IPv6 == other.Family()) {
+			NewIPv6(reinterpret_cast<const struct sockaddr_in6 *>(other.Addr()));
 		}
 	}
 	return *this;
@@ -77,12 +77,12 @@ SocketAddress::~SocketAddress() {
 	Destroy();
 }
 
-bool SocketAddress::operator==(const SocketAddress & rhs) const {
-	return Host() == rhs.Host() && Port() == rhs.Port();
+bool SocketAddress::operator==(const SocketAddress & other) const {
+	return Host() == other.Host() && Port() == other.Port();
 }
 
-bool SocketAddress::operator!=(const SocketAddress & rhs) const {
-	return !(*this == rhs);
+bool SocketAddress::operator!=(const SocketAddress & other) const {
+	return !(*this == other);
 }
 
 void SocketAddress::Init(const IPAddress & host, u16 port) {

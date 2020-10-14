@@ -48,10 +48,8 @@ IPv4SocketAddressImpl::IPv4SocketAddressImpl(const struct sockaddr_in * addr) {
 IPv4SocketAddressImpl::~IPv4SocketAddressImpl() {
 }
 
-std::string IPv4SocketAddressImpl::ToString() const {
-	std::stringstream result;
-	result << Host().ToString() << ":" << Port();
-	return result.str();
+Common::SDString IPv4SocketAddressImpl::ToString() const {
+	return Common::SDString::Format("%s:%u", *Host().ToString(), Port());
 }
 
 //*********************************************************************
@@ -70,10 +68,8 @@ IPv6SocketAddressImpl::IPv6SocketAddressImpl(const struct sockaddr_in6 * addr) {
 IPv6SocketAddressImpl::~IPv6SocketAddressImpl() {
 }
 
-std::string IPv6SocketAddressImpl::ToString() const {
-	std::stringstream result;
-	result << "[" << Host().ToString() << "]:" << Port();
-	return result.str();
+Common::SDString IPv6SocketAddressImpl::ToString() const {
+	return Common::SDString::Format("[%s]:%u", *Host().ToString(), Port());
 }
 
 }

@@ -25,19 +25,22 @@
 #ifndef Net_Address_SocketAddress_INCLUDED
 #define Net_Address_SocketAddress_INCLUDED
 
+#include "Common.h"
+#include "CObject.h"
+#include "SDString.h"
 #include "Address/SocketAddressImpl.h"
 
 namespace Net {
 
-class NET_EXTERN SocketAddress : public NetObject {
+class COMMON_EXTERN SocketAddress : public Common::CObject {
 public:
 	SocketAddress();
 	explicit SocketAddress(u16 port);
-	SocketAddress(const std::string & ip, u16 port);
+	SocketAddress(const i8 * ip, u16 port);
 	SocketAddress(const IPAddress & host, u16 port);
 	SocketAddress(const struct sockaddr * addr, socklen_t length);
-	SocketAddress(const SocketAddress & rhs);
-	SocketAddress & operator=(const SocketAddress & rhs);
+	SocketAddress(const SocketAddress & other);
+	SocketAddress & operator=(const SocketAddress & other);
 	virtual ~SocketAddress();
 
 	IPAddress Host() const;
@@ -46,9 +49,9 @@ public:
 	const struct sockaddr * Addr() const;
 	i32 AF() const;
 	AddressFamily::eFamily Family() const;
-	std::string ToString() const;
-	bool operator==(const SocketAddress & rhs) const;
-	bool operator!=(const SocketAddress & rhs) const;
+	Common::SDString ToString() const;
+	bool operator==(const SocketAddress & other) const;
+	bool operator!=(const SocketAddress & other) const;
 
 protected:
 	void Init(const IPAddress & host, u16 port);
@@ -90,7 +93,7 @@ inline AddressFamily::eFamily SocketAddress::Family() const {
 	return Impl()->Family();
 }
 
-inline std::string SocketAddress::ToString() const {
+inline Common::SDString SocketAddress::ToString() const {
 	return Impl()->ToString();
 }
 
