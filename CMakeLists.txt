@@ -1,21 +1,15 @@
 # cmake版本
-CMAKE_MINIMUM_REQUIRED(VERSION 3.7.2)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.8)
 
 # 项目名
-PROJECT(libnet VERSION 4.4)
-# MESSAGE("CMAKE_SOURCE_DIR: " ${CMAKE_SOURCE_DIR})
-# MESSAGE("CMAKE_BINARY_DIR: " ${CMAKE_BINARY_DIR})
-# MESSAGE("PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR})
-# MESSAGE("PROJECT_BINARY_DIR: " ${PROJECT_BINARY_DIR})
-# MESSAGE("CMAKE_CURRENT_SOURCE_DIR: " ${CMAKE_CURRENT_SOURCE_DIR})
-# MESSAGE("CMAKE_CURRENT_BINARY_DIR: " ${CMAKE_CURRENT_BINARY_DIR})
+PROJECT(libnet VERSION 5.0)
 
 # 开关
 OPTION(VLD "use Visual Leak Detector to check memory on windows" ON)
 OPTION(RELEASE "compile the release version" OFF)
 
 # 设置模块路径
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/3rd/vld)
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/logger/common/3rd/vld)
 
 # 平台
 IF(MSVC)
@@ -32,93 +26,99 @@ MESSAGE(STATUS "VLD:" ${VLD})
 MESSAGE(STATUS "RELEASE:" ${RELEASE})
 MESSAGE(STATUS "WINDOWS:" ${WINDOWS})
 MESSAGE(STATUS "LINUX:" ${LINUX})
+MESSAGE(STATUS "PROJECT_SOURCE_DIR:" ${PROJECT_SOURCE_DIR})
 
 # 添加源文件
-SET(Common
-	${PROJECT_SOURCE_DIR}/Common/Logger.h
-	${PROJECT_SOURCE_DIR}/Common/Logger.cc
-	${PROJECT_SOURCE_DIR}/Common/Allocator.h
-	${PROJECT_SOURCE_DIR}/Common/Allocator.cc
-	${PROJECT_SOURCE_DIR}/Common/NetObject.h
-	${PROJECT_SOURCE_DIR}/Common/NetObject.cc
-	${PROJECT_SOURCE_DIR}/Common/RefCountedObject.h
-	${PROJECT_SOURCE_DIR}/Common/IOBuffer.h
-	${PROJECT_SOURCE_DIR}/Common/BipBuffer.h
-	${PROJECT_SOURCE_DIR}/Common/BipBuffer.cc
-	${PROJECT_SOURCE_DIR}/Common/StraightBuffer.h
-	${PROJECT_SOURCE_DIR}/Common/StraightBuffer.cc
-	${PROJECT_SOURCE_DIR}/Common/ObjectMgr.h
-)
-SET(Address
-	${PROJECT_SOURCE_DIR}/Address/AddressFamily.h
-	${PROJECT_SOURCE_DIR}/Address/IPAddress.h
-	${PROJECT_SOURCE_DIR}/Address/IPAddress.cc
-	${PROJECT_SOURCE_DIR}/Address/IPAddressImpl.h
-	${PROJECT_SOURCE_DIR}/Address/IPAddressImpl.cc
-	${PROJECT_SOURCE_DIR}/Address/SocketAddress.h
-	${PROJECT_SOURCE_DIR}/Address/SocketAddress.cc
-	${PROJECT_SOURCE_DIR}/Address/SocketAddressImpl.h
-	${PROJECT_SOURCE_DIR}/Address/SocketAddressImpl.cc
-)
-SET(Sockets
-	${PROJECT_SOURCE_DIR}/Sockets/UvData.h
-	${PROJECT_SOURCE_DIR}/Sockets/ServerSocket.h
-	${PROJECT_SOURCE_DIR}/Sockets/ServerSocket.cc
-	${PROJECT_SOURCE_DIR}/Sockets/ServerSocketImpl.h
-	${PROJECT_SOURCE_DIR}/Sockets/ServerSocketImpl.cc
-	${PROJECT_SOURCE_DIR}/Sockets/Socket.h
-	${PROJECT_SOURCE_DIR}/Sockets/Socket.cc
-	${PROJECT_SOURCE_DIR}/Sockets/SocketImpl.h
-	${PROJECT_SOURCE_DIR}/Sockets/SocketImpl.cc
-	${PROJECT_SOURCE_DIR}/Sockets/StreamSocket.h
-	${PROJECT_SOURCE_DIR}/Sockets/StreamSocket.cc
-	${PROJECT_SOURCE_DIR}/Sockets/StreamSocketImpl.h
-	${PROJECT_SOURCE_DIR}/Sockets/StreamSocketImpl.cc
-)
-SET(Reactor
-	${PROJECT_SOURCE_DIR}/Reactor/ConnectState.h
-	${PROJECT_SOURCE_DIR}/Reactor/EventHandler.h
-	${PROJECT_SOURCE_DIR}/Reactor/EventHandler.cc
-	${PROJECT_SOURCE_DIR}/Reactor/EventReactor.h
-	${PROJECT_SOURCE_DIR}/Reactor/EventReactor.cc
-	${PROJECT_SOURCE_DIR}/Reactor/SocketAcceptor.h
-	${PROJECT_SOURCE_DIR}/Reactor/SocketAcceptor.cc
-	${PROJECT_SOURCE_DIR}/Reactor/SocketConnection.h
-	${PROJECT_SOURCE_DIR}/Reactor/SocketConnection.cc
-	${PROJECT_SOURCE_DIR}/Reactor/SocketConnector.h
-	${PROJECT_SOURCE_DIR}/Reactor/SocketConnector.cc
-)
-SET(Interface
-	${PROJECT_SOURCE_DIR}/Interface/INotification.h
-	${PROJECT_SOURCE_DIR}/Interface/Client.h
-	${PROJECT_SOURCE_DIR}/Interface/Client.cc
-	${PROJECT_SOURCE_DIR}/Interface/Connection.h
-	${PROJECT_SOURCE_DIR}/Interface/Connection.cc
-	${PROJECT_SOURCE_DIR}/Interface/Server.h
-	${PROJECT_SOURCE_DIR}/Interface/Server.cc
-	${PROJECT_SOURCE_DIR}/Interface/ConnectionMgr.h
-	${PROJECT_SOURCE_DIR}/Interface/ConnectionMgr.cc
-	${PROJECT_SOURCE_DIR}/Interface/AppService.h
-	${PROJECT_SOURCE_DIR}/Interface/AppService.cc
-	${PROJECT_SOURCE_DIR}/Interface/Interface.cc
-)
+# SET(Common
+# 	${PROJECT_SOURCE_DIR}/Common/Logger.h
+# 	${PROJECT_SOURCE_DIR}/Common/Logger.cc
+# 	${PROJECT_SOURCE_DIR}/Common/Allocator.h
+# 	${PROJECT_SOURCE_DIR}/Common/Allocator.cc
+# 	${PROJECT_SOURCE_DIR}/Common/NetObject.h
+# 	${PROJECT_SOURCE_DIR}/Common/NetObject.cc
+# 	${PROJECT_SOURCE_DIR}/Common/RefCountedObject.h
+# 	${PROJECT_SOURCE_DIR}/Common/IOBuffer.h
+# 	${PROJECT_SOURCE_DIR}/Common/BipBuffer.h
+# 	${PROJECT_SOURCE_DIR}/Common/BipBuffer.cc
+# 	${PROJECT_SOURCE_DIR}/Common/StraightBuffer.h
+# 	${PROJECT_SOURCE_DIR}/Common/StraightBuffer.cc
+# 	${PROJECT_SOURCE_DIR}/Common/ObjectMgr.h
+# )
+# SET(Address
+# 	${PROJECT_SOURCE_DIR}/Address/AddressFamily.h
+# 	${PROJECT_SOURCE_DIR}/Address/IPAddress.h
+# 	${PROJECT_SOURCE_DIR}/Address/IPAddress.cc
+# 	${PROJECT_SOURCE_DIR}/Address/IPAddressImpl.h
+# 	${PROJECT_SOURCE_DIR}/Address/IPAddressImpl.cc
+# 	${PROJECT_SOURCE_DIR}/Address/SocketAddress.h
+# 	${PROJECT_SOURCE_DIR}/Address/SocketAddress.cc
+# 	${PROJECT_SOURCE_DIR}/Address/SocketAddressImpl.h
+# 	${PROJECT_SOURCE_DIR}/Address/SocketAddressImpl.cc
+# )
+# SET(Sockets
+# 	${PROJECT_SOURCE_DIR}/Sockets/UvData.h
+# 	${PROJECT_SOURCE_DIR}/Sockets/ServerSocket.h
+# 	${PROJECT_SOURCE_DIR}/Sockets/ServerSocket.cc
+# 	${PROJECT_SOURCE_DIR}/Sockets/ServerSocketImpl.h
+# 	${PROJECT_SOURCE_DIR}/Sockets/ServerSocketImpl.cc
+# 	${PROJECT_SOURCE_DIR}/Sockets/Socket.h
+# 	${PROJECT_SOURCE_DIR}/Sockets/Socket.cc
+# 	${PROJECT_SOURCE_DIR}/Sockets/SocketImpl.h
+# 	${PROJECT_SOURCE_DIR}/Sockets/SocketImpl.cc
+# 	${PROJECT_SOURCE_DIR}/Sockets/StreamSocket.h
+# 	${PROJECT_SOURCE_DIR}/Sockets/StreamSocket.cc
+# 	${PROJECT_SOURCE_DIR}/Sockets/StreamSocketImpl.h
+# 	${PROJECT_SOURCE_DIR}/Sockets/StreamSocketImpl.cc
+# )
+# SET(Reactor
+# 	${PROJECT_SOURCE_DIR}/Reactor/ConnectState.h
+# 	${PROJECT_SOURCE_DIR}/Reactor/EventHandler.h
+# 	${PROJECT_SOURCE_DIR}/Reactor/EventHandler.cc
+# 	${PROJECT_SOURCE_DIR}/Reactor/EventReactor.h
+# 	${PROJECT_SOURCE_DIR}/Reactor/EventReactor.cc
+# 	${PROJECT_SOURCE_DIR}/Reactor/SocketAcceptor.h
+# 	${PROJECT_SOURCE_DIR}/Reactor/SocketAcceptor.cc
+# 	${PROJECT_SOURCE_DIR}/Reactor/SocketConnection.h
+# 	${PROJECT_SOURCE_DIR}/Reactor/SocketConnection.cc
+# 	${PROJECT_SOURCE_DIR}/Reactor/SocketConnector.h
+# 	${PROJECT_SOURCE_DIR}/Reactor/SocketConnector.cc
+# )
+# SET(Interface
+# 	${PROJECT_SOURCE_DIR}/Interface/INotification.h
+# 	${PROJECT_SOURCE_DIR}/Interface/Client.h
+# 	${PROJECT_SOURCE_DIR}/Interface/Client.cc
+# 	${PROJECT_SOURCE_DIR}/Interface/Connection.h
+# 	${PROJECT_SOURCE_DIR}/Interface/Connection.cc
+# 	${PROJECT_SOURCE_DIR}/Interface/Server.h
+# 	${PROJECT_SOURCE_DIR}/Interface/Server.cc
+# 	${PROJECT_SOURCE_DIR}/Interface/ConnectionMgr.h
+# 	${PROJECT_SOURCE_DIR}/Interface/ConnectionMgr.cc
+# 	${PROJECT_SOURCE_DIR}/Interface/AppService.h
+# 	${PROJECT_SOURCE_DIR}/Interface/AppService.cc
+# 	${PROJECT_SOURCE_DIR}/Interface/Interface.cc
+# )
 
-SET(all_srcs
-	${PROJECT_SOURCE_DIR}/Net.h
-	${Common}
-	${Address}
-	${Sockets}
-	${Reactor}
-	${Interface}
+# SET(all_srcs
+# 	${PROJECT_SOURCE_DIR}/Net.h
+# 	${Common}
+# 	${Address}
+# 	${Sockets}
+# 	${Reactor}
+# 	${Interface}
+# )
+SET(srcs
+	${PROJECT_SOURCE_DIR}/include/NetworkException.h
+	${PROJECT_SOURCE_DIR}/include/Address/AddressFamily.h
+	${PROJECT_SOURCE_DIR}/include/Address/IPAddressImpl.h
+	${PROJECT_SOURCE_DIR}/include/Address/IPAddress.h
+
+	${PROJECT_SOURCE_DIR}/src/NetworkException.cc
+	${PROJECT_SOURCE_DIR}/src/Address/IPAddressImpl.cc
+	${PROJECT_SOURCE_DIR}/src/Address/IPAddress.cc
 )
-# MESSAGE(${all_srcs})
 
 # 生成目录结构
-SOURCE_GROUP(Common FILES ${Common})
-SOURCE_GROUP(Address FILES ${Address})
-SOURCE_GROUP(Sockets FILES ${Sockets})
-SOURCE_GROUP(Reactor FILES ${Reactor})
-SOURCE_GROUP(Interface FILES ${Interface})
+SOURCE_GROUP(TREE ${PROJECT_SOURCE_DIR} FILES ${srcs})
 
 # 设置输出目录
 SET(CMAKE_DEBUG_POSTFIX "d")
@@ -156,17 +156,15 @@ ELSE()
 	MESSAGE(STATUS "flags:" ${CMAKE_CXX_FLAGS_DEBUG} ${CMAKE_CXX_FLAGS})
 ENDIF()
 
-# 第三方类库
-ADD_SUBDIRECTORY(3rd/gtest ${CMAKE_BINARY_DIR}/../gtest)
-ADD_SUBDIRECTORY(3rd/libuv ${CMAKE_BINARY_DIR}/../libuv)
+# libuv
+ADD_SUBDIRECTORY(3rd/libuv)
+SET(LIBUV_LIBRARY optimized uv debug uvd)
+SET(LIBUV_LIBRARIES ${LIBUV_LIBRARY} CACHE STRING "libuv all library" FORCE)
+SET(LIBUV_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/3rd/libuv/include)
+SET(LIBUV_INCLUDE_DIRS ${LIBUV_INCLUDE_DIR} CACHE PATH "libuv include directory" FORCE)
 
-# 头文件
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR})
-INCLUDE_DIRECTORIES(${LIBUV_INCLUDE_DIRS})
-INCLUDE_DIRECTORIES(${GTEST_INCLUDE_DIRS})
-
-# 库目录
-LINK_DIRECTORIES(${OUTPUT_DIRECTORY})
+# liblogger
+ADD_SUBDIRECTORY(logger)
 
 # vld
 IF(VLD)
@@ -177,18 +175,28 @@ IF(VLD)
 	ENDIF()
 ENDIF()
 
+# 头文件
+SET(NET_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include CACHE PATH "net include directory" FORCE)
+INCLUDE_DIRECTORIES(${GTEST_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${COMMON_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${LOGGER_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${LIBUV_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${NET_INCLUDE_DIRS})
+
+# 库目录
+LINK_DIRECTORIES(${OUTPUT_DIRECTORY})
+
 # 生成静态库、动态库
-ADD_LIBRARY(net-static STATIC ${all_srcs})
-ADD_LIBRARY(net SHARED ${all_srcs})
-ADD_DEPENDENCIES(net-static uv)
-ADD_DEPENDENCIES(net uv)
+ADD_LIBRARY(net-static STATIC ${srcs})
+ADD_LIBRARY(net SHARED ${srcs})
+TARGET_LINK_LIBRARIES(net-static logger-static common-static ${LIBUV_LIBRARIES})
+TARGET_LINK_LIBRARIES(net logger common ${LIBUV_LIBRARIES})
 IF(WINDOWS)
-	TARGET_LINK_LIBRARIES(net ws2_32 iphlpapi psapi userenv ${LIBUV_LIBRARIES})
-	TARGET_COMPILE_DEFINITIONS(net PRIVATE BUILDING_NET_SHARED)
+	TARGET_LINK_LIBRARIES(net ws2_32 iphlpapi psapi userenv)
+	TARGET_COMPILE_DEFINITIONS(net PRIVATE BUILDING_COMMON_SHARED)
 ELSEIF(LINUX)
 	TARGET_COMPILE_OPTIONS(net PRIVATE -fPIC -fvisibility=hidden)
 ENDIF()
 
-# 添加单元测试项目、压测项目
-ADD_SUBDIRECTORY(TestSuite)
-ADD_SUBDIRECTORY(Test)
+# 添加测试项目
+ADD_SUBDIRECTORY(test)

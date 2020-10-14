@@ -28,7 +28,7 @@ public:
 TEST_F(IPAddressImplTestSuite, ipv4_ctor) {
 	Net::IPv4AddressImpl ipv4_impl1, ipv4_impl2(*ipv4_impl_);
 	ipv4_impl1 = *ipv4_impl_;
-	EXPECT_STREQ(ipv4_impl1.ToString().c_str(), ipv4_impl2.ToString().c_str());
+	EXPECT_STREQ(*ipv4_impl1.ToString(), *ipv4_impl2.ToString());
 	EXPECT_EQ(std::memcmp(ipv4_impl1.Addr(), ipv4_impl2.Addr(), ipv4_impl1.Length()), 0);
 	EXPECT_EQ(ipv4_impl1.Length(), ipv4_impl2.Length());
 	EXPECT_EQ(ipv4_impl1.Family(), ipv4_impl2.Family());
@@ -39,7 +39,7 @@ TEST_F(IPAddressImplTestSuite, ipv4_ctor) {
 TEST_F(IPAddressImplTestSuite, ipv6_ctor) {
 	Net::IPv6AddressImpl ipv6_impl1, ipv6_impl2(*ipv6_impl_);
 	ipv6_impl1 = *ipv6_impl_;
-	EXPECT_STREQ(ipv6_impl1.ToString().c_str(), ipv6_impl2.ToString().c_str());
+	EXPECT_STREQ(*ipv6_impl1.ToString(), *ipv6_impl2.ToString());
 	EXPECT_EQ(std::memcmp(ipv6_impl1.Addr(), ipv6_impl2.Addr(), ipv6_impl1.Length()), 0);
 	EXPECT_EQ(ipv6_impl1.Length(), ipv6_impl2.Length());
 	EXPECT_EQ(ipv6_impl1.Family(), ipv6_impl2.Family());
@@ -58,7 +58,7 @@ TEST_F(IPAddressImplTestSuite, ipv6_cmp) {
 }
 
 TEST_F(IPAddressImplTestSuite, ipv4_get) {
-	EXPECT_STREQ(ipv4_impl_->ToString().c_str(), "192.168.1.100");
+	EXPECT_STREQ(*ipv4_impl_->ToString(), "192.168.1.100");
 	EXPECT_EQ(ipv4_impl_->Length(), sizeof(ipv4_addr_.sin_addr));
 	EXPECT_EQ(ipv4_impl_->Family(), Net::AddressFamily::IPv4);
 	EXPECT_EQ(ipv4_impl_->AF(), AF_INET);
@@ -66,7 +66,7 @@ TEST_F(IPAddressImplTestSuite, ipv4_get) {
 }
 
 TEST_F(IPAddressImplTestSuite, ipv6_get) {
-	EXPECT_STREQ(ipv6_impl_->ToString().c_str(), "fe80::6101:927f:1dde:cb33");
+	EXPECT_STREQ(*ipv6_impl_->ToString(), "fe80::6101:927f:1dde:cb33");
 	EXPECT_EQ(ipv6_impl_->Length(), sizeof(ipv6_addr_.sin6_addr));
 	EXPECT_EQ(ipv6_impl_->Family(), Net::AddressFamily::IPv6);
 	EXPECT_EQ(ipv6_impl_->AF(), AF_INET6);
@@ -74,21 +74,21 @@ TEST_F(IPAddressImplTestSuite, ipv6_get) {
 }
 
 TEST_F(IPAddressImplTestSuite, ipv4_parse) {
-	EXPECT_STREQ(Net::IPv4AddressImpl::Parse("").ToString().c_str(), "0.0.0.0");
-	EXPECT_STREQ(Net::IPv4AddressImpl::Parse("192.168.1.100").ToString().c_str(), "192.168.1.100");
-	EXPECT_STREQ(Net::IPv4AddressImpl::Parse("error ip").ToString().c_str(), "0.0.0.0");
-	EXPECT_STREQ(Net::IPv4AddressImpl::Parse("   192.168.1.100   ").ToString().c_str(), "0.0.0.0");
+	EXPECT_STREQ(*Net::IPv4AddressImpl::Parse("").ToString(), "0.0.0.0");
+	EXPECT_STREQ(*Net::IPv4AddressImpl::Parse("192.168.1.100").ToString(), "192.168.1.100");
+	EXPECT_STREQ(*Net::IPv4AddressImpl::Parse("error ip").ToString(), "0.0.0.0");
+	EXPECT_STREQ(*Net::IPv4AddressImpl::Parse("   192.168.1.100   ").ToString(), "0.0.0.0");
 }
 
 TEST_F(IPAddressImplTestSuite, ipv6_parse) {
-	EXPECT_STREQ(Net::IPv6AddressImpl::Parse("").ToString().c_str(), "::");
-	EXPECT_STREQ(Net::IPv6AddressImpl::Parse("fe80::6101:927f:1dde:cb33").ToString().c_str(), "fe80::6101:927f:1dde:cb33");
-	EXPECT_STREQ(Net::IPv6AddressImpl::Parse("error ip").ToString().c_str(), "::");
-	EXPECT_STREQ(Net::IPv6AddressImpl::Parse("   fe80::6101:927f:1dde:cb33   ").ToString().c_str(), "::");
+	EXPECT_STREQ(*Net::IPv6AddressImpl::Parse("").ToString(), "::");
+	EXPECT_STREQ(*Net::IPv6AddressImpl::Parse("fe80::6101:927f:1dde:cb33").ToString(), "fe80::6101:927f:1dde:cb33");
+	EXPECT_STREQ(*Net::IPv6AddressImpl::Parse("error ip").ToString(), "::");
+	EXPECT_STREQ(*Net::IPv6AddressImpl::Parse("   fe80::6101:927f:1dde:cb33   ").ToString(), "::");
 #ifdef _WIN32
-	EXPECT_STREQ(Net::IPv6AddressImpl::Parse("fe80::6101:927f:1dde:cb33%1").ToString().c_str(), "fe80::6101:927f:1dde:cb33");
+	EXPECT_STREQ(*Net::IPv6AddressImpl::Parse("fe80::6101:927f:1dde:cb33%1").ToString(), "fe80::6101:927f:1dde:cb33");
 #else
-	EXPECT_STREQ(Net::IPv6AddressImpl::Parse("fe80::6101:927f:1dde:cb33%lo").ToString().c_str(), "fe80::6101:927f:1dde:cb33");
+	EXPECT_STREQ(*Net::IPv6AddressImpl::Parse("fe80::6101:927f:1dde:cb33%lo").ToString(), "fe80::6101:927f:1dde:cb33");
 #endif
 }
 
@@ -112,7 +112,7 @@ public:
 
 TEST_F(IPAddressTestSuite, ctor) {
 	Net::IPAddress ip;
-	EXPECT_STREQ(ip.ToString().c_str(), "0.0.0.0");
+	EXPECT_STREQ(*ip.ToString(), "0.0.0.0");
 	EXPECT_EQ(ip.Length(), sizeof(ipv4_addr_.sin_addr));
 	EXPECT_LT(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
@@ -122,7 +122,7 @@ TEST_F(IPAddressTestSuite, ctor) {
 
 TEST_F(IPAddressTestSuite, ctor2) {
 	Net::IPAddress ip("");
-	EXPECT_STREQ(ip.ToString().c_str(), "0.0.0.0");
+	EXPECT_STREQ(*ip.ToString(), "0.0.0.0");
 	EXPECT_EQ(ip.Length(), sizeof(ipv4_addr_.sin_addr));
 	EXPECT_LT(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
@@ -132,7 +132,7 @@ TEST_F(IPAddressTestSuite, ctor2) {
 
 TEST_F(IPAddressTestSuite, ctor3) {
 	Net::IPAddress ip("0.0.0.0");
-	EXPECT_STREQ(ip.ToString().c_str(), "0.0.0.0");
+	EXPECT_STREQ(*ip.ToString(), "0.0.0.0");
 	EXPECT_EQ(ip.Length(), sizeof(ipv4_addr_.sin_addr));
 	EXPECT_LT(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
@@ -142,7 +142,7 @@ TEST_F(IPAddressTestSuite, ctor3) {
 
 TEST_F(IPAddressTestSuite, ctor4) {
 	Net::IPAddress ip("::");
-	EXPECT_STREQ(ip.ToString().c_str(), "::");
+	EXPECT_STREQ(*ip.ToString(), "::");
 	EXPECT_EQ(ip.Length(), sizeof(ipv6_addr_.sin6_addr));
 	EXPECT_LT(std::memcmp(ip.Addr(), ipv6_impl_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv6);
@@ -152,7 +152,7 @@ TEST_F(IPAddressTestSuite, ctor4) {
 
 TEST_F(IPAddressTestSuite, ctor5) {
 	Net::IPAddress ip("  192.168.1.100  ");
-	EXPECT_STREQ(ip.ToString().c_str(), "192.168.1.100");
+	EXPECT_STREQ(*ip.ToString(), "192.168.1.100");
 	EXPECT_EQ(ip.Length(), sizeof(ipv4_addr_.sin_addr));
 	EXPECT_EQ(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
@@ -166,7 +166,7 @@ TEST_F(IPAddressTestSuite, ctor6) {
 #else
 	Net::IPAddress ip("fe80::6101:927f:1dde:cb33%lo");
 #endif
-	EXPECT_STREQ(ip.ToString().c_str(), "fe80::6101:927f:1dde:cb33");
+	EXPECT_STREQ(*ip.ToString(), "fe80::6101:927f:1dde:cb33");
 	EXPECT_EQ(ip.Length(), sizeof(ipv6_addr_.sin6_addr));
 	EXPECT_EQ(std::memcmp(ip.Addr(), ipv6_impl_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv6);
@@ -180,7 +180,7 @@ TEST_F(IPAddressTestSuite, ctor7) {
 
 TEST_F(IPAddressTestSuite, ctor8) {
 	Net::IPAddress ip(ipv4_impl_->Addr(), ipv4_impl_->Length(), ipv4_impl_->Scope());
-	EXPECT_STREQ(ip.ToString().c_str(), "192.168.1.100");
+	EXPECT_STREQ(*ip.ToString(), "192.168.1.100");
 	EXPECT_EQ(ip.Length(), sizeof(ipv4_addr_.sin_addr));
 	EXPECT_EQ(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
@@ -190,7 +190,7 @@ TEST_F(IPAddressTestSuite, ctor8) {
 
 TEST_F(IPAddressTestSuite, ctor9) {
 	Net::IPAddress ip(ipv6_impl_->Addr(), ipv6_impl_->Length(), ipv6_impl_->Scope());
-	EXPECT_STREQ(ip.ToString().c_str(), "fe80::6101:927f:1dde:cb33");
+	EXPECT_STREQ(*ip.ToString(), "fe80::6101:927f:1dde:cb33");
 	EXPECT_EQ(ip.Length(), sizeof(ipv6_addr_.sin6_addr));
 	EXPECT_EQ(std::memcmp(ip.Addr(), ipv6_impl_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv6);
@@ -200,7 +200,7 @@ TEST_F(IPAddressTestSuite, ctor9) {
 
 TEST_F(IPAddressTestSuite, ctor10) {
 	Net::IPAddress ip(*ip_);
-	EXPECT_STREQ(ip.ToString().c_str(), "192.168.1.100");
+	EXPECT_STREQ(*ip.ToString(), "192.168.1.100");
 	EXPECT_EQ(ip.Length(), sizeof(ipv4_addr_.sin_addr));
 	EXPECT_EQ(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
@@ -210,7 +210,7 @@ TEST_F(IPAddressTestSuite, ctor10) {
 
 TEST_F(IPAddressTestSuite, ctor11) {
 	Net::IPAddress ip(*ip6_);
-	EXPECT_STREQ(ip.ToString().c_str(), "fe80::6101:927f:1dde:cb33");
+	EXPECT_STREQ(*ip.ToString(), "fe80::6101:927f:1dde:cb33");
 	EXPECT_EQ(ip.Length(), sizeof(ipv6_addr_.sin6_addr));
 	EXPECT_EQ(std::memcmp(ip.Addr(), ipv6_impl_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv6);
@@ -225,7 +225,7 @@ TEST_F(IPAddressTestSuite, ctor12) {
 TEST_F(IPAddressTestSuite, assign) {
 	Net::IPAddress ip;
 	ip = *ip_;
-	EXPECT_STREQ(ip.ToString().c_str(), "192.168.1.100");
+	EXPECT_STREQ(*ip.ToString(), "192.168.1.100");
 	EXPECT_EQ(ip.Length(), sizeof(ipv4_addr_.sin_addr));
 	EXPECT_EQ(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
@@ -236,7 +236,7 @@ TEST_F(IPAddressTestSuite, assign) {
 TEST_F(IPAddressTestSuite, assign2) {
 	Net::IPAddress ip;
 	ip = *ip6_;
-	EXPECT_STREQ(ip.ToString().c_str(), "fe80::6101:927f:1dde:cb33");
+	EXPECT_STREQ(*ip.ToString(), "fe80::6101:927f:1dde:cb33");
 	EXPECT_EQ(ip.Length(), sizeof(ipv6_addr_.sin6_addr));
 	EXPECT_EQ(std::memcmp(ip.Addr(), ipv6_impl_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv6);
@@ -247,7 +247,7 @@ TEST_F(IPAddressTestSuite, assign2) {
 TEST_F(IPAddressTestSuite, assign3) {
 	Net::IPAddress ip;
 	ip = ip;
-	EXPECT_STREQ(ip.ToString().c_str(), "0.0.0.0");
+	EXPECT_STREQ(*ip.ToString(), "0.0.0.0");
 	EXPECT_EQ(ip.Length(), sizeof(ipv4_addr_.sin_addr));
 	EXPECT_LT(std::memcmp(ip.Addr(), ipv4_impl_->Addr(), ip.Length()), 0);
 	EXPECT_EQ(ip.Family(), Net::AddressFamily::IPv4);
@@ -265,31 +265,31 @@ TEST_F(IPAddressTestSuite, cmp) {
 
 TEST_F(IPAddressTestSuite, parse) {
 	*ip_ = Net::IPAddress::Parse("");
-	EXPECT_STREQ(ip_->ToString().c_str(), "0.0.0.0");
-	EXPECT_STREQ(Net::IPAddress::Parse("0.0.0.0").ToString().c_str(), "0.0.0.0");
-	EXPECT_STREQ(Net::IPAddress::Parse("::").ToString().c_str(), "::");
-	EXPECT_STREQ(Net::IPAddress::Parse("  192.168.1.100  ").ToString().c_str(), "192.168.1.100");
+	EXPECT_STREQ(*ip_->ToString(), "0.0.0.0");
+	EXPECT_STREQ(*Net::IPAddress::Parse("0.0.0.0").ToString(), "0.0.0.0");
+	EXPECT_STREQ(*Net::IPAddress::Parse("::").ToString(), "::");
+	EXPECT_STREQ(*Net::IPAddress::Parse("  192.168.1.100  ").ToString(), "192.168.1.100");
 	*ip_ = Net::IPAddress::Parse("  fe80::6101:927f:1dde:cb33  ");
-	EXPECT_STREQ(ip_->ToString().c_str(), "fe80::6101:927f:1dde:cb33");
+	EXPECT_STREQ(*ip_->ToString(), "fe80::6101:927f:1dde:cb33");
 	EXPECT_ANY_THROW(Net::IPAddress::Parse("error ip"));
 }
 
 TEST_F(IPAddressTestSuite, tryparse) {
 	EXPECT_EQ(Net::IPAddress::TryParse("", *ip6_), true);
-	EXPECT_STREQ(ip6_->ToString().c_str(), "0.0.0.0");
+	EXPECT_STREQ(*ip6_->ToString(), "0.0.0.0");
 
 	EXPECT_EQ(Net::IPAddress::TryParse("0.0.0.0", *ip6_), true);
-	EXPECT_STREQ(ip6_->ToString().c_str(), "0.0.0.0");
+	EXPECT_STREQ(*ip6_->ToString(), "0.0.0.0");
 
 	EXPECT_EQ(Net::IPAddress::TryParse("::", *ip6_), true);
-	EXPECT_STREQ(ip6_->ToString().c_str(), "::");
+	EXPECT_STREQ(*ip6_->ToString(), "::");
 
 	EXPECT_EQ(Net::IPAddress::TryParse("  192.168.1.100  ", *ip6_), true);
-	EXPECT_STREQ(ip6_->ToString().c_str(), "192.168.1.100");
+	EXPECT_STREQ(*ip6_->ToString(), "192.168.1.100");
 
 	EXPECT_EQ(Net::IPAddress::TryParse("  fe80::6101:927f:1dde:cb33  ", *ip6_), true);
-	EXPECT_STREQ(ip6_->ToString().c_str(), "fe80::6101:927f:1dde:cb33");
+	EXPECT_STREQ(*ip6_->ToString(), "fe80::6101:927f:1dde:cb33");
 
 	EXPECT_EQ(Net::IPAddress::TryParse("error ip", *ip6_), false);
-	EXPECT_STREQ(ip6_->ToString().c_str(), "fe80::6101:927f:1dde:cb33");
+	EXPECT_STREQ(*ip6_->ToString(), "fe80::6101:927f:1dde:cb33");
 }

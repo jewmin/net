@@ -25,41 +25,34 @@
 #ifndef Net_Address_IPAddress_INCLUDED
 #define Net_Address_IPAddress_INCLUDED
 
+#include "Common.h"
+#include "CObject.h"
+#include "SDString.h"
 #include "Address/IPAddressImpl.h"
+#include "uv.h"
 
 namespace Net {
 
-template<class S>
-S Trim(const S & str) {
-	i32 first = 0;
-	i32 last = static_cast<i32>(str.size()) - 1;
-
-	while (first <= last && 0x20 == str[first]) ++first;
-	while (last >= first && 0x20 == str[last]) --last;
-
-	return S(str, first, last - first + 1);
-}
-
-class NET_EXTERN IPAddress : public NetObject {
+class COMMON_EXTERN IPAddress : public Common::CObject {
 public:
 	IPAddress();
-	explicit IPAddress(const std::string & ip);
+	explicit IPAddress(const i8 * ip);
 	IPAddress(const void * addr, socklen_t length, u32 scope = 0);
-	IPAddress(const IPAddress & rhs);
-	IPAddress & operator=(const IPAddress & rhs);
+	IPAddress(const IPAddress & other);
+	IPAddress & operator=(const IPAddress & other);
 	virtual ~IPAddress();
 
-	std::string ToString() const;
+	Common::SDString ToString() const;
 	socklen_t Length() const;
 	const void * Addr() const;
 	AddressFamily::eFamily Family() const;
 	i32 AF() const;
 	u32 Scope() const;
-	bool operator==(const IPAddress & rhs) const;
-	bool operator!=(const IPAddress & rhs) const;
+	bool operator==(const IPAddress & other) const;
+	bool operator!=(const IPAddress & other) const;
 
-	static IPAddress Parse(const std::string & ip);
-	static bool TryParse(const std::string & ip, IPAddress & result);
+	static IPAddress Parse(const i8 * ip);
+	static bool TryParse(const i8 * ip, IPAddress & result);
 
 	static const AddressFamily::eFamily IPv4 = AddressFamily::IPv4;
 	static const AddressFamily::eFamily IPv6 = AddressFamily::IPv6;
@@ -77,7 +70,7 @@ private:
 	i8 memory_[sizeof(IPv6AddressImpl)];
 };
 
-inline std::string IPAddress::ToString() const {
+inline Common::SDString IPAddress::ToString() const {
 	return Impl()->ToString();
 }
 

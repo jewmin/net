@@ -4,9 +4,11 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/build/libuv/libuv-src/include",
-                "${workspaceFolder}/build/gtest/googletest-src/googletest/include",
-                "${workspaceFolder}/build/gtest/googletest-src/googlemock/include"
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/logger/include",
+                "${workspaceFolder}/logger/common/include",
+                "${workspaceFolder}/logger/common/3rd/googletest/googletest/include",
+                "${workspaceFolder}/logger/common/3rd/googletest/googlemock/include"
             ],
             "defines": [],
             "windowsSdkVersion": "10.0.17763.0",
@@ -19,15 +21,20 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/build/libuv/libuv-src/include",
-                "${workspaceFolder}/build/gtest/googletest-src/googletest/include",
-                "${workspaceFolder}/build/gtest/googletest-src/googlemock/include"
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/logger/include",
+                "${workspaceFolder}/logger/common/include",
+                "${workspaceFolder}/logger/common/3rd/googletest/googletest/include",
+                "${workspaceFolder}/logger/common/3rd/googletest/googlemock/include"
             ],
             "defines": [],
-            "compilerPath": "/usr/bin/gcc",
+            "compilerPath": "/usr/bin/g++",
             "cStandard": "c11",
             "cppStandard": "c++11",
-            "intelliSenseMode": "gcc-x64"
+            "intelliSenseMode": "gcc-x64",
+            "compilerArgs": [
+                "-m64"
+            ]
         }
     ],
     "version": 4

@@ -44,13 +44,13 @@ IPv4AddressImpl::IPv4AddressImpl(const void * addr) {
 	std::memcpy(&addr_, addr, sizeof(addr_));
 }
 
-IPv4AddressImpl::IPv4AddressImpl(const IPv4AddressImpl & rhs) {
-	std::memcpy(&addr_, &rhs.addr_, sizeof(addr_));
+IPv4AddressImpl::IPv4AddressImpl(const IPv4AddressImpl & other) {
+	std::memcpy(&addr_, &other.addr_, sizeof(addr_));
 }
 
-IPv4AddressImpl & IPv4AddressImpl::operator=(const IPv4AddressImpl & rhs) {
-	if (this != &rhs) {
-		std::memcpy(&addr_, &rhs.addr_, sizeof(addr_));
+IPv4AddressImpl & IPv4AddressImpl::operator=(const IPv4AddressImpl & other) {
+	if (this != std::addressof(other)) {
+		std::memcpy(&addr_, &other.addr_, sizeof(addr_));
 	}
 	return *this;
 }
@@ -58,30 +58,31 @@ IPv4AddressImpl & IPv4AddressImpl::operator=(const IPv4AddressImpl & rhs) {
 IPv4AddressImpl::~IPv4AddressImpl() {
 }
 
-std::string IPv4AddressImpl::ToString() const {
+Common::SDString IPv4AddressImpl::ToString() const {
 	i8 buf[16];
-	std::string result;
+	Common::SDString result;
 	if (0 == uv_inet_ntop(AF(), &addr_, buf, sizeof(buf))) {
 		result = buf;
 	}
 	return result;
 }
 
-bool IPv4AddressImpl::operator==(const IPv4AddressImpl & rhs) const {
-	return 0 == std::memcmp(&addr_, &rhs.addr_, sizeof(addr_));
+bool IPv4AddressImpl::operator==(const IPv4AddressImpl & other) const {
+	return 0 == std::memcmp(&addr_, &other.addr_, sizeof(addr_));
 }
 
-bool IPv4AddressImpl::operator!=(const IPv4AddressImpl & rhs) const {
-	return !(*this == rhs);
+bool IPv4AddressImpl::operator!=(const IPv4AddressImpl & other) const {
+	return !(*this == other);
 }
 
-IPv4AddressImpl IPv4AddressImpl::Parse(const std::string & ip) {
-	if (ip.empty()) {
+IPv4AddressImpl IPv4AddressImpl::Parse(const i8 * ip) {
+	Common::SDString trim_ip = Common::SDString(ip).TrimStartAndEnd();
+	if (trim_ip.Empty()) {
 		return IPv4AddressImpl();
 	}
 
 	struct sockaddr_in si;
-	if (0 != uv_ip4_addr(ip.c_str(), 0, &si)) {
+	if (0 != uv_ip4_addr(*trim_ip, 0, &si)) {
 		return IPv4AddressImpl();
 	} else {
 		return IPv4AddressImpl(&si.sin_addr);
@@ -100,14 +101,14 @@ IPv6AddressImpl::IPv6AddressImpl(const void * addr, u32 scope) : scope_(scope) {
 	std::memcpy(&addr_, addr, sizeof(addr_));
 }
 
-IPv6AddressImpl::IPv6AddressImpl(const IPv6AddressImpl & rhs) : scope_(rhs.scope_) {
-	std::memcpy(&addr_, &rhs.addr_, sizeof(addr_));
+IPv6AddressImpl::IPv6AddressImpl(const IPv6AddressImpl & other) : scope_(other.scope_) {
+	std::memcpy(&addr_, &other.addr_, sizeof(addr_));
 }
 
-IPv6AddressImpl & IPv6AddressImpl::operator=(const IPv6AddressImpl & rhs) {
-	if (this != &rhs) {
-		scope_ = rhs.scope_;
-		std::memcpy(&addr_, &rhs.addr_, sizeof(addr_));
+IPv6AddressImpl & IPv6AddressImpl::operator=(const IPv6AddressImpl & other) {
+	if (this != std::addressof(other)) {
+		scope_ = other.scope_;
+		std::memcpy(&addr_, &other.addr_, sizeof(addr_));
 	}
 	return *this;
 }
@@ -115,30 +116,31 @@ IPv6AddressImpl & IPv6AddressImpl::operator=(const IPv6AddressImpl & rhs) {
 IPv6AddressImpl::~IPv6AddressImpl() {
 }
 
-std::string IPv6AddressImpl::ToString() const {
+Common::SDString IPv6AddressImpl::ToString() const {
 	i8 buf[46];
-	std::string result;
+	Common::SDString result;
 	if (0 == uv_inet_ntop(AF(), &addr_, buf, sizeof(buf))) {
 		result = buf;
 	}
 	return result;
 }
 
-bool IPv6AddressImpl::operator==(const IPv6AddressImpl & rhs) const {
-	return scope_ == rhs.scope_ && 0 == std::memcmp(&addr_, &rhs.addr_, sizeof(addr_));
+bool IPv6AddressImpl::operator==(const IPv6AddressImpl & other) const {
+	return scope_ == other.scope_ && 0 == std::memcmp(&addr_, &other.addr_, sizeof(addr_));
 }
 
-bool IPv6AddressImpl::operator!=(const IPv6AddressImpl & rhs) const {
-	return !(*this == rhs);
+bool IPv6AddressImpl::operator!=(const IPv6AddressImpl & other) const {
+	return !(*this == other);
 }
 
-IPv6AddressImpl IPv6AddressImpl::Parse(const std::string & ip) {
-	if (ip.empty()) {
+IPv6AddressImpl IPv6AddressImpl::Parse(const i8 * ip) {
+	Common::SDString trim_ip = Common::SDString(ip).TrimStartAndEnd();
+	if (trim_ip.Empty()) {
 		return IPv6AddressImpl();
 	}
 
 	struct sockaddr_in6 si;
-	if (0 != uv_ip6_addr(ip.c_str(), 0, &si)) {
+	if (0 != uv_ip6_addr(*trim_ip, 0, &si)) {
 		return IPv6AddressImpl();
 	} else {
 		return IPv6AddressImpl(&si.sin6_addr, si.sin6_scope_id);
