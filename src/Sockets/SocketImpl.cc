@@ -23,12 +23,13 @@
  */
 
 #include "Sockets/SocketImpl.h"
-#include "Common/Allocator.h"
 #include "Sockets/StreamSocketImpl.h"
+#include "Allocator.h"
+#include "NetworkException.h"
 
 namespace Net {
 
-SocketImpl::SocketImpl() : handle_(nullptr) {
+SocketImpl::SocketImpl() : handle_(nullptr), logger_(Logger::Category::GetCategory("SocketImpl")) {
 }
 
 SocketImpl::~SocketImpl() {
@@ -61,7 +62,7 @@ i32 SocketImpl::Bind(const SocketAddress & address, bool ipv6_only, bool reuse_a
 		}
 		status = uv_tcp_bind(reinterpret_cast<uv_tcp_t *>(handle_), address.Addr(), flags);
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "uv_tcp_bind()", address.ToString().c_str(), uv_strerror(status));
+			logger_->Error("uv_tcp_bind() %s %d %s", *address.ToString(), status, uv_strerror(status));
 			Close();
 		}
 	}
@@ -73,7 +74,7 @@ i32 SocketImpl::Listen(i32 backlog) {
 	if (handle_ && UV_TCP == handle_->type) {
 		status = uv_listen(reinterpret_cast<uv_stream_t *>(handle_), backlog, connection_cb);
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "uv_listen()", LocalAddress().ToString().c_str(), uv_strerror(status));
+			logger_->Error("uv_listen() %s %d %s", *LocalAddress().ToString(), status, uv_strerror(status));
 			Close();
 		}
 	}
@@ -87,7 +88,7 @@ i32 SocketImpl::Connect(const SocketAddress & address, void * arg) {
 		status = uv_tcp_connect(req, reinterpret_cast<uv_tcp_t *>(handle_), address.Addr(), connect_cb);
 		if (status < 0) {
 			jc_free(req);
-			Log(kLog, __FILE__, __LINE__, "uv_tcp_connect()", address.ToString().c_str(), uv_strerror(status));
+			logger_->Error("uv_tcp_connect() %s %d %s", *address.ToString(), status, uv_strerror(status));
 			Close();
 		} else {
 			req->data = arg;
@@ -102,7 +103,7 @@ SocketImpl * SocketImpl::AcceptSocket(SocketAddress & client_address) {
 		client->Open(handle_->loop);
 		i32 status = uv_accept(reinterpret_cast<uv_stream_t *>(handle_), reinterpret_cast<uv_stream_t *>(client->handle_));
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "uv_accept()", LocalAddress().ToString().c_str(), uv_strerror(status));
+			logger_->Error("uv_accept() %s %d %s", *LocalAddress().ToString(), status, uv_strerror(status));
 			client->Release();
 		} else {
 			client_address = client->RemoteAddress();
@@ -127,7 +128,7 @@ i32 SocketImpl::ShutdownWrite(void * arg) {
 		status = uv_shutdown(req, reinterpret_cast<uv_stream_t *>(handle_), shutdown_cb);
 		if (status < 0) {
 			jc_free(req);
-			Log(kLog, __FILE__, __LINE__, "uv_shutdown()", uv_strerror(status));
+			logger_->Error("uv_shutdown() %s %d %s", *LocalAddress().ToString(), status, uv_strerror(status));
 		} else {
 			req->data = arg;
 		}
@@ -139,9 +140,6 @@ i32 SocketImpl::ShutdownRead() {
 	i32 status = UV_UNKNOWN;
 	if (handle_ && UV_TCP == handle_->type) {
 		status = uv_read_stop(reinterpret_cast<uv_stream_t *>(handle_));
-		// if (status < 0) {
-		// 	Log(kLog, __FILE__, __LINE__, "uv_read_stop()", uv_strerror(status));
-		// }
 	}
 	return status;
 }
@@ -151,7 +149,7 @@ i32 SocketImpl::Established() {
 	if (handle_ && UV_TCP == handle_->type) {
 		status = uv_read_start(reinterpret_cast<uv_stream_t *>(handle_), alloc_cb, read_cb);
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "uv_read_start()", uv_strerror(status));
+			logger_->Error("uv_read_start() %s %d %s", *LocalAddress().ToString(), status, uv_strerror(status));
 		}
 	}
 	return status;
@@ -166,10 +164,10 @@ i32 SocketImpl::Write(const i8 * data, i32 len, void * arg) {
 	}
 	uv_buf_t buf = uv_buf_init(const_cast<i8 *>(data), len);
 	uv_write_t * req = static_cast<uv_write_t *>(jc_malloc(sizeof(uv_write_t)));
-	i32 status = uv_write(req, reinterpret_cast<uv_stream_t * >(handle_), &buf, 1, write_cb);
+	i32 status = uv_write(req, reinterpret_cast<uv_stream_t *>(handle_), &buf, 1, write_cb);
 	if (status < 0) {
 		jc_free(req);
-		Log(kLog, __FILE__, __LINE__, "uv_write()", uv_strerror(status));
+		logger_->Error("uv_write() %s %d %s", *LocalAddress().ToString(), status, uv_strerror(status));
 		return status;
 	} else {
 		req->data = arg;
@@ -181,7 +179,7 @@ void SocketImpl::SetSendBufferSize(i32 size) {
 	if (handle_) {
 		i32 status = uv_send_buffer_size(handle_, &size);
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "uv_send_buffer_size() set SO_SNDBUF error", uv_strerror(status));
+			logger_->Error("uv_send_buffer_size() %s set SO_SNDBUF %d %s", *LocalAddress().ToString(), status, uv_strerror(status));
 		}
 	}
 }
@@ -191,7 +189,7 @@ i32 SocketImpl::GetSendBufferSize() const {
 	if (handle_) {
 		i32 status = uv_send_buffer_size(handle_, &size);
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "uv_send_buffer_size() get SO_SNDBUF error", uv_strerror(status));
+			logger_->Error("uv_send_buffer_size() %s get SO_SNDBUF %d %s", *LocalAddress().ToString(), status, uv_strerror(status));
 		}
 	}
 	return size;
@@ -200,7 +198,7 @@ i32 SocketImpl::GetSendBufferSize() const {
 i32 SocketImpl::GetWriteQueueSize() const {
 	i32 size = 0;
 	if (handle_ && UV_TCP == handle_->type) {
-		size = static_cast<i32>(uv_stream_get_write_queue_size(reinterpret_cast<uv_stream_t * >(handle_)));
+		size = static_cast<i32>(uv_stream_get_write_queue_size(reinterpret_cast<uv_stream_t *>(handle_)));
 	}
 	return size;
 }
@@ -209,7 +207,7 @@ void SocketImpl::SetRecvBufferSize(i32 size) {
 	if (handle_) {
 		i32 status = uv_recv_buffer_size(handle_, &size);
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "uv_recv_buffer_size() set SO_RCVBUF error", uv_strerror(status));
+			logger_->Error("uv_recv_buffer_size() %s set SO_RCVBUF %d %s", *LocalAddress().ToString(), status, uv_strerror(status));
 		}
 	}
 }
@@ -219,20 +217,20 @@ i32 SocketImpl::GetRecvBufferSize() const {
 	if (handle_) {
 		i32 status = uv_recv_buffer_size(handle_, &size);
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "uv_recv_buffer_size() get SO_RCVBUF error", uv_strerror(status));
+			logger_->Error("uv_recv_buffer_size() %s get SO_RCVBUF %d %s", *LocalAddress().ToString(), status, uv_strerror(status));
 		}
 	}
 	return size;
 }
 
-SocketAddress SocketImpl::LocalAddress() {
+SocketAddress SocketImpl::LocalAddress() const {
 	if (handle_ && UV_TCP == handle_->type) {
 		struct sockaddr_storage buffer;
 		struct sockaddr * sa = reinterpret_cast<struct sockaddr *>(&buffer);
 		socklen_t len = sizeof(buffer);
 		i32 status = uv_tcp_getsockname(reinterpret_cast<uv_tcp_t *>(handle_), sa, reinterpret_cast<i32 *>(&len));
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "uv_tcp_getsockname()", uv_strerror(status));
+			logger_->Error("uv_tcp_getsockname() %d %s", status, uv_strerror(status));
 		} else {
 			return SocketAddress(sa, len);
 		}
@@ -240,14 +238,14 @@ SocketAddress SocketImpl::LocalAddress() {
 	return SocketAddress();
 }
 
-SocketAddress SocketImpl::RemoteAddress() {
+SocketAddress SocketImpl::RemoteAddress() const {
 	if (handle_ && UV_TCP == handle_->type) {
 		struct sockaddr_storage buffer;
 		struct sockaddr * sa = reinterpret_cast<struct sockaddr *>(&buffer);
 		socklen_t len = sizeof(buffer);
 		i32 status = uv_tcp_getpeername(reinterpret_cast<uv_tcp_t *>(handle_), sa, reinterpret_cast<i32 *>(&len));
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "uv_tcp_getpeername()", uv_strerror(status));
+			logger_->Error("uv_tcp_getpeername() %d %s", status, uv_strerror(status));
 		} else {
 			return SocketAddress(sa, len);
 		}
@@ -260,7 +258,7 @@ void SocketImpl::SetNoDelay() {
 		i32 status = uv_tcp_nodelay(reinterpret_cast<uv_tcp_t *>(handle_), 1);
 		status = uv_translate_sys_error(status);
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "uv_tcp_nodelay()", uv_strerror(status));
+			logger_->Error("uv_tcp_nodelay() %d %s", status, uv_strerror(status));
 		}
 	}
 }
@@ -270,7 +268,7 @@ void SocketImpl::SetKeepAlive(i32 interval) {
 		i32 status = uv_tcp_keepalive(reinterpret_cast<uv_tcp_t *>(handle_), 1, interval);
 		status = uv_translate_sys_error(status);
 		if (status < 0) {
-			Log(kLog, __FILE__, __LINE__, "uv_tcp_keepalive()", uv_strerror(status));
+			logger_->Error("uv_tcp_keepalive() %d %s", status, uv_strerror(status));
 		}
 	}
 }
@@ -278,9 +276,9 @@ void SocketImpl::SetKeepAlive(i32 interval) {
 void SocketImpl::SetUvData(UvData * data) {
 	if (handle_) {
 		if (handle_->data) {
-			static_cast<WeakReference *>(handle_->data)->Release();
+			static_cast<Common::WeakReference *>(handle_->data)->Release();
 		}
-		handle_->data = data ? data->WeakRef() : nullptr;
+		handle_->data = data ? data->IncWeakRef() : nullptr;
 	}
 }
 
@@ -289,93 +287,93 @@ void SocketImpl::SetUvData(UvData * data) {
 //*********************************************************************
 
 void SocketImpl::close_cb(uv_handle_t * handle) {
-	WeakReference * reference = static_cast<WeakReference *>(handle->data);
+	Common::WeakReference * reference = static_cast<Common::WeakReference *>(handle->data);
 	if (reference) {
-		UvData * data = dynamic_cast<UvData *>(reference->Get());
+		UvData * data = dynamic_cast<UvData *>(reference->Lock());
 		if (data) {
 			data->CloseCallback();
 		} else {
-			Log(kLog, __FILE__, __LINE__, "close_cb() UvData has been released");
+			Logger::Category::GetCategory("SocketImpl")->Warn("close_cb() UvData has been released");
 		}
 		reference->Release();
 	}
 	if (UV_TCP == handle->type) {
 		jc_free(handle);
 	} else {
-		Log(kCrash, __FILE__, __LINE__, "close_cb() free specified handle [", uv_handle_type_name(handle->type), "] error");
+		throw NetworkException(*Common::SDString::Format("close_cb() free specified handle [%s] error", uv_handle_type_name(handle->type)));
 	}
 }
 
 void SocketImpl::connection_cb(uv_stream_t * server, int status) {
-	WeakReference * reference = static_cast<WeakReference *>(server->data);
+	Common::WeakReference * reference = static_cast<Common::WeakReference *>(server->data);
 	if (reference) {
-		UvData * data = dynamic_cast<UvData *>(reference->Get());
+		UvData * data = dynamic_cast<UvData *>(reference->Lock());
 		if (data) {
 			data->AcceptCallback(status);
 		} else {
-			Log(kLog, __FILE__, __LINE__, "connection_cb() UvData has been released");
+			Logger::Category::GetCategory("SocketImpl")->Warn("connection_cb() UvData has been released");
 		}
 	}
 }
 
 void SocketImpl::connect_cb(uv_connect_t * req, int status) {
-	WeakReference * reference = static_cast<WeakReference *>(req->handle->data);
+	Common::WeakReference * reference = static_cast<Common::WeakReference *>(req->handle->data);
 	if (reference) {
-		UvData * data = dynamic_cast<UvData *>(reference->Get());
+		UvData * data = dynamic_cast<UvData *>(reference->Lock());
 		if (data) {
 			data->ConnectCallback(status, req->data);
 		} else {
-			Log(kLog, __FILE__, __LINE__, "connect_cb() UvData has been released");
+			Logger::Category::GetCategory("SocketImpl")->Warn("connect_cb() UvData has been released");
 		}
 	}
 	jc_free(req);
 }
 
 void SocketImpl::shutdown_cb(uv_shutdown_t * req, int status) {
-	WeakReference * reference = static_cast<WeakReference *>(req->handle->data);
+	Common::WeakReference * reference = static_cast<Common::WeakReference *>(req->handle->data);
 	if (reference) {
-		UvData * data = dynamic_cast<UvData *>(reference->Get());
+		UvData * data = dynamic_cast<UvData *>(reference->Lock());
 		if (data) {
 			data->ShutdownCallback(status, req->data);
 		} else {
-			Log(kLog, __FILE__, __LINE__, "shutdown_cb() UvData has been released");
+			Logger::Category::GetCategory("SocketImpl")->Warn("shutdown_cb() UvData has been released");
 		}
 	}
 	jc_free(req);
 }
 
 void SocketImpl::alloc_cb(uv_handle_t * handle, size_t suggested_size, uv_buf_t * buf) {
-	WeakReference * reference = static_cast<WeakReference *>(handle->data);
+	Common::WeakReference * reference = static_cast<Common::WeakReference *>(handle->data);
 	if (reference) {
-		UvData * data = dynamic_cast<UvData *>(reference->Get());
+		UvData * data = dynamic_cast<UvData *>(reference->Lock());
 		if (data) {
 			data->AllocCallback(buf);
 		} else {
-			Log(kLog, __FILE__, __LINE__, "alloc_cb() UvData has been released");
+			Logger::Category::GetCategory("SocketImpl")->Warn("alloc_cb() UvData has been released");
 		}
 	}
 }
 
 void SocketImpl::read_cb(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf) {
-	WeakReference * reference = static_cast<WeakReference *>(stream->data);
+	Common::WeakReference * reference = static_cast<Common::WeakReference *>(stream->data);
 	if (reference) {
-		UvData * data = dynamic_cast<UvData *>(reference->Get());
+		UvData * data = dynamic_cast<UvData *>(reference->Lock());
 		if (data) {
 			data->ReadCallback(static_cast<i32>(nread));
 		} else {
-			Log(kLog, __FILE__, __LINE__, "read_cb() UvData has been released");
+			Logger::Category::GetCategory("SocketImpl")->Warn("read_cb() UvData has been released");
 		}
 	}
 }
 
 void SocketImpl::write_cb(uv_write_t * req, int status) {
-	WeakReference * reference = static_cast<WeakReference *>(req->handle->data);
+	Common::WeakReference * reference = static_cast<Common::WeakReference *>(req->handle->data);
 	if (reference) {
-		UvData * data = dynamic_cast<UvData *>(reference->Get());
+		UvData * data = dynamic_cast<UvData *>(reference->Lock());
 		if (data) {
 			data->WrittenCallback(status, req->data);
 		} else {
-			Log(kLog, __FILE__, __LINE__, "write_cb() UvData has been released");
+			Logger::Category::GetCategory("SocketImpl")->Warn("write_cb() UvData has been released");
 		}
 	}
 	jc_free(req);

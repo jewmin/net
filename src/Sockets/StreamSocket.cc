@@ -24,7 +24,7 @@
 
 #include "Sockets/StreamSocket.h"
 #include "Sockets/StreamSocketImpl.h"
-#include "Common/Logger.h"
+#include "NetworkException.h"
 
 namespace Net {
 
@@ -33,21 +33,21 @@ StreamSocket::StreamSocket() : Socket(new StreamSocketImpl()) {
 
 StreamSocket::StreamSocket(SocketImpl * impl) : Socket(impl) {
 	if (!dynamic_cast<StreamSocketImpl *>(Impl())) {
-		Log(kCrash, __FILE__, __LINE__, "socket impl != StreamSocketImpl");
+		throw NetworkException("socket impl != StreamSocketImpl");
 	}
 }
 
-StreamSocket::StreamSocket(const Socket & rhs) : Socket(rhs) {
+StreamSocket::StreamSocket(const Socket & other) : Socket(other) {
 	if (!dynamic_cast<StreamSocketImpl *>(Impl())) {
-		Log(kCrash, __FILE__, __LINE__, "socket impl != StreamSocketImpl");
+		throw NetworkException("socket impl != StreamSocketImpl");
 	}
 }
 
-StreamSocket & StreamSocket::operator=(const Socket & rhs) {
-	if (dynamic_cast<StreamSocketImpl *>(rhs.Impl())) {
-		Socket::operator=(rhs);
+StreamSocket & StreamSocket::operator=(const Socket & other) {
+	if (dynamic_cast<StreamSocketImpl *>(other.Impl())) {
+		Socket::operator=(other);
 	} else {
-		Log(kCrash, __FILE__, __LINE__, "socket impl != StreamSocketImpl");
+		throw NetworkException("socket impl != StreamSocketImpl");
 	}
 	return *this;
 }

@@ -29,7 +29,7 @@
 
 namespace Net {
 
-class NET_EXTERN StreamSocketImpl : public SocketImpl {
+class COMMON_EXTERN StreamSocketImpl : public SocketImpl {
 public:
 	StreamSocketImpl();
 	virtual ~StreamSocketImpl();

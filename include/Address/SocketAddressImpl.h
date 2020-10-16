@@ -29,6 +29,7 @@
 #include "CObject.h"
 #include "SDString.h"
 #include "Address/IPAddress.h"
+#include "uv.h"
 
 namespace Net {
 

@@ -24,23 +24,24 @@
 
 #include "Sockets/ServerSocket.h"
 #include "Sockets/ServerSocketImpl.h"
+#include "NetworkException.h"
 
 namespace Net {
 
 ServerSocket::ServerSocket() : Socket(new ServerSocketImpl()) {
 }
 
-ServerSocket::ServerSocket(const Socket & rhs) : Socket(rhs) {
+ServerSocket::ServerSocket(const Socket & other) : Socket(other) {
 	if (!dynamic_cast<ServerSocketImpl *>(Impl())) {
-		Log(kCrash, __FILE__, __LINE__, "socket impl != ServerSocketImpl");
+		throw NetworkException("socket impl != ServerSocketImpl");
 	}
 }
 
-ServerSocket & ServerSocket::operator=(const Socket & rhs) {
-	if (dynamic_cast<ServerSocketImpl *>(rhs.Impl())) {
-		Socket::operator=(rhs);
+ServerSocket & ServerSocket::operator=(const Socket & other) {
+	if (dynamic_cast<ServerSocketImpl *>(other.Impl())) {
+		Socket::operator=(other);
 	} else {
-		Log(kCrash, __FILE__, __LINE__, "socket impl != ServerSocketImpl");
+		throw NetworkException("socket impl != ServerSocketImpl");
 	}
 	return *this;
 }

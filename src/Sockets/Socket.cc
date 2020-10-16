@@ -24,6 +24,7 @@
 
 #include "Sockets/Socket.h"
 #include "Sockets/StreamSocketImpl.h"
+#include "NetworkException.h"
 
 namespace Net {
 
@@ -32,24 +33,21 @@ Socket::Socket() : impl_(new StreamSocketImpl()) {
 
 Socket::Socket(SocketImpl * impl) : impl_(impl) {
 	if (!impl_) {
-		Log(kCrash, __FILE__, __LINE__, "impl_ == nullptr");
+		throw NetworkException("impl_ == nullptr");
 	}
 }
 
-Socket::Socket(const Socket & rhs) : impl_(rhs.impl_) {
-	// if (!impl_) {
-	// 	Log(kCrash, __FILE__, __LINE__, "impl_ == nullptr");
-	// }
+Socket::Socket(const Socket & other) : impl_(other.impl_) {
 	impl_->Duplicate();
 }
 
-Socket & Socket::operator=(const Socket & rhs) {
-	if (this != &rhs) {
-		if (impl_ != rhs.impl_) {
+Socket & Socket::operator=(const Socket & other) {
+	if (this != std::addressof(other)) {
+		if (impl_ != other.impl_) {
 			if (impl_) {
 				impl_->Release();
 			}
-			impl_ = rhs.impl_;
+			impl_ = other.impl_;
 			if (impl_) {
 				impl_->Duplicate();
 			}

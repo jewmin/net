@@ -25,14 +25,17 @@
 #ifndef Net_Sockets_SocketImpl_INCLUDED
 #define Net_Sockets_SocketImpl_INCLUDED
 
-#include "Common/RefCountedObject.h"
+#include "Common.h"
+#include "CObject.h"
+#include "RefCountedObject.h"
 #include "Address/SocketAddress.h"
-#include "Common/Logger.h"
 #include "Sockets/UvData.h"
+#include "Category.h"
+#include "uv.h"
 
 namespace Net {
 
-class NET_EXTERN SocketImpl : public RefCountedObject {
+class COMMON_EXTERN SocketImpl : public Common::RefCountedObject {
 public:
 	virtual ~SocketImpl();
 
@@ -53,8 +56,8 @@ public:
 	virtual i32 GetWriteQueueSize() const;
 	virtual void SetRecvBufferSize(i32 size);
 	virtual i32 GetRecvBufferSize() const;
-	virtual SocketAddress LocalAddress();
-	virtual SocketAddress RemoteAddress();
+	virtual SocketAddress LocalAddress() const;
+	virtual SocketAddress RemoteAddress() const;
 	virtual void SetNoDelay();
 	virtual void SetKeepAlive(i32 interval);
 
@@ -79,6 +82,7 @@ private:
 
 protected:
 	uv_handle_t * handle_;
+	Logger::Category * logger_;
 };
 
 }

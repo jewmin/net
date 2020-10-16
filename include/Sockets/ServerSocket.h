@@ -25,16 +25,17 @@
 #ifndef Net_Sockets_ServerSocket_INCLUDED
 #define Net_Sockets_ServerSocket_INCLUDED
 
+#include "Common.h"
 #include "Sockets/Socket.h"
 #include "Sockets/StreamSocket.h"
 
 namespace Net {
 
-class NET_EXTERN ServerSocket : public Socket {
+class COMMON_EXTERN ServerSocket : public Socket {
 public:
 	ServerSocket();
-	ServerSocket(const Socket & rhs);
-	ServerSocket & operator=(const Socket & rhs);
+	ServerSocket(const Socket & other);
+	ServerSocket & operator=(const Socket & other);
 	virtual ~ServerSocket();
 
 	i32 Bind(const SocketAddress & address, bool ipv6_only = false, bool reuse_address = false);

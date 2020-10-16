@@ -22,7 +22,6 @@
  * SOFTWARE.
  */
 
-
 #ifndef Net_Sockets_ServerSocketImpl_INCLUDED
 #define Net_Sockets_ServerSocketImpl_INCLUDED
 
@@ -30,7 +29,7 @@
 
 namespace Net {
 
-class NET_EXTERN ServerSocketImpl : public SocketImpl {
+class COMMON_EXTERN ServerSocketImpl : public SocketImpl {
 public:
 	ServerSocketImpl();
 	virtual ~ServerSocketImpl();

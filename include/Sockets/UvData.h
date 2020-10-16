@@ -25,12 +25,13 @@
 #ifndef Net_Sockets_UvData_INCLUDED
 #define Net_Sockets_UvData_INCLUDED
 
-#include "Common/RefCountedObject.h"
+#include "Common.h"
+#include "RefCountedObject.h"
 
 namespace Net {
 
 class SocketImpl;
-class NET_EXTERN UvData : public StrongRefObject {
+class COMMON_EXTERN UvData : public Common::StrongRefObject {
 	friend class SocketImpl;
 
 public:

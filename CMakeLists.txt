@@ -38,19 +38,6 @@ MESSAGE(STATUS "PROJECT_SOURCE_DIR:" ${PROJECT_SOURCE_DIR})
 # 	${PROJECT_SOURCE_DIR}/include/Common/ObjectMgr.h
 # )
 # SET(Sockets
-# 	${PROJECT_SOURCE_DIR}/include/Sockets/UvData.h
-# 	${PROJECT_SOURCE_DIR}/include/Sockets/ServerSocket.h
-# 	${PROJECT_SOURCE_DIR}/src/Sockets/ServerSocket.cc
-# 	${PROJECT_SOURCE_DIR}/include/Sockets/ServerSocketImpl.h
-# 	${PROJECT_SOURCE_DIR}/src/Sockets/ServerSocketImpl.cc
-# 	${PROJECT_SOURCE_DIR}/include/Sockets/Socket.h
-# 	${PROJECT_SOURCE_DIR}/src/Sockets/Socket.cc
-# 	${PROJECT_SOURCE_DIR}/include/Sockets/SocketImpl.h
-# 	${PROJECT_SOURCE_DIR}/src/Sockets/SocketImpl.cc
-# 	${PROJECT_SOURCE_DIR}/include/Sockets/StreamSocket.h
-# 	${PROJECT_SOURCE_DIR}/src/Sockets/StreamSocket.cc
-# 	${PROJECT_SOURCE_DIR}/include/Sockets/StreamSocketImpl.h
-# 	${PROJECT_SOURCE_DIR}/src/Sockets/StreamSocketImpl.cc
 # )
 # SET(Reactor
 # 	${PROJECT_SOURCE_DIR}/include/Reactor/ConnectState.h
@@ -87,12 +74,25 @@ SET(srcs
 	${PROJECT_SOURCE_DIR}/include/Address/IPAddress.h
 	${PROJECT_SOURCE_DIR}/include/Address/SocketAddressImpl.h
 	${PROJECT_SOURCE_DIR}/include/Address/SocketAddress.h
+	${PROJECT_SOURCE_DIR}/include/Sockets/UvData.h
+	${PROJECT_SOURCE_DIR}/include/Sockets/SocketImpl.h
+	${PROJECT_SOURCE_DIR}/include/Sockets/StreamSocketImpl.h
+	${PROJECT_SOURCE_DIR}/include/Sockets/Socket.h
+	${PROJECT_SOURCE_DIR}/include/Sockets/StreamSocket.h
+	${PROJECT_SOURCE_DIR}/include/Sockets/ServerSocketImpl.h
+	${PROJECT_SOURCE_DIR}/include/Sockets/ServerSocket.h
 
 	${PROJECT_SOURCE_DIR}/src/NetworkException.cc
 	${PROJECT_SOURCE_DIR}/src/Address/IPAddressImpl.cc
 	${PROJECT_SOURCE_DIR}/src/Address/IPAddress.cc
 	${PROJECT_SOURCE_DIR}/src/Address/SocketAddressImpl.cc
 	${PROJECT_SOURCE_DIR}/src/Address/SocketAddress.cc
+	${PROJECT_SOURCE_DIR}/src/Sockets/SocketImpl.cc
+	${PROJECT_SOURCE_DIR}/src/Sockets/StreamSocketImpl.cc
+	${PROJECT_SOURCE_DIR}/src/Sockets/Socket.cc
+	${PROJECT_SOURCE_DIR}/src/Sockets/StreamSocket.cc
+	${PROJECT_SOURCE_DIR}/src/Sockets/ServerSocketImpl.cc
+	${PROJECT_SOURCE_DIR}/src/Sockets/ServerSocket.cc
 )
 
 # 生成目录结构

@@ -25,17 +25,18 @@
 #ifndef Net_Sockets_StreamSocket_INCLUDED
 #define Net_Sockets_StreamSocket_INCLUDED
 
+#include "Common.h"
 #include "Sockets/Socket.h"
 
 namespace Net {
 
-class NET_EXTERN StreamSocket : public Socket {
+class COMMON_EXTERN StreamSocket : public Socket {
 	friend class ServerSocket;
 
 public:
 	StreamSocket();
-	StreamSocket(const Socket & rhs);
-	StreamSocket & operator=(const Socket & rhs);
+	StreamSocket(const Socket & other);
+	StreamSocket & operator=(const Socket & other);
 	virtual ~StreamSocket();
 
 	i32 Bind(const SocketAddress & address, bool ipv6_only = false, bool reuse_address = false);

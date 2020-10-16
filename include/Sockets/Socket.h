@@ -25,16 +25,18 @@
 #ifndef Net_Sockets_Socket_INCLUDED
 #define Net_Sockets_Socket_INCLUDED
 
-#include "Common/NetObject.h"
+#include "Common.h"
+#include "CObject.h"
 #include "Sockets/SocketImpl.h"
+#include "uv.h"
 
 namespace Net {
 
-class NET_EXTERN Socket : public NetObject {
+class COMMON_EXTERN Socket : public Common::CObject {
 public:
 	Socket();
-	Socket(const Socket & rhs);
-	Socket & operator=(const Socket & rhs);
+	Socket(const Socket & other);
+	Socket & operator=(const Socket & other);
 	virtual ~Socket();
 	
 	void Open(uv_loop_t * loop);
@@ -53,12 +55,12 @@ public:
 	void SetUvData(UvData * data);
 	SocketImpl * Impl() const;
 
-	bool operator==(const Socket & rhs) const;
-	bool operator!=(const Socket & rhs) const;
-	bool operator<(const Socket & rhs) const;
-	bool operator<=(const Socket & rhs) const;
-	bool operator>(const Socket & rhs) const;
-	bool operator>=(const Socket & rhs) const;
+	bool operator==(const Socket & other) const;
+	bool operator!=(const Socket & other) const;
+	bool operator<(const Socket & other) const;
+	bool operator<=(const Socket & other) const;
+	bool operator>(const Socket & other) const;
+	bool operator>=(const Socket & other) const;
 
 protected:
 	explicit Socket(SocketImpl * impl);
@@ -119,28 +121,28 @@ inline SocketImpl * Socket::Impl() const {
 	return impl_;
 }
 
-inline bool Socket::operator==(const Socket & rhs) const {
-	return impl_ == rhs.impl_;
+inline bool Socket::operator==(const Socket & other) const {
+	return impl_ == other.impl_;
 }
 
-inline bool Socket::operator!=(const Socket & rhs) const {
-	return impl_ != rhs.impl_;
+inline bool Socket::operator!=(const Socket & other) const {
+	return impl_ != other.impl_;
 }
 
-inline bool Socket::operator<(const Socket & rhs) const {
-	return impl_ < rhs.impl_;
+inline bool Socket::operator<(const Socket & other) const {
+	return impl_ < other.impl_;
 }
 
-inline bool Socket::operator<=(const Socket & rhs) const {
-	return impl_ <= rhs.impl_;
+inline bool Socket::operator<=(const Socket & other) const {
+	return impl_ <= other.impl_;
 }
 
-inline bool Socket::operator>(const Socket & rhs) const {
-	return impl_ > rhs.impl_;
+inline bool Socket::operator>(const Socket & other) const {
+	return impl_ > other.impl_;
 }
 
-inline bool Socket::operator>=(const Socket & rhs) const {
-	return impl_ >= rhs.impl_;
+inline bool Socket::operator>=(const Socket & other) const {
+	return impl_ >= other.impl_;
 }
 
 }
