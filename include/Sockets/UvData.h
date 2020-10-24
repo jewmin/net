@@ -27,6 +27,7 @@
 
 #include "Common.h"
 #include "RefCountedObject.h"
+#include "Category.h"
 
 namespace Net {
 
@@ -48,7 +49,10 @@ protected:
 	virtual void WrittenCallback(i32 status, void * arg) {}
 
 protected:
-	UvData() {}
+	UvData(Logger::Category * logger = Logger::Category::GetCategory("UvData")) : logger_(logger) {}
+
+protected:
+	Logger::Category * logger_;
 };
 
 }
