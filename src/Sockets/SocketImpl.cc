@@ -62,7 +62,7 @@ i32 SocketImpl::Bind(const SocketAddress & address, bool ipv6_only, bool reuse_a
 		}
 		status = uv_tcp_bind(reinterpret_cast<uv_tcp_t *>(handle_), address.Addr(), flags);
 		if (status < 0) {
-			logger_->Error("uv_tcp_bind() %s %d %s", *address.ToString(), status, uv_strerror(status));
+			logger_->Error("uv_tcp_bind() - %s:%s(%d)", *address.ToString(), uv_strerror(status), status);
 			Close();
 		}
 	}
@@ -74,7 +74,7 @@ i32 SocketImpl::Listen(i32 backlog) {
 	if (handle_ && UV_TCP == handle_->type) {
 		status = uv_listen(reinterpret_cast<uv_stream_t *>(handle_), backlog, connection_cb);
 		if (status < 0) {
-			logger_->Error("uv_listen() %s %d %s", *LocalAddress().ToString(), status, uv_strerror(status));
+			logger_->Error("uv_listen() - %s:%s(%d)", *LocalAddress().ToString(), uv_strerror(status), status);
 			Close();
 		}
 	}
@@ -88,7 +88,7 @@ i32 SocketImpl::Connect(const SocketAddress & address, void * arg) {
 		status = uv_tcp_connect(req, reinterpret_cast<uv_tcp_t *>(handle_), address.Addr(), connect_cb);
 		if (status < 0) {
 			jc_free(req);
-			logger_->Error("uv_tcp_connect() %s %d %s", *address.ToString(), status, uv_strerror(status));
+			logger_->Error("uv_tcp_connect() - %s:%s(%d)", *address.ToString(), uv_strerror(status), status);
 			Close();
 		} else {
 			req->data = arg;
@@ -103,7 +103,7 @@ SocketImpl * SocketImpl::AcceptSocket(SocketAddress & client_address) {
 		client->Open(handle_->loop);
 		i32 status = uv_accept(reinterpret_cast<uv_stream_t *>(handle_), reinterpret_cast<uv_stream_t *>(client->handle_));
 		if (status < 0) {
-			logger_->Error("uv_accept() %s %d %s", *LocalAddress().ToString(), status, uv_strerror(status));
+			logger_->Error("uv_accept() - %s:%s(%d)", *LocalAddress().ToString(), uv_strerror(status), status);
 			client->Release();
 		} else {
 			client_address = client->RemoteAddress();
@@ -128,7 +128,7 @@ i32 SocketImpl::ShutdownWrite(void * arg) {
 		status = uv_shutdown(req, reinterpret_cast<uv_stream_t *>(handle_), shutdown_cb);
 		if (status < 0) {
 			jc_free(req);
-			logger_->Error("uv_shutdown() %s %d %s", *LocalAddress().ToString(), status, uv_strerror(status));
+			logger_->Error("uv_shutdown() - %s:%s(%d)", *LocalAddress().ToString(), uv_strerror(status), status);
 		} else {
 			req->data = arg;
 		}
@@ -149,7 +149,7 @@ i32 SocketImpl::Established() {
 	if (handle_ && UV_TCP == handle_->type) {
 		status = uv_read_start(reinterpret_cast<uv_stream_t *>(handle_), alloc_cb, read_cb);
 		if (status < 0) {
-			logger_->Error("uv_read_start() %s %d %s", *LocalAddress().ToString(), status, uv_strerror(status));
+			logger_->Error("uv_read_start() - %s:%s(%d)", *LocalAddress().ToString(), uv_strerror(status), status);
 		}
 	}
 	return status;
@@ -167,7 +167,7 @@ i32 SocketImpl::Write(const i8 * data, i32 len, void * arg) {
 	i32 status = uv_write(req, reinterpret_cast<uv_stream_t *>(handle_), &buf, 1, write_cb);
 	if (status < 0) {
 		jc_free(req);
-		logger_->Error("uv_write() %s %d %s", *LocalAddress().ToString(), status, uv_strerror(status));
+		logger_->Error("uv_write() - %s:%s(%d)", *LocalAddress().ToString(), uv_strerror(status), status);
 		return status;
 	} else {
 		req->data = arg;
@@ -179,7 +179,7 @@ void SocketImpl::SetSendBufferSize(i32 size) {
 	if (handle_) {
 		i32 status = uv_send_buffer_size(handle_, &size);
 		if (status < 0) {
-			logger_->Error("uv_send_buffer_size() %s set SO_SNDBUF %d %s", *LocalAddress().ToString(), status, uv_strerror(status));
+			logger_->Error("uv_send_buffer_size() set SO_SNDBUF - %s(%d)", uv_strerror(status), status);
 		}
 	}
 }
@@ -189,7 +189,7 @@ i32 SocketImpl::GetSendBufferSize() const {
 	if (handle_) {
 		i32 status = uv_send_buffer_size(handle_, &size);
 		if (status < 0) {
-			logger_->Error("uv_send_buffer_size() %s get SO_SNDBUF %d %s", *LocalAddress().ToString(), status, uv_strerror(status));
+			logger_->Error("uv_send_buffer_size() get SO_SNDBUF - %s(%d)", uv_strerror(status), status);
 		}
 	}
 	return size;
@@ -207,7 +207,7 @@ void SocketImpl::SetRecvBufferSize(i32 size) {
 	if (handle_) {
 		i32 status = uv_recv_buffer_size(handle_, &size);
 		if (status < 0) {
-			logger_->Error("uv_recv_buffer_size() %s set SO_RCVBUF %d %s", *LocalAddress().ToString(), status, uv_strerror(status));
+			logger_->Error("uv_recv_buffer_size() set SO_RCVBUF - %s(%d)", uv_strerror(status), status);
 		}
 	}
 }
@@ -217,7 +217,7 @@ i32 SocketImpl::GetRecvBufferSize() const {
 	if (handle_) {
 		i32 status = uv_recv_buffer_size(handle_, &size);
 		if (status < 0) {
-			logger_->Error("uv_recv_buffer_size() %s get SO_RCVBUF %d %s", *LocalAddress().ToString(), status, uv_strerror(status));
+			logger_->Error("uv_recv_buffer_size() get SO_RCVBUF - %s(%d)", uv_strerror(status), status);
 		}
 	}
 	return size;
@@ -230,7 +230,7 @@ SocketAddress SocketImpl::LocalAddress() const {
 		socklen_t len = sizeof(buffer);
 		i32 status = uv_tcp_getsockname(reinterpret_cast<uv_tcp_t *>(handle_), sa, reinterpret_cast<i32 *>(&len));
 		if (status < 0) {
-			logger_->Error("uv_tcp_getsockname() %d %s", status, uv_strerror(status));
+			logger_->Error("uv_tcp_getsockname() - %s(%d)", uv_strerror(status), status);
 		} else {
 			return SocketAddress(sa, len);
 		}
@@ -245,7 +245,7 @@ SocketAddress SocketImpl::RemoteAddress() const {
 		socklen_t len = sizeof(buffer);
 		i32 status = uv_tcp_getpeername(reinterpret_cast<uv_tcp_t *>(handle_), sa, reinterpret_cast<i32 *>(&len));
 		if (status < 0) {
-			logger_->Error("uv_tcp_getpeername() %d %s", status, uv_strerror(status));
+			logger_->Error("uv_tcp_getpeername() - %s(%d)", uv_strerror(status), status);
 		} else {
 			return SocketAddress(sa, len);
 		}
@@ -258,7 +258,7 @@ void SocketImpl::SetNoDelay() {
 		i32 status = uv_tcp_nodelay(reinterpret_cast<uv_tcp_t *>(handle_), 1);
 		status = uv_translate_sys_error(status);
 		if (status < 0) {
-			logger_->Error("uv_tcp_nodelay() %d %s", status, uv_strerror(status));
+			logger_->Error("uv_tcp_nodelay() - %s(%d)", uv_strerror(status), status);
 		}
 	}
 }
@@ -268,7 +268,7 @@ void SocketImpl::SetKeepAlive(i32 interval) {
 		i32 status = uv_tcp_keepalive(reinterpret_cast<uv_tcp_t *>(handle_), 1, interval);
 		status = uv_translate_sys_error(status);
 		if (status < 0) {
-			logger_->Error("uv_tcp_keepalive() %d %s", status, uv_strerror(status));
+			logger_->Error("uv_tcp_keepalive() - %s(%d)", uv_strerror(status), status);
 		}
 	}
 }
