@@ -1,40 +1,113 @@
 #include "gtest/gtest.h"
-#include "Common/Allocator.h"
 #include "Reactor/EventHandler.h"
 #include "Reactor/EventReactor.h"
 #include "Reactor/SocketAcceptor.h"
 #include "Reactor/SocketConnector.h"
 #include "Reactor/SocketConnection.h"
-#include "Sockets/StreamSocketImpl.h"
 
-class MockEventHandler : public Net::EventHandler {
+class MockSuccEventHandler : public Net::EventHandler {
 public:
-	MockEventHandler(Net::EventReactor * reactor) : Net::EventHandler(reactor) {}
+	MockSuccEventHandler(Net::EventReactor * reactor) : Net::EventHandler(reactor) {}
 	virtual bool RegisterToReactor() { return true; }
 	virtual bool UnRegisterFromReactor() { return true; }
 };
 
-class MockEventHandler2 : public Net::EventHandler {
+class MockFailEventHandler : public Net::EventHandler {
 public:
-	MockEventHandler2(Net::EventReactor * reactor) : Net::EventHandler(reactor) {}
+	MockFailEventHandler(Net::EventReactor * reactor) : Net::EventHandler(reactor) {}
 	virtual bool RegisterToReactor() { return false; }
 	virtual bool UnRegisterFromReactor() { return false; }
 };
+
+TEST(ReactorTest, reactor_ctor) {
+	Net::EventReactor reactor;
+	EXPECT_EQ(reactor.Poll(), false);
+	EXPECT_FALSE(reactor.GetUvLoop() == nullptr);
+}
+
+TEST(ReactorTest, handler) {
+	Net::EventReactor reactor;
+	MockSuccEventHandler * h1 = new MockSuccEventHandler(&reactor);
+	MockFailEventHandler * h2 = new MockFailEventHandler(nullptr);
+	EXPECT_TRUE(h1->GetReactor() == &reactor);
+	EXPECT_TRUE(h2->GetReactor() == nullptr);
+	h1->SetReactor(nullptr);
+	h2->SetReactor(&reactor);
+	EXPECT_TRUE(h1->GetReactor() == nullptr);
+	EXPECT_TRUE(h2->GetReactor() == &reactor);
+	EXPECT_EQ(h1->ReferenceCount(), 1);
+	EXPECT_EQ(h2->ReferenceCount(), 1);
+	h1->Release();
+	h2->Release();
+}
+
+TEST(ReactorTest, reactor_add) {
+	Net::EventReactor reactor;
+	MockSuccEventHandler * h1 = new MockSuccEventHandler(&reactor);
+	MockFailEventHandler * h2 = new MockFailEventHandler(&reactor);
+	Net::SocketConnection * h3 = new Net::SocketConnection(50, 50);
+	h3->SetReactor(&reactor);
+	EXPECT_EQ(h1->ReferenceCount(), 1);
+	EXPECT_EQ(h2->ReferenceCount(), 1);
+	EXPECT_EQ(h3->ReferenceCount(), 1);
+	EXPECT_EQ(reactor.AddEventHandler(h1), true);
+	EXPECT_EQ(reactor.AddEventHandler(h2), false);
+	EXPECT_EQ(reactor.AddEventHandler(h3), false);
+	EXPECT_EQ(h1->ReferenceCount(), 2);
+	EXPECT_EQ(h2->ReferenceCount(), 1);
+	EXPECT_EQ(h3->ReferenceCount(), 1);
+	h1->Release();
+	h2->Release();
+	h3->Release();
+}
+
+TEST(ReactorTest, reactor_remove) {
+	Net::EventReactor reactor;
+	MockSuccEventHandler * h1 = new MockSuccEventHandler(&reactor);
+	MockFailEventHandler * h2 = new MockFailEventHandler(&reactor);
+	Net::SocketConnection * h3 = new Net::SocketConnection(50, 50);
+	h3->SetReactor(&reactor);
+	EXPECT_EQ(h1->ReferenceCount(), 1);
+	EXPECT_EQ(h2->ReferenceCount(), 1);
+	EXPECT_EQ(h3->ReferenceCount(), 1);
+	EXPECT_EQ(reactor.AddEventHandler(h1), true);
+	EXPECT_EQ(reactor.AddEventHandler(h2), false);
+	EXPECT_EQ(reactor.AddEventHandler(h3), false);
+	EXPECT_EQ(h1->ReferenceCount(), 2);
+	EXPECT_EQ(h2->ReferenceCount(), 1);
+	EXPECT_EQ(h3->ReferenceCount(), 1);
+	EXPECT_EQ(reactor.RemoveEventHandler(h1), true);
+	EXPECT_EQ(reactor.RemoveEventHandler(h2), false);
+	EXPECT_EQ(reactor.RemoveEventHandler(h3), false);
+	EXPECT_EQ(h1->ReferenceCount(), 1);
+	EXPECT_EQ(h2->ReferenceCount(), 1);
+	EXPECT_EQ(h3->ReferenceCount(), 1);
+	h1->Release();
+	h2->Release();
+	h3->Release();
+}
 
 class ReactorTestSuite : public testing::Test {
 public:
 	// Sets up the test fixture.
 	virtual void SetUp() {
-		reactor_ = new Net::EventReactor();
-		handler_ = new MockEventHandler(nullptr);
-		handler2_ = new MockEventHandler2(reactor_);
+		succ_handler_ = new MockSuccEventHandler(nullptr);
+		fail_handler_ = new MockFailEventHandler(&reactor_);
 	}
 
 	// Tears down the test fixture.
 	virtual void TearDown() {
-		delete handler_;
-		delete handler2_;
-		delete reactor_;
+		succ_handler_->Release();
+		fail_handler_->Release();
+		reactor_.ClearEventHandlers();
+	}
+
+	Net::EventReactor * GetReactor() {
+		return &reactor_;
+	}
+
+	uv_loop_t * GetUvLoop() const {
+		return reactor_.GetUvLoop();
 	}
 
 	static void close_cb(uv_handle_t* handle) {
@@ -45,61 +118,33 @@ public:
 		uv_close(reinterpret_cast<uv_handle_t *>(handle), close_cb);
 	}
 
-	MockEventHandler * handler_;
-	MockEventHandler2 * handler2_;
-	Net::EventReactor * reactor_;
+	MockSuccEventHandler * succ_handler_;
+	MockFailEventHandler * fail_handler_;
+	Net::EventReactor reactor_;
 };
 
-TEST_F(ReactorTestSuite, event_handler) {
-	EXPECT_TRUE(handler_->GetReactor() == nullptr);
-	EXPECT_TRUE(handler2_->GetReactor() == reactor_);
-	handler_->SetReactor(reactor_);
-	handler2_->SetReactor(nullptr);
-	EXPECT_TRUE(handler_->GetReactor() == reactor_);
-	EXPECT_TRUE(handler2_->GetReactor() == nullptr);
-}
-
-TEST_F(ReactorTestSuite, event_handler2) {
-	EXPECT_EQ(reactor_->AddEventHandler(handler_), true);
-	EXPECT_EQ(reactor_->GetHandlerCount(), 1);
-	EXPECT_EQ(reactor_->RemoveEventHandler(handler_), true);
-	EXPECT_EQ(reactor_->GetHandlerCount(), 0);
-	EXPECT_EQ(reactor_->AddEventHandler(handler2_), false);
-	EXPECT_EQ(reactor_->GetHandlerCount(), 0);
-	EXPECT_EQ(reactor_->RemoveEventHandler(handler2_), false);
-	EXPECT_EQ(reactor_->GetHandlerCount(), 0);
-}
-
-TEST_F(ReactorTestSuite, event_handler3) {
-	EXPECT_EQ(reactor_->AddEventHandler(handler_), true);
-}
-
-TEST_F(ReactorTestSuite, event_handler4) {
-	EXPECT_EQ(reactor_->RemoveEventHandler(handler_), true);
-}
-
-TEST_F(ReactorTestSuite, reactor) {
-	EXPECT_EQ(reactor_->Poll(), false);
-}
-
-TEST_F(ReactorTestSuite, reactor2) {
+TEST(ReactorTest, reactor_timer) {
+	Net::EventReactor reactor;
 	uv_timer_t * timer = static_cast<uv_timer_t *>(jc_malloc(sizeof(*timer)));
-	uv_timer_init(reactor_->GetUvLoop(), timer);
-	uv_timer_start(timer, timer_cb, 10, 0);
+	uv_timer_init(reactor.GetUvLoop(), timer);
+	uv_timer_start(timer, ReactorTestSuite::timer_cb, 10, 0);
+	EXPECT_EQ(reactor.Poll(), true);
+	EXPECT_EQ(reactor.Poll(UV_RUN_DEFAULT), false);
+}
+
+TEST(ReactorTest, reactor_dtor) {
+	Net::EventReactor reactor;
+	uv_timer_t * timer = static_cast<uv_timer_t *>(jc_malloc(sizeof(*timer)));
+	uv_timer_init(reactor.GetUvLoop(), timer);
+	uv_timer_start(timer, ReactorTestSuite::timer_cb, 10, 0);
 }
 
 class MockConnection : public Net::SocketConnection {
 public:
-	MockConnection() : Net::SocketConnection(50, 50), call_connected_(0), call_connect_failed_(0)
-		, call_disconnected_(0), call_recv_(0), call_sent_(0), call_error_(0) {}
+	MockConnection() : Net::SocketConnection(60, 50), call_connected_(0), call_disconnected_(0), call_recv_(0), call_sent_(0), call_error_(0) {}
 	virtual void OnConnected() {
 		Net::SocketConnection::OnConnected();
 		call_connected_++;
-	}
-	virtual void OnConnectFailed(i32 reason) {
-		Net::SocketConnection::OnConnectFailed(reason);
-		call_connect_failed_++;
-		std::printf("OnConnectFailed: %s\n", uv_err_name(reason));
 	}
 	virtual void OnDisconnected(bool is_remote) {
 		Net::SocketConnection::OnDisconnected(is_remote);
@@ -116,423 +161,395 @@ public:
 	virtual void OnError(i32 reason) {
 		Net::SocketConnection::OnError(reason);
 		call_error_++;
-		std::printf("OnError: %s\n", uv_err_name(reason));
 	}
 
 	i32 call_connected_;
-	i32 call_connect_failed_;
 	i32 call_disconnected_;
 	i32 call_recv_;
 	i32 call_sent_;
 	i32 call_error_;
 };
 
-class MockAcceptor : public Net::SocketAcceptor {
+class MockNullAcceptor : public Net::SocketAcceptor {
 public:
-	MockAcceptor(Net::EventReactor * reactor) : Net::SocketAcceptor(reactor)
-		, use_null_connection_(false), use_exist_connection_(false) {}
-	virtual ~MockAcceptor() {
-		for (auto & it : connection_list_) {
-			delete it;
-		}
-	}
-	virtual Net::SocketConnection * CreateConnection() {
-		if (use_null_connection_) {
-			return nullptr;
-		} else if (use_exist_connection_ && connection_list_.size() > 0) {
-			return connection_list_.front();
-		} else {
-			Net::SocketConnection * connection = new MockConnection();
-			connection_list_.push_back(connection);
-			return connection;
-		}
-	}
-	virtual void DestroyConnection(Net::SocketConnection * connection) {
-		connection_list_.remove(connection);
-		delete connection;
-	}
+	MockNullAcceptor(Net::EventReactor * reactor) : Net::SocketAcceptor(reactor) {}
+	virtual ~MockNullAcceptor() {}
+	virtual Net::SocketConnection * CreateConnection() { return nullptr; }
+	virtual void DestroyConnection(Net::SocketConnection * connection) {}
 	virtual void AcceptCallback(i32 status) {
 		Net::SocketAcceptor::AcceptCallback(status);
 	}
-	void UseNullConnection(bool use) { use_null_connection_ = use; }
-	void UseExistConnection(bool use) { use_exist_connection_ = use; }
-	std::list<Net::SocketConnection *> connection_list_;
-	bool use_null_connection_;
-	bool use_exist_connection_;
 };
 
-class MockStreamSocketImpl : public Net::StreamSocketImpl {
-public:
-	void delayed_error(i32 err) {
-		reinterpret_cast<uv_tcp_t *>(handle_)->delayed_error = err;
-	}
-};
+TEST_F(ReactorTestSuite, accept_open) {
+	Net::SocketAddress ipv6_address("::", 9999), ipv4_address(10000);
+	Net::SocketAcceptor * acceptor = new MockNullAcceptor(GetReactor());
+	EXPECT_EQ(acceptor->ReferenceCount(), 1);
 
-class MockStreamSocket : public Net::StreamSocket {
-public:
-	MockStreamSocket() : Net::StreamSocket(new MockStreamSocketImpl()) {}
-};
+	acceptor->Close();
+	EXPECT_EQ(acceptor->Open(ipv6_address), true);
+	EXPECT_EQ(acceptor->GetListenAddress(), ipv6_address);
+	EXPECT_EQ(acceptor->ReferenceCount(), 2);
 
-TEST_F(ReactorTestSuite, address) {
-	MockAcceptor acceptor(reactor_);
-	Net::SocketAddress address("::", 10000);
-	EXPECT_EQ(acceptor.Open(address), true);
-	EXPECT_EQ(acceptor.GetListenAddress(), address);
+	EXPECT_EQ(acceptor->Open(ipv6_address), false);
+
+	acceptor->Close();
+	EXPECT_EQ(acceptor->ReferenceCount(), 1);
+
+	EXPECT_EQ(acceptor->Open(ipv4_address, 128, true), false);
+
+	EXPECT_EQ(acceptor->Open(ipv4_address), true);
+	EXPECT_EQ(acceptor->GetListenAddress(), ipv4_address);
+	EXPECT_EQ(acceptor->ReferenceCount(), 2);
+	acceptor->Release();
 }
 
-TEST_F(ReactorTestSuite, address2) {
-	MockAcceptor acceptor(reactor_);
-	Net::SocketAddress address("::", 0);
-	EXPECT_EQ(acceptor.Open(address), true);
-	EXPECT_NE(acceptor.GetListenAddress(), address);
+TEST_F(ReactorTestSuite, accept_cb_err) {
+	MockNullAcceptor * acceptor = new MockNullAcceptor(GetReactor());
+	acceptor->AcceptCallback(UV_UNKNOWN);
+	acceptor->AcceptCallback(0);
+	acceptor->Release();
 }
 
-class ReactorPollTestSuite : public ReactorTestSuite {
+class AcceptorTestSuite : public ReactorTestSuite {
 public:
-	ReactorPollTestSuite() {
+	AcceptorTestSuite() : port_(10001) {
 		std::memcpy(w_content_, "hello world", std::strlen("hello world"));
 		w_content_len_ = static_cast<i32>(std::strlen("hello world"));
 		w_content_[w_content_len_] = 0;
 	}
+
 	// Sets up the test fixture.
 	virtual void SetUp() {
 		ReactorTestSuite::SetUp();
-		connection_ = new MockConnection();
-		acceptor_ = new MockAcceptor(reactor_);
-		connection_->SetReactor(reactor_);
-		connector_ = new Net::SocketConnector(reactor_);
-		client_ = new MockConnection();
-		acceptor_address_ = Net::SocketAddress("::", 0);
-		EXPECT_EQ(acceptor_->Open(acceptor_address_), true);
-		acceptor_address_ = Net::SocketAddress("127.0.0.1", acceptor_->GetListenAddress().Port());
-		EXPECT_EQ(connector_->Connect(connection_, acceptor_address_), true);
-		Poll();
-		EXPECT_EQ(connection_->GetConnectState(), Net::ConnectState::kConnected);
-		EXPECT_EQ(acceptor_->connection_list_.front()->Write(w_content_, w_content_len_), w_content_len_);
-		EXPECT_EQ(connector_->Connect(client_, acceptor_address_), true);
-		Poll();
-		EXPECT_EQ(client_->GetConnectState(), Net::ConnectState::kConnected);
-		EXPECT_EQ(connection_->call_connected_, 1);
-		EXPECT_EQ(connection_->call_recv_, 1);
-		EXPECT_EQ(client_->call_connected_, 1);
+		port_++;
 	}
 
 	// Tears down the test fixture.
 	virtual void TearDown() {
-		delete connection_;
-		delete acceptor_;
-		delete connector_;
-		delete client_;
 		ReactorTestSuite::TearDown();
 	}
 
 	void Poll(i32 count = 30) {
-		while (count-- > 0) {
-			reactor_->Poll();
-		}
+		while (count-- > 0) { GetReactor()->Poll(); }
 	}
 
 	i8 w_content_[12];
 	i32 w_content_len_;
+	u16 port_;
+};
+
+TEST_F(AcceptorTestSuite, accept_cb_null) {
+	Net::StreamSocket socket;
+	Net::SocketAcceptor * acceptor = new MockNullAcceptor(GetReactor());
+	EXPECT_EQ(acceptor->ReferenceCount(), 1);
+	EXPECT_EQ(acceptor->Open(Net::SocketAddress(port_)), true);
+	EXPECT_EQ(acceptor->ReferenceCount(), 2);
+	socket.Open(GetReactor()->GetUvLoop());
+	EXPECT_EQ(socket.Connect(Net::SocketAddress("127.0.0.1", port_)), 0);
+	Poll();
+	EXPECT_EQ(acceptor->ReferenceCount(), 2);
+	acceptor->Release();
+}
+
+class MockDupAcceptor : public MockNullAcceptor {
+public:
+	MockDupAcceptor(Net::EventReactor * reactor) : MockNullAcceptor(reactor), connection_(new MockConnection()) {}
+	virtual ~MockDupAcceptor() { connection_->Release(); }
+	virtual Net::SocketConnection * CreateConnection() { return connection_; }
+	virtual void DestroyConnection(Net::SocketConnection * connection) {}
 	MockConnection * connection_;
-	MockConnection * client_;
+};
+
+TEST_F(AcceptorTestSuite, accept_cb_repeat) {
+	Net::StreamSocket socket, socket_dup;
+	MockDupAcceptor * acceptor = new MockDupAcceptor(GetReactor());
+	EXPECT_EQ(acceptor->ReferenceCount(), 1);
+	EXPECT_EQ(acceptor->connection_->ReferenceCount(), 1);
+	EXPECT_EQ(acceptor->connection_->call_connected_, 0);
+	EXPECT_EQ(acceptor->Open(Net::SocketAddress(port_)), true);
+	socket.Open(GetReactor()->GetUvLoop());
+	EXPECT_EQ(socket.Connect(Net::SocketAddress("127.0.0.1", port_)), 0);
+	Poll();
+	EXPECT_EQ(acceptor->ReferenceCount(), 2);
+	EXPECT_EQ(acceptor->connection_->ReferenceCount(), 2);
+	EXPECT_EQ(acceptor->connection_->call_connected_, 1);
+	socket_dup.Open(GetReactor()->GetUvLoop());
+	EXPECT_EQ(socket_dup.Connect(Net::SocketAddress("127.0.0.1", port_)), 0);
+	Poll();
+	EXPECT_EQ(acceptor->ReferenceCount(), 2);
+	EXPECT_EQ(acceptor->connection_->ReferenceCount(), 2);
+	EXPECT_EQ(acceptor->connection_->call_connected_, 1);
+	acceptor->Release();
+}
+
+class MockAcceptor : public MockNullAcceptor {
+public:
+	MockAcceptor(Net::EventReactor * reactor) : MockNullAcceptor(reactor) {}
+	virtual ~MockAcceptor() {
+		for (auto & it : connection_list_) {
+			it->Release();
+		}
+	}
+	virtual Net::SocketConnection * CreateConnection() {
+		Net::SocketConnection * connection = new MockConnection();
+		connection_list_.push_back(connection);
+		return connection;
+	}
+	virtual void DestroyConnection(Net::SocketConnection * connection) {
+		connection_list_.remove(connection);
+		connection->Release();
+	}
+	void WriteAll(i8 * data, i32 len) {
+		for (auto & it : connection_list_) {
+			EXPECT_EQ(it->Write(data, len), len);
+		}
+	}
+	void ShutdownAll(bool now) {
+		for (auto & it : connection_list_) {
+			it->Shutdown(now);
+		}
+	}
+	std::list<Net::SocketConnection *> connection_list_;
+};
+
+class ConnectorTestSuite : public AcceptorTestSuite {
+public:
+	ConnectorTestSuite() { port_ += 10; }
+
+	// Sets up the test fixture.
+	virtual void SetUp() {
+		AcceptorTestSuite::SetUp();
+		acceptor_ = new MockAcceptor(GetReactor());
+		EXPECT_EQ(acceptor_->Open(Net::SocketAddress("::", port_)), true);
+	}
+
+	// Tears down the test fixture.
+	virtual void TearDown() {
+		acceptor_->Release();
+		AcceptorTestSuite::TearDown();
+	}
+
 	MockAcceptor * acceptor_;
-	Net::SocketConnector * connector_;
-	Net::SocketAddress acceptor_address_;
 };
 
-TEST_F(ReactorPollTestSuite, ctor) {
-	MockAcceptor acceptor(reactor_);
-	Net::SocketConnector connector(reactor_);
-	MockConnection connection;
+class MockNullConnector : public Net::SocketConnector {
+public:
+	MockNullConnector(Net::EventReactor * reactor) : Net::SocketConnector(reactor), connect_failed_(0) {}
+	virtual Net::SocketConnection * CreateConnection() override { return nullptr; }
+	virtual void DestroyConnection(Net::SocketConnection * connection) override {}
+	virtual void OnConnectFailed() override { connect_failed_++; }
+	i32 connect_failed_;
+};
+
+TEST_F(ConnectorTestSuite, close_fail) {
+	MockNullConnector * connector = new MockNullConnector(GetReactor());
+	EXPECT_EQ(connector->ReferenceCount(), 1);
+	connector->Close();
+	connector->Release();
 }
 
-TEST_F(ReactorPollTestSuite, handler) {
-	MockAcceptor acceptor(reactor_);
-	MockConnection connection;
-	Net::SocketConnector connector(reactor_);
-	EXPECT_EQ(reactor_->AddEventHandler(&acceptor), true);
-	EXPECT_EQ(reactor_->RemoveEventHandler(&acceptor), true);
-	EXPECT_EQ(reactor_->AddEventHandler(&connector), false);
-	EXPECT_EQ(reactor_->RemoveEventHandler(&connector), false);
-	EXPECT_EQ(reactor_->AddEventHandler(&connection), false);
-	EXPECT_EQ(reactor_->RemoveEventHandler(&connection), false);
+TEST_F(ConnectorTestSuite, connect_fail) {
+	MockNullConnector * connector = new MockNullConnector(GetReactor());
+	EXPECT_EQ(connector->ReferenceCount(), 1);
+	EXPECT_EQ(connector->Connect(Net::SocketAddress(0)), false);
+	connector->Release();
 }
 
-TEST_F(ReactorPollTestSuite, handler2) {
-	Net::StreamSocket * socket = connection_->GetSocket();
-	socket->ShutdownRead();
-	Net::StreamSocket tmp_socket = *socket;
-	connection_->SetSocket(Net::StreamSocket());
-	EXPECT_EQ(connector_->Connect(connection_, acceptor_address_), true);
-	connection_->SetSocket(tmp_socket);
-	EXPECT_ANY_THROW(reactor_->AddEventHandler(connection_));
+TEST_F(ConnectorTestSuite, connect_succ) {
+	MockNullConnector * connector = new MockNullConnector(GetReactor());
+	EXPECT_EQ(connector->ReferenceCount(), 1);
+	EXPECT_EQ(connector->Connect(Net::SocketAddress("127.0.0.1", port_)), true);
+	EXPECT_EQ(connector->ReferenceCount(), 2);
+	EXPECT_EQ(connector->Connect(Net::SocketAddress("::", port_)), false);
+	connector->Release();
 }
 
-TEST_F(ReactorPollTestSuite, open) {
-	MockAcceptor acceptor(reactor_);
-	EXPECT_EQ(acceptor.Open(Net::SocketAddress()), true);
-}
-
-TEST_F(ReactorPollTestSuite, open2) {
-	EXPECT_EQ(acceptor_->Open(acceptor_address_), false);
-}
-
-TEST_F(ReactorPollTestSuite, open3) {
-	MockAcceptor acceptor(reactor_);
-	EXPECT_EQ(acceptor.Open(Net::SocketAddress(), 128, true), false);
-}
-
-TEST_F(ReactorPollTestSuite, close) {
-	MockAcceptor acceptor(reactor_);
-	acceptor.Close();
-	acceptor_->Close();
-}
-
-TEST_F(ReactorPollTestSuite, accept_cb) {
-	acceptor_->AcceptCallback(UV_ECANCELED);
-}
-
-TEST_F(ReactorPollTestSuite, accept_cb2) {
-	acceptor_->AcceptCallback(0);
-}
-
-TEST_F(ReactorPollTestSuite, accept_cb3) {
-	acceptor_->UseNullConnection(true);
-	MockConnection connection;
-	EXPECT_EQ(connector_->Connect(&connection, acceptor_address_), true);
+TEST_F(ConnectorTestSuite, close_succ) {
+	MockNullConnector * connector = new MockNullConnector(GetReactor());
+	EXPECT_EQ(connector->ReferenceCount(), 1);
+	EXPECT_EQ(connector->Connect(Net::SocketAddress("127.0.0.1", port_)), true);
+	EXPECT_EQ(connector->ReferenceCount(), 2);
+	connector->Close();
 	Poll();
+	EXPECT_EQ(connector->ReferenceCount(), 1);
+	EXPECT_EQ(connector->connect_failed_, 1);
+	connector->Release();
 }
 
-TEST_F(ReactorPollTestSuite, accept_cb4) {
-	acceptor_->UseExistConnection(true);
-	MockConnection connection;
-	EXPECT_EQ(connector_->Connect(&connection, acceptor_address_), true);
+TEST_F(ConnectorTestSuite, connect_cb_null) {
+	MockNullConnector * connector = new MockNullConnector(GetReactor());
+	EXPECT_EQ(connector->ReferenceCount(), 1);
+	EXPECT_EQ(connector->Connect(Net::SocketAddress("127.0.0.1", port_)), true);
+	EXPECT_EQ(connector->ReferenceCount(), 2);
 	Poll();
+	EXPECT_EQ(connector->ReferenceCount(), 1);
+	EXPECT_EQ(connector->connect_failed_, 1);
+	connector->Release();
 }
 
-TEST_F(ReactorPollTestSuite, connect) {
-	MockConnection connection;
-	EXPECT_EQ(connector_->Connect(&connection, acceptor_address_), true);
-#ifdef _WIN32
-	EXPECT_EQ(connector_->Connect(client_, acceptor_address_), false);
-	EXPECT_EQ(client_->call_connect_failed_, 1);
-#else
-	EXPECT_EQ(connector_->Connect(client_, acceptor_address_), true);
-	EXPECT_EQ(client_->call_connect_failed_, 0);
-#endif
-}
+class MockDupConnector : public MockNullConnector {
+public:
+	MockDupConnector(Net::EventReactor * reactor) : MockNullConnector(reactor), connection_(new MockConnection()) {}
+	virtual ~MockDupConnector() { connection_->Release(); }
+	virtual Net::SocketConnection * CreateConnection() { return connection_; }
+	virtual void DestroyConnection(Net::SocketConnection * connection) {}
+	MockConnection * connection_;
+};
 
-TEST_F(ReactorPollTestSuite, connect_cb) {
-	MockConnection connection;
-	EXPECT_EQ(connector_->Connect(&connection, acceptor_address_), true);
+TEST_F(ConnectorTestSuite, connect_cb_repeat) {
+	MockDupConnector * connector = new MockDupConnector(GetReactor());
+	EXPECT_EQ(connector->ReferenceCount(), 1);
+	EXPECT_EQ(connector->Connect(Net::SocketAddress("127.0.0.1", port_)), true);
+	EXPECT_EQ(connector->ReferenceCount(), 2);
 	Poll();
-}
-
-TEST_F(ReactorPollTestSuite, connect_cb2) {
-	MockConnection * connection = new MockConnection();
-	EXPECT_EQ(connector_->Connect(connection, acceptor_address_), true);
-	delete connection;
+	EXPECT_EQ(connector->ReferenceCount(), 1);
+	EXPECT_EQ(connector->connect_failed_, 0);
+	EXPECT_EQ(connector->Connect(Net::SocketAddress("127.0.0.1", port_)), true);
+	EXPECT_EQ(connector->ReferenceCount(), 2);
 	Poll();
+	EXPECT_EQ(connector->ReferenceCount(), 1);
+	EXPECT_EQ(connector->connect_failed_, 1);
+	connector->Release();
 }
 
-TEST_F(ReactorPollTestSuite, connect_cb3) {
-	MockConnection connection;
-	Net::SocketConnector * connector = new Net::SocketConnector(reactor_);
-	EXPECT_EQ(connector->Connect(&connection, acceptor_address_), true);
-	delete connector;
-	Poll();
-}
+class MockWriteConnection : public MockConnection {
+public:
+	virtual void OnNewDataReceived() override {
+		MockConnection::OnNewDataReceived();
+		i8 buff[250] = {0};
+		EXPECT_GT(Read(buff, sizeof(250)), 0);
+	}
+};
 
-TEST_F(ReactorPollTestSuite, connect_cb4) {
-	MockConnection connection;
-	EXPECT_EQ(connector_->Connect(&connection, acceptor_address_), true);
-	connection.GetSocket()->Close();
-	Poll();
-}
+class MockConnector : public MockNullConnector {
+public:
+	MockConnector(Net::EventReactor * reactor) : MockNullConnector(reactor), connection_(nullptr) {}
+	virtual ~MockConnector() {
+		if (connection_) {
+			connection_->Release();
+		}
+	}
+	virtual Net::SocketConnection * CreateConnection() {
+		connection_ = new MockWriteConnection();
+		return connection_;
+	}
+	virtual void DestroyConnection(Net::SocketConnection * connection) {
+		connection_->Release();
+		connection_ = nullptr;
+	}
+	MockWriteConnection * connection_;
+};
 
-TEST_F(ReactorPollTestSuite, connect_cb5) {
-	MockConnection connection;
-	EXPECT_EQ(connector_->Connect(&connection, acceptor_address_), true);
-	Net::StreamSocket * socket = connection.GetSocket();
-	Net::StreamSocket tmp_socket = *socket;
-	connection.SetSocket(Net::StreamSocket());
-	Poll();
-}
+class ConnectionTestSuite : public ConnectorTestSuite {
+public:
+	ConnectionTestSuite() { port_ += 10; }
 
-TEST_F(ReactorPollTestSuite, state) {
+	// Sets up the test fixture.
+	virtual void SetUp() {
+		ConnectorTestSuite::SetUp();
+		connector_ = new MockConnector(GetReactor());
+		EXPECT_EQ(connector_->Connect(Net::SocketAddress("127.0.0.1", port_)), true);
+		Poll();
+		EXPECT_EQ(connector_->connection_->call_connected_, 1);
+	}
+
+	// Tears down the test fixture.
+	virtual void TearDown() {
+		connector_->Release();
+		ConnectorTestSuite::TearDown();
+	}
+
+	MockConnector * connector_;
+};
+
+TEST_F(ConnectionTestSuite, disconnected_conn) {
 	MockConnection connection;
-	EXPECT_EQ(connection_->GetConnectState(), Net::ConnectState::kConnected);
 	EXPECT_EQ(connection.GetConnectState(), Net::ConnectState::kDisconnected);
-	EXPECT_EQ(connector_->Connect(&connection, acceptor_address_), true);
-	EXPECT_EQ(connection.GetConnectState(), Net::ConnectState::kConnecting);
-}
-
-TEST_F(ReactorPollTestSuite, socket) {
-	Net::StreamSocket other_socket;
-	MockConnection connection;
-	Net::StreamSocket * socket = connection.GetSocket();
-	EXPECT_NE(*socket, other_socket);
-	connection.SetSocket(other_socket);
-	socket = connection.GetSocket();
-	EXPECT_EQ(*socket, other_socket);
-}
-
-TEST_F(ReactorPollTestSuite, recv) {
-	MockConnection connection;
-	EXPECT_ANY_THROW(connection.GetRecvData());
-	EXPECT_ANY_THROW(connection.GetRecvDataSize());
-	EXPECT_TRUE(client_->GetRecvData() == nullptr);
-	EXPECT_EQ(client_->GetRecvDataSize(), 0);
-	EXPECT_TRUE(connection_->GetRecvData() != nullptr);
-	EXPECT_EQ(connection_->GetRecvDataSize(), w_content_len_);
-}
-
-TEST_F(ReactorPollTestSuite, recv2) {
-	MockConnection connection;
-	client_->PopRecvData(w_content_len_);
-	EXPECT_ANY_THROW(connection.PopRecvData(w_content_len_));
-	connection_->PopRecvData(w_content_len_);
-}
-
-TEST_F(ReactorPollTestSuite, call) {
-	MockConnection connection;
-	connection.CallOnConnected();
-	connection.CallOnConnected();
-	connection.CallOnConnected();
-	connection.CallOnConnectFailed(UV_ECANCELED);
-	connection.CallOnConnectFailed(UV_EBADF);
-	connection.CallOnConnectFailed(UV_EBUSY);
-	EXPECT_EQ(connection.call_connected_, 1);
-	EXPECT_EQ(connection.call_connect_failed_, 1);
-	EXPECT_EQ(connection.call_disconnected_, 0);
-}
-
-TEST_F(ReactorPollTestSuite, write) {
-	MockConnection connection;
+	Net::StreamSocket socket;
+	EXPECT_NE(*connection.GetSocket(), socket);
+	connection.SetSocket(socket);
+	EXPECT_EQ(*connection.GetSocket(), socket);
+	EXPECT_TRUE(connection.GetRecvData() == nullptr);
+	EXPECT_EQ(connection.GetRecvDataSize(), 0);
+	connection.PopRecvData(10);
 	EXPECT_EQ(connection.Write(w_content_, w_content_len_), UV_ENOTCONN);
-	EXPECT_EQ(connection_->Write(w_content_, w_content_len_), w_content_len_);
-	EXPECT_EQ(connection_->Write(w_content_, w_content_len_), w_content_len_);
-	EXPECT_EQ(connection_->Write(w_content_, w_content_len_), w_content_len_);
-	EXPECT_EQ(connection_->Write(w_content_, w_content_len_), w_content_len_);
-	EXPECT_EQ(connection_->Write(w_content_, w_content_len_), UV_ENOBUFS);
-}
-
-TEST_F(ReactorPollTestSuite, write2) {
-	for (auto & it : acceptor_->connection_list_) {
-		it->GetSocket()->Close();
-	}
-	Poll(1);
-#ifdef _WIN32
-	EXPECT_EQ(connection_->Write(w_content_, w_content_len_), w_content_len_);
-#else
-	EXPECT_EQ(connection_->Write(w_content_, w_content_len_), UV_ENOTCONN);
-#endif
-	Poll();
-}
-
-TEST_F(ReactorPollTestSuite, write_cb) {
-	MockConnection connection;
-	connection.GetSocket()->Open(reactor_->GetUvLoop());
-	connection.GetSocket()->SetUvData(&connection);
-	EXPECT_EQ(connection.GetSocket()->Connect(Net::SocketAddress("127.0.0.1", 6789)), 0);
-#ifdef _WIN32
-	EXPECT_EQ(connection.GetSocket()->Write(w_content_, w_content_len_), UV_EPIPE);
-#else
-	EXPECT_EQ(connection.GetSocket()->Write(w_content_, w_content_len_), w_content_len_);
-#endif
-	connection.GetSocket()->Close();
-	Poll();
-}
-
-TEST_F(ReactorPollTestSuite, read) {
-	i8 buff[50];
-	MockConnection connection;
-	EXPECT_EQ(connection.Read(w_content_, w_content_len_), UV_ENOTCONN);
-	EXPECT_EQ(connection_->Read(buff, sizeof(buff)), w_content_len_);
-	buff[w_content_len_] = 0;
-	EXPECT_STREQ(buff, w_content_);
-	EXPECT_EQ(client_->Read(buff, sizeof(buff)), 0);
-}
-
-class MockConnectionNoBuf : public Net::SocketConnection {
-public:
-	MockConnectionNoBuf() : Net::SocketConnection(50, 50) {}
-	virtual void AllocCallback(uv_buf_t * buf) override {}
-};
-
-TEST_F(ReactorPollTestSuite, read_cb) {
-	MockConnectionNoBuf connection;
-	EXPECT_EQ(connector_->Connect(&connection, acceptor_address_), true);
-	Poll();
-	for (auto & it : acceptor_->connection_list_) {
-		it->Write(w_content_, w_content_len_);
-	}
-	Poll();
-}
-
-TEST_F(ReactorPollTestSuite, shutdown) {
-	MockConnection connection;
+	i8 buff[256] = {0};
+	EXPECT_EQ(connection.Read(buff, sizeof(buff)), UV_ENOTCONN);
 	connection.Shutdown(false);
-	connection_->Shutdown(false);
-	client_->Shutdown(false);
 }
 
-TEST_F(ReactorPollTestSuite, shutdown2) {
-	MockConnection connection;
-	connection.Shutdown(true);
-	connection_->Shutdown(true);
-	client_->Shutdown(true);
-}
-
-TEST_F(ReactorPollTestSuite, shutdown3) {
-	MockConnection connection;
-	EXPECT_EQ(connection.Write(w_content_, w_content_len_), UV_ENOTCONN);
-	EXPECT_EQ(connection_->Write(w_content_, w_content_len_), w_content_len_);
-	EXPECT_EQ(client_->Write(w_content_, w_content_len_), w_content_len_);
-	connection.Shutdown(false);
-	connection_->Shutdown(false);
-	client_->Shutdown(false);
+TEST_F(ConnectionTestSuite, connected_conn) {
+	EXPECT_EQ(connector_->connection_->GetConnectState(), Net::ConnectState::kConnected);
+	EXPECT_TRUE(connector_->connection_->GetRecvData() == nullptr);
+	EXPECT_EQ(connector_->connection_->GetRecvDataSize(), 0);
+	connector_->connection_->PopRecvData(10);
+	connector_->connection_->Shutdown(true);
 	Poll();
 }
 
-TEST_F(ReactorPollTestSuite, shutdown4) {
-	MockConnection connection;
-	EXPECT_EQ(connection.Write(w_content_, w_content_len_), UV_ENOTCONN);
-	EXPECT_EQ(connection_->Write(w_content_, w_content_len_), w_content_len_);
-	EXPECT_EQ(client_->Write(w_content_, w_content_len_), w_content_len_);
-	connection.Shutdown(true);
-	connection_->Shutdown(true);
-	client_->Shutdown(true);
+TEST_F(ConnectionTestSuite, write_succ) {
+	EXPECT_EQ(connector_->connection_->Write(w_content_, w_content_len_), w_content_len_);
+	EXPECT_EQ(connector_->connection_->Write(w_content_, w_content_len_), w_content_len_);
+	EXPECT_EQ(connector_->connection_->Write(w_content_, w_content_len_), w_content_len_);
+	EXPECT_EQ(connector_->connection_->Write(w_content_, w_content_len_), w_content_len_);
+	EXPECT_EQ(connector_->connection_->Write(w_content_, w_content_len_), w_content_len_);
+	EXPECT_EQ(connector_->connection_->Write(w_content_, w_content_len_), UV_ENOBUFS);
+	connector_->connection_->Shutdown(false);
 	Poll();
+	EXPECT_EQ(connector_->connection_->call_error_, 0);
+	EXPECT_EQ(connector_->connection_->call_sent_, 5);
 }
 
-class MockConnection2 : public MockConnection {
+TEST_F(ConnectionTestSuite, write_close) {
+	EXPECT_EQ(connector_->connection_->Write(w_content_, w_content_len_), w_content_len_);
+	connector_->connection_->Shutdown(true);
+	Poll();
+	EXPECT_EQ(connector_->connection_->call_error_, 0);
+	EXPECT_EQ(connector_->connection_->call_sent_, 0);
+}
+
+TEST_F(ConnectionTestSuite, read) {
+	acceptor_->WriteAll(w_content_, w_content_len_);
+	Poll();
+	EXPECT_EQ(connector_->connection_->call_error_, 0);
+	EXPECT_EQ(connector_->connection_->call_recv_, 1);
+}
+
+class TwoReactorTestSuite : public ConnectorTestSuite {
 public:
-	virtual void OnError(i32 reason) {
-		MockConnection::OnError(reason);
-		Write("123", 3);
+	TwoReactorTestSuite() { port_ += 20; }
+
+	// Sets up the test fixture.
+	virtual void SetUp() {
+		ConnectorTestSuite::SetUp();
+		connector_ = new MockConnector(&connect_reactor_);
+		EXPECT_EQ(connector_->Connect(Net::SocketAddress("127.0.0.1", port_)), true);
+		Poll();
+		ConnectPoll();
+		EXPECT_EQ(connector_->connection_->call_connected_, 1);
 	}
+
+	// Tears down the test fixture.
+	virtual void TearDown() {
+		connector_->Release();
+		connect_reactor_.ClearEventHandlers();
+		ConnectorTestSuite::TearDown();
+	}
+
+	void ConnectPoll(i32 count = 30) {
+		while (count-- > 0) { connect_reactor_.Poll(); }
+	}
+
+	MockConnector * connector_;
+	Net::EventReactor connect_reactor_;
 };
 
-class MockConnection3 : public MockConnection {
-public:
-	virtual void OnError(i32 reason) {
-		MockConnection::OnError(reason);
-		Write("123", 3);
-		Shutdown(false);
-	}
-};
-
-TEST_F(ReactorPollTestSuite, shutdown5) {
-	MockConnection2 connection;
-	MockConnection3 connection2;
-	EXPECT_EQ(connector_->Connect(&connection, acceptor_address_), true);
-	EXPECT_EQ(connector_->Connect(&connection2, acceptor_address_), true);
+TEST_F(TwoReactorTestSuite, eof) {
+	EXPECT_EQ(connector_->connection_->GetSocket()->ShutdownRead(), 0);
+	EXPECT_EQ(connector_->connection_->Write(w_content_, w_content_len_), w_content_len_);
+	acceptor_->WriteAll(w_content_, w_content_len_);
+	connector_->connection_->Shutdown(false);
 	Poll();
-	for (auto & it : acceptor_->connection_list_) {
-		it->GetSocket()->ShutdownRead();
-		it->GetSocket()->Close();
-	}
-	Poll();
+	ConnectPoll();
 }

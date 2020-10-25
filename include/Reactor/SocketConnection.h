@@ -25,45 +25,37 @@
 #ifndef Net_Reactor_SocketConnection_INCLUDED
 #define Net_Reactor_SocketConnection_INCLUDED
 
+#include "Common.h"
 #include "Reactor/EventHandler.h"
 #include "Reactor/ConnectState.h"
+#include "Reactor/SocketAcceptor.h"
 #include "Reactor/SocketConnector.h"
 #include "Sockets/StreamSocket.h"
-#include "Common/IOBuffer.h"
+#include "Buffer/StraightBuffer.h"
+#include "Buffer/BipBuffer.h"
+#include "CObject.h"
+#include "Address/SocketAddress.h"
 
 namespace Net {
 
-class NET_EXTERN SocketConnection : public EventHandler {
-	friend bool SocketConnector::Connect(SocketConnection * connection, const SocketAddress & address);
-	class SocketIO : public NetObject {
-	public:
-		SocketIO(i32 max_out_buffer_size, i32 max_in_buffer_size);
-		virtual ~SocketIO();
-		IOBuffer * in_buffer_;
-		IOBuffer * out_buffer_;
-
-		static const i32 kReadMax = 4096;
-	};
+class COMMON_EXTERN SocketConnection : public EventHandler {
+	friend class SocketAcceptor;
+	friend class SocketConnector;
 
 public:
 	SocketConnection(i32 max_out_buffer_size, i32 max_in_buffer_size);
 	virtual ~SocketConnection();
 
-	bool Establish();
-	void Shutdown(bool now, i32 reason = UV_ECANCELED);
-
+	void Shutdown(bool now);
 	i32 Write(const i8 * data, i32 len);
 	i32 Read(i8 * data, i32 len);
-	i8 * GetRecvData() const;
-	i32 GetRecvDataSize() const;
+	i8 * GetRecvData();
+	i32 GetRecvDataSize();
 	void PopRecvData(i32 size);
 
 	ConnectState::eState GetConnectState() const;
 	StreamSocket * GetSocket();
 	void SetSocket(const StreamSocket & socket);
-
-	void CallOnConnected();
-	void CallOnConnectFailed(i32 reason);
 
 protected:
 	virtual bool RegisterToReactor() override;
@@ -71,7 +63,6 @@ protected:
 
 	// 通知应用层
 	virtual void OnConnected();
-	virtual void OnConnectFailed(i32 reason);
 	virtual void OnDisconnected(bool is_remote);
 	virtual void OnNewDataReceived();
 	virtual void OnSomeDataSent();
@@ -84,22 +75,27 @@ private:
 	virtual void ReadCallback(i32 status) override;
 	virtual void WrittenCallback(i32 status, void * arg) override;
 
-	void ShutdownImmediately(i32 reason = UV_ECANCELED);
+	bool Establish();
+	void ShutdownImmediately();
+	void CallOnConnected();
 	void CallOnDisconnected(bool is_remote);
 	void InternalError(i32 reason);
 	void HandleClose4EOF(i32 reason);
 	void HandleClose4Error(i32 reason);
 
 private:
-	SocketIO * io_;
+	Common::BipBuffer out_buffer_;
+	Common::StraightBuffer in_buffer_;
 	StreamSocket socket_;
+	SocketAddress address_;
 	ConnectState::eState connect_state_;
 	i32 max_out_buffer_size_;
 	i32 max_in_buffer_size_;
 	bool shutdown_;
 	bool called_on_connected_;
-	bool called_on_connectfailed_;
 	bool called_on_disconnected_;
+
+	static const i32 kReadMax = 4096;
 };
 
 inline ConnectState::eState SocketConnection::GetConnectState() const {
@@ -114,41 +110,25 @@ inline void SocketConnection::SetSocket(const StreamSocket & socket) {
 	socket_ = socket;
 }
 
-inline i8 * SocketConnection::GetRecvData() const {
-	if (!io_) {
-		Log(kCrash, __FILE__, __LINE__, "GetRecvData() io_ == nullptr");
-	}
-	i32 size = 0;
-	return io_->in_buffer_->GetContiguousBlock(size);
+inline i8 * SocketConnection::GetRecvData() {
+	i32 readable_size = 0;
+	return in_buffer_.ReadableBlock(readable_size);
 }
 
-inline i32 SocketConnection::GetRecvDataSize() const {
-	if (!io_) {
-		Log(kCrash, __FILE__, __LINE__, "GetRecvDataSize() io_ == nullptr");
-	}
-	i32 size = 0;
-	io_->in_buffer_->GetContiguousBlock(size);
-	return size;
+inline i32 SocketConnection::GetRecvDataSize() {
+	i32 readable_size = 0;
+	in_buffer_.ReadableBlock(readable_size);
+	return readable_size;
 }
 
 inline void SocketConnection::PopRecvData(i32 size) {
-	if (!io_) {
-		Log(kCrash, __FILE__, __LINE__, "PopRecvData() io_ == nullptr");
-	}
-	io_->in_buffer_->DeCommit(size);
+	in_buffer_.IncReaderIndex(size);
 }
 
 inline void SocketConnection::CallOnConnected() {
 	if (!called_on_connected_) {
 		called_on_connected_ = true;
 		OnConnected();
-	}
-}
-
-inline void SocketConnection::CallOnConnectFailed(i32 reason) {
-	if (!called_on_connectfailed_) {
-		called_on_connectfailed_ = true;
-		OnConnectFailed(reason);
 	}
 }
 

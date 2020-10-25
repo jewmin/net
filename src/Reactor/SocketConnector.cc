@@ -23,74 +23,78 @@
  */
 
 #include "Reactor/SocketConnector.h"
+#include "Reactor/EventReactor.h"
 #include "Reactor/SocketConnection.h"
-#include "Reactor/ConnectState.h"
-#include "Common/Logger.h"
+#include "Category.h"
 
 namespace Net {
 
-SocketConnector::Context::Context(SocketConnector * connector, SocketConnection * connection)
-	: connector_reference_(connector->WeakRef()), connection_reference_(connection->WeakRef()) {
-}
-
-SocketConnector::Context::~Context() {
-	connector_reference_->Release();
-	connection_reference_->Release();
-}
-
-void SocketConnector::Context::ConnectCallback(i32 status, void * arg) {
-	SocketConnector * connector = dynamic_cast<SocketConnector *>(connector_reference_->Get());
-	SocketConnection * connection = dynamic_cast<SocketConnection *>(connection_reference_->Get());
-	delete this;
-	if (connector && connection) {
-		StreamSocket * associate_socket = connection->GetSocket();
-		associate_socket->SetUvData(nullptr);
-		if (status < 0) {
-			connection->Shutdown(true, status);
-		} else {
-			associate_socket->SetNoDelay();
-			associate_socket->SetKeepAlive(60);
-			if (connector->ActivateConnection(connection)) {
-				connection->CallOnConnected();
-			} else {
-				Log(kLog, __FILE__, __LINE__, "ConnectCallback() ActivateConnection error");
-				connection->CallOnConnectFailed(UV_ECANCELED);
-			}
-		}
-	}
-}
-
-SocketConnector::SocketConnector(EventReactor * reactor) : EventHandler(reactor) {
+SocketConnector::SocketConnector(EventReactor * reactor) : EventHandler(reactor, Logger::Category::GetCategory("SocketConnector")), connect_(false) {
 }
 
 SocketConnector::~SocketConnector() {
+	Close();
 }
 
-bool SocketConnector::Connect(SocketConnection * connection, const SocketAddress & address) {
-	StreamSocket * associate_socket = connection->GetSocket();
-	associate_socket->Open(GetReactor()->GetUvLoop());
-	i32 status = associate_socket->Connect(address);
-	if (status < 0) {
-		connection->CallOnConnectFailed(status);
+bool SocketConnector::Connect(const SocketAddress & address) {
+	if (connect_) {
 		return false;
-	} else {
-		connection->connect_state_ = ConnectState::kConnecting;
-		associate_socket->SetUvData(new Context(this, connection));
-		return true;
+	}
+	socket_.Open(GetReactor()->GetUvLoop());
+	if (socket_.Connect(address) < 0) {
+		return false;
+	}
+	return GetReactor()->AddEventHandler(this);
+}
+
+void SocketConnector::Close() {
+	if (connect_) {
+		GetReactor()->RemoveEventHandler(this);
 	}
 }
 
 bool SocketConnector::RegisterToReactor() {
-	return false;
+	socket_.SetUvData(this);
+	connect_ = true;
+	return true;
 }
 
 bool SocketConnector::UnRegisterFromReactor() {
-	return false;
+	connect_ = false;
+	socket_.Close();
+	return true;
 }
 
 bool SocketConnector::ActivateConnection(SocketConnection * connection) {
 	connection->SetReactor(GetReactor());
 	return connection->Establish();
+}
+
+void SocketConnector::ConnectCallback(i32 status, void * arg) {
+	StreamSocket client(socket_);
+	socket_ = StreamSocket();
+	Close();
+	if (status < 0) {
+		logger_->Error("ConnectCallback - %s:%s(%d)", *client.LocalAddress().ToString(), uv_strerror(status), status);
+		OnConnectFailed();
+		return;
+	}
+
+	SocketConnection * connection = CreateConnection();
+	if (!connection) {
+		logger_->Error("ConnectCallback - %s:create connecton error", *client.RemoteAddress().ToString());
+		OnConnectFailed();
+		return;
+	}
+
+	connection->SetSocket(client);
+	if (ActivateConnection(connection)) {
+		connection->CallOnConnected();
+	} else {
+		logger_->Error("ConnectCallback - %s:activate connecton error", *client.RemoteAddress().ToString());
+		OnConnectFailed();
+		DestroyConnection(connection);
+	}
 }
 
 }

@@ -292,6 +292,7 @@ void SocketImpl::close_cb(uv_handle_t * handle) {
 		UvData * data = dynamic_cast<UvData *>(reference->Lock());
 		if (data) {
 			data->CloseCallback();
+			data->Release();
 		} else {
 			Logger::Category::GetCategory("SocketImpl")->Warn("close_cb() UvData has been released");
 		}
@@ -310,6 +311,7 @@ void SocketImpl::connection_cb(uv_stream_t * server, int status) {
 		UvData * data = dynamic_cast<UvData *>(reference->Lock());
 		if (data) {
 			data->AcceptCallback(status);
+			data->Release();
 		} else {
 			Logger::Category::GetCategory("SocketImpl")->Warn("connection_cb() UvData has been released");
 		}
@@ -322,6 +324,7 @@ void SocketImpl::connect_cb(uv_connect_t * req, int status) {
 		UvData * data = dynamic_cast<UvData *>(reference->Lock());
 		if (data) {
 			data->ConnectCallback(status, req->data);
+			data->Release();
 		} else {
 			Logger::Category::GetCategory("SocketImpl")->Warn("connect_cb() UvData has been released");
 		}
@@ -335,6 +338,7 @@ void SocketImpl::shutdown_cb(uv_shutdown_t * req, int status) {
 		UvData * data = dynamic_cast<UvData *>(reference->Lock());
 		if (data) {
 			data->ShutdownCallback(status, req->data);
+			data->Release();
 		} else {
 			Logger::Category::GetCategory("SocketImpl")->Warn("shutdown_cb() UvData has been released");
 		}
@@ -348,6 +352,7 @@ void SocketImpl::alloc_cb(uv_handle_t * handle, size_t suggested_size, uv_buf_t 
 		UvData * data = dynamic_cast<UvData *>(reference->Lock());
 		if (data) {
 			data->AllocCallback(buf);
+			data->Release();
 		} else {
 			Logger::Category::GetCategory("SocketImpl")->Warn("alloc_cb() UvData has been released");
 		}
@@ -360,6 +365,7 @@ void SocketImpl::read_cb(uv_stream_t * stream, ssize_t nread, const uv_buf_t * b
 		UvData * data = dynamic_cast<UvData *>(reference->Lock());
 		if (data) {
 			data->ReadCallback(static_cast<i32>(nread));
+			data->Release();
 		} else {
 			Logger::Category::GetCategory("SocketImpl")->Warn("read_cb() UvData has been released");
 		}
@@ -372,6 +378,7 @@ void SocketImpl::write_cb(uv_write_t * req, int status) {
 		UvData * data = dynamic_cast<UvData *>(reference->Lock());
 		if (data) {
 			data->WrittenCallback(status, req->data);
+			data->Release();
 		} else {
 			Logger::Category::GetCategory("SocketImpl")->Warn("write_cb() UvData has been released");
 		}

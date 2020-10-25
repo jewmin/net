@@ -27,32 +27,33 @@
 
 #include "Reactor/EventHandler.h"
 #include "Address/SocketAddress.h"
+#include "Sockets/StreamSocket.h"
 
 namespace Net {
 
 class SocketConnection;
-class NET_EXTERN SocketConnector : public EventHandler {
-	class Context : public UvData {
-	public:
-		Context(SocketConnector * connector, SocketConnection * connection);
-		virtual ~Context();
-		virtual void ConnectCallback(i32 status, void * arg) override;
-		WeakReference * connector_reference_;
-		WeakReference * connection_reference_;
-	};
-
+class COMMON_EXTERN SocketConnector : public EventHandler {
 public:
-	explicit SocketConnector(EventReactor * reactor);
 	virtual ~SocketConnector();
 
-	bool Connect(SocketConnection * connection, const SocketAddress & address);
+	bool Connect(const SocketAddress & address);
+	void Close();
 
 protected:
+	explicit SocketConnector(EventReactor * reactor);
 	virtual bool RegisterToReactor() override;
 	virtual bool UnRegisterFromReactor() override;
+	virtual SocketConnection * CreateConnection() = 0;
+	virtual void DestroyConnection(SocketConnection * connection) = 0;
+	virtual void OnConnectFailed() = 0;
+	virtual void ConnectCallback(i32 status, void * arg) override;
 
 private:
 	bool ActivateConnection(SocketConnection * connection);
+
+private:
+	bool connect_;
+	StreamSocket socket_;
 };
 
 }

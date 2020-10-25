@@ -23,11 +23,14 @@
  */
 
 #include "Reactor/SocketAcceptor.h"
-#include "Common/Logger.h"
+#include "Reactor/EventReactor.h"
+#include "Reactor/SocketConnection.h"
+#include "Sockets/StreamSocket.h"
+#include "Category.h"
 
 namespace Net {
 
-SocketAcceptor::SocketAcceptor(EventReactor * reactor) : EventHandler(reactor), opened_(false) {
+SocketAcceptor::SocketAcceptor(EventReactor * reactor) : EventHandler(reactor, Logger::Category::GetCategory("SocketAcceptor")), opened_(false) {
 }
 
 SocketAcceptor::~SocketAcceptor() {
@@ -55,6 +58,7 @@ void SocketAcceptor::Close() {
 }
 
 bool SocketAcceptor::RegisterToReactor() {
+	address_ = socket_.LocalAddress();
 	socket_.SetUvData(this);
 	opened_ = true;
 	return true;
@@ -73,28 +77,28 @@ bool SocketAcceptor::ActivateConnection(SocketConnection * connection) {
 
 void SocketAcceptor::AcceptCallback(i32 status) {
 	if (status < 0) {
-		Log(kLog, __FILE__, __LINE__, "AcceptCallback()", uv_strerror(status));
-		Close();
+		logger_->Error("AcceptCallback - %s:%s(%d)", *GetListenAddress().ToString(), uv_strerror(status), status);
+		return;
+	}
+
+	StreamSocket client;
+	if (!socket_.AcceptSocket(client)) {
+		logger_->Error("AcceptCallback - %s:accept socket error", *GetListenAddress().ToString());
+		return;
+	}
+
+	SocketConnection * connection = CreateConnection();
+	if (!connection) {
+		logger_->Error("AcceptCallback - %s:create connecton error", *client.RemoteAddress().ToString());
+		return;
+	}
+
+	connection->SetSocket(client);
+	if (ActivateConnection(connection)) {
+		connection->CallOnConnected();
 	} else {
-		StreamSocket client;
-		if (!socket_.AcceptSocket(client)) {
-			Log(kLog, __FILE__, __LINE__, "AcceptCallback() accept socket error");
-			return;
-		}
-		SocketConnection * connection = CreateConnection();
-		if (!connection) {
-			Log(kLog, __FILE__, __LINE__, "AcceptCallback() connection == nullptr");
-			return;
-		}
-		client.SetNoDelay();
-		client.SetKeepAlive(60);
-		connection->SetSocket(client);
-		if (ActivateConnection(connection)) {
-			connection->CallOnConnected();
-		} else {
-			Log(kLog, __FILE__, __LINE__, "AcceptCallback() ActivateConnection error");
-			DestroyConnection(connection);
-		}
+		logger_->Error("AcceptCallback - %s:activate connecton error", *client.RemoteAddress().ToString());
+		DestroyConnection(connection);
 	}
 }
 

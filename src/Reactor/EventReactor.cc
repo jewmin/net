@@ -23,19 +23,17 @@
  */
 
 #include "Reactor/EventReactor.h"
-#include "Reactor/EventHandler.h"
-#include "Common/Logger.h"
-#include "Common/Allocator.h"
 
 namespace Net {
 
-EventReactor::EventReactor() : loop_(static_cast<uv_loop_t *>(jc_malloc(sizeof(uv_loop_t)))), handler_count_(0) {
-	Log(kLog, __FILE__, __LINE__, "<libuv>", uv_version_string());
+EventReactor::EventReactor() : loop_(static_cast<uv_loop_t *>(jc_malloc(sizeof(uv_loop_t)))) {
+	Logger::Category::GetCategory("EventReactor")->Info("<libuv> %s", uv_version_string());
 	uv_loop_init(loop_);
 	loop_->data = this;
 }
 
 EventReactor::~EventReactor() {
+	ClearEventHandlers();
 	while (Poll()) {
 		Poll(UV_RUN_ONCE);
 	}
@@ -46,7 +44,8 @@ EventReactor::~EventReactor() {
 bool EventReactor::AddEventHandler(EventHandler * handler) {
 	bool success = handler->RegisterToReactor();
 	if (success) {
-		++handler_count_;
+		handler->Duplicate();
+		handlers_.PushBack(handler);
 	}
 	return success;
 }
@@ -54,9 +53,18 @@ bool EventReactor::AddEventHandler(EventHandler * handler) {
 bool EventReactor::RemoveEventHandler(EventHandler * handler) {
 	bool success = handler->UnRegisterFromReactor();
 	if (success) {
-		--handler_count_;
+		handler->RemoveFromList();
+		handler->Release();
 	}
 	return success;
+}
+
+void EventReactor::ClearEventHandlers() {
+	EventHandler * handler = handlers_.Front();
+	while (handler) {
+		RemoveEventHandler(handler);
+		handler = handlers_.Front();
+	}
 }
 
 }

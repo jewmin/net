@@ -25,12 +25,13 @@
 #ifndef Net_Reactor_EventHandler_INCLUDED
 #define Net_Reactor_EventHandler_INCLUDED
 
-#include "Reactor/EventReactor.h"
+#include "CList.h"
 #include "Sockets/UvData.h"
 
 namespace Net {
 
-class NET_EXTERN EventHandler : public UvData {
+class EventReactor;
+class COMMON_EXTERN EventHandler : public Common::CList<EventHandler>::BaseNode, public UvData {
 	friend class EventReactor;
 
 public:
@@ -40,12 +41,11 @@ public:
 	void SetReactor(EventReactor * reactor);
 
 protected:
-	explicit EventHandler(EventReactor * reactor);
+	explicit EventHandler(EventReactor * reactor, Logger::Category * logger = Logger::Category::GetCategory("EventHandler"));
 	virtual bool RegisterToReactor() = 0;
 	virtual bool UnRegisterFromReactor() = 0;
 
 private:
-	EventHandler() = delete;
 	EventHandler(EventHandler &&) = delete;
 	EventHandler(const EventHandler &) = delete;
 	EventHandler & operator=(EventHandler &&) = delete;

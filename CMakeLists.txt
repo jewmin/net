@@ -40,17 +40,6 @@ MESSAGE(STATUS "PROJECT_SOURCE_DIR:" ${PROJECT_SOURCE_DIR})
 # SET(Sockets
 # )
 # SET(Reactor
-# 	${PROJECT_SOURCE_DIR}/include/Reactor/ConnectState.h
-# 	${PROJECT_SOURCE_DIR}/include/Reactor/EventHandler.h
-# 	${PROJECT_SOURCE_DIR}/src/Reactor/EventHandler.cc
-# 	${PROJECT_SOURCE_DIR}/include/Reactor/EventReactor.h
-# 	${PROJECT_SOURCE_DIR}/src/Reactor/EventReactor.cc
-# 	${PROJECT_SOURCE_DIR}/include/Reactor/SocketAcceptor.h
-# 	${PROJECT_SOURCE_DIR}/src/Reactor/SocketAcceptor.cc
-# 	${PROJECT_SOURCE_DIR}/include/Reactor/SocketConnection.h
-# 	${PROJECT_SOURCE_DIR}/src/Reactor/SocketConnection.cc
-# 	${PROJECT_SOURCE_DIR}/include/Reactor/SocketConnector.h
-# 	${PROJECT_SOURCE_DIR}/src/Reactor/SocketConnector.cc
 # )
 # SET(Interface
 # 	${PROJECT_SOURCE_DIR}/include/Interface/INotification.h
@@ -81,6 +70,12 @@ SET(srcs
 	${PROJECT_SOURCE_DIR}/include/Sockets/StreamSocket.h
 	${PROJECT_SOURCE_DIR}/include/Sockets/ServerSocketImpl.h
 	${PROJECT_SOURCE_DIR}/include/Sockets/ServerSocket.h
+	${PROJECT_SOURCE_DIR}/include/Reactor/ConnectState.h
+	${PROJECT_SOURCE_DIR}/include/Reactor/EventHandler.h
+	${PROJECT_SOURCE_DIR}/include/Reactor/EventReactor.h
+	${PROJECT_SOURCE_DIR}/include/Reactor/SocketConnection.h
+	${PROJECT_SOURCE_DIR}/include/Reactor/SocketAcceptor.h
+	${PROJECT_SOURCE_DIR}/include/Reactor/SocketConnector.h
 
 	${PROJECT_SOURCE_DIR}/src/NetworkException.cc
 	${PROJECT_SOURCE_DIR}/src/Address/IPAddressImpl.cc
@@ -93,6 +88,11 @@ SET(srcs
 	${PROJECT_SOURCE_DIR}/src/Sockets/StreamSocket.cc
 	${PROJECT_SOURCE_DIR}/src/Sockets/ServerSocketImpl.cc
 	${PROJECT_SOURCE_DIR}/src/Sockets/ServerSocket.cc
+	${PROJECT_SOURCE_DIR}/src/Reactor/EventHandler.cc
+	${PROJECT_SOURCE_DIR}/src/Reactor/EventReactor.cc
+	${PROJECT_SOURCE_DIR}/src/Reactor/SocketConnection.cc
+	${PROJECT_SOURCE_DIR}/src/Reactor/SocketAcceptor.cc
+	${PROJECT_SOURCE_DIR}/src/Reactor/SocketConnector.cc
 )
 
 # 生成目录结构

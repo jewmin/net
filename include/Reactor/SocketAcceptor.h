@@ -26,13 +26,13 @@
 #define Net_Reactor_SocketAcceptor_INCLUDED
 
 #include "Reactor/EventHandler.h"
-#include "Reactor/SocketConnection.h"
+#include "Address/SocketAddress.h"
 #include "Sockets/ServerSocket.h"
-#include "Sockets/StreamSocket.h"
 
 namespace Net {
 
-class NET_EXTERN SocketAcceptor : public EventHandler {
+class SocketConnection;
+class COMMON_EXTERN SocketAcceptor : public EventHandler {
 public:
 	virtual ~SocketAcceptor();
 
@@ -54,10 +54,11 @@ private:
 private:
 	bool opened_;
 	ServerSocket socket_;
+	SocketAddress address_;
 };
 
 inline SocketAddress SocketAcceptor::GetListenAddress() const {
-	return socket_.Impl()->LocalAddress();
+	return address_;
 }
 
 }

@@ -28,6 +28,7 @@
 #include "Common.h"
 #include "RefCountedObject.h"
 #include "Category.h"
+#include "uv.h"
 
 namespace Net {
 

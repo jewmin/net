@@ -25,21 +25,23 @@
 #ifndef Net_Reactor_EventReactor_INCLUDED
 #define Net_Reactor_EventReactor_INCLUDED
 
-#include "Common/NetObject.h"
+#include "CObject.h"
+#include "CList.h"
+#include "Reactor/EventHandler.h"
+#include "uv.h"
 
 namespace Net {
 
-class EventHandler;
-class NET_EXTERN EventReactor : public NetObject {
+class COMMON_EXTERN EventReactor : public Common::CObject {
 public:
 	EventReactor();
 	virtual ~EventReactor();
 
 	bool AddEventHandler(EventHandler * handler);
 	bool RemoveEventHandler(EventHandler * handler);
+	void ClearEventHandlers();
 	bool Poll(uv_run_mode mode = UV_RUN_NOWAIT);
 	uv_loop_t * GetUvLoop() const;
-	i32 GetHandlerCount() const;
 
 private:
 	EventReactor(EventReactor &&) = delete;
@@ -49,7 +51,7 @@ private:
 
 private:
 	uv_loop_t * loop_;
-	i32 handler_count_;
+	Common::CList<EventHandler> handlers_;
 };
 
 inline bool EventReactor::Poll(uv_run_mode mode) {
@@ -58,10 +60,6 @@ inline bool EventReactor::Poll(uv_run_mode mode) {
 
 inline uv_loop_t * EventReactor::GetUvLoop() const {
 	return loop_;
-}
-
-inline i32 EventReactor::GetHandlerCount() const {
-	return handler_count_;
 }
 
 }

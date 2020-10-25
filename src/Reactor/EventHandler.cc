@@ -23,10 +23,11 @@
  */
 
 #include "Reactor/EventHandler.h"
+#include "Reactor/EventReactor.h"
 
 namespace Net {
 
-EventHandler::EventHandler(EventReactor * reactor) : reactor_(reactor) {
+EventHandler::EventHandler(EventReactor * reactor, Logger::Category * logger) : UvData(logger), reactor_(reactor) {
 }
 
 EventHandler::~EventHandler() {

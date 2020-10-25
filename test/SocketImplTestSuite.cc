@@ -45,7 +45,7 @@ public:
 
 	// Tears down the test fixture.
 	virtual void TearDown() {
-		delete uv_data_;
+		uv_data_->Release();
 	}
 
 	Net::UvData * uv_data_;
@@ -337,8 +337,8 @@ public:
 	// Tears down the test fixture.
 	virtual void TearDown() {
 		client_socket_impl_->Release();
-		delete client_data_;
-		delete server_data_;
+		client_data_->Release();
+		server_data_->Release();
 		SocketImplOpenTestSuite::TearDown();
 	}
 
@@ -405,7 +405,7 @@ TEST_F(SocketImplCbNullTestSuite, cb4) {
 	MockUvData * data = new MockUvData();
 	socket_impl_->SetUvData(data);
 	client_socket_impl_->SetUvData(data);
-	delete data;
+	data->Release();
 	Loop();
 }
 
@@ -490,7 +490,7 @@ TEST_F(SocketImplEstablishedTestSuite, read) {
 TEST_F(SocketImplEstablishedTestSuite, read2) {
 	MockUvData * data = new MockUvData();
 	client_socket_impl_->SetUvData(data);
-	delete data;
+	data->Release();
 	Loop();
 	EXPECT_EQ(client_data_->call_alloc_count_, 0);
 	EXPECT_EQ(client_data_->call_read_count_, 0);
